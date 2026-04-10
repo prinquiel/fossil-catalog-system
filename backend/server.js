@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { testConnection } = require('./src/config/database');
+const authRoutes = require('./src/routes/authRoutesV2');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,11 +31,6 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// ============================================
-// RUTAS
-// ============================================
-
-// Ruta de prueba
 app.get('/', (req, res) => {
   res.json({
     success: true,
@@ -44,11 +40,10 @@ app.get('/', (req, res) => {
       health: '/api/health',
       auth: '/api/auth/*',
       fossils: '/api/fossils/*',
-    }
+    },
   });
 });
 
-// Health check
 app.get('/api/health', async (req, res) => {
   const dbConnected = await testConnection();
   res.json({
@@ -58,6 +53,8 @@ app.get('/api/health', async (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+app.use('/api/auth', authRoutes);
 
 // ============================================
 // MANEJO DE ERRORES
