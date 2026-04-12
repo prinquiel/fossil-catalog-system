@@ -4,7 +4,17 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { testConnection } = require('./src/config/database');
-const authRoutes = require('./src/routes/authRoutesV2');
+const authRoutes = require('./src/routes/authRoutesMain');
+const fossilRoutes = require('./src/routes/fossilRoutesApi');
+const mediaRoutes = require('./src/routes/mediaRoutesMain');
+const taxonomyRoutes = require('./src/routes/taxonomyRoutesMain');
+const geologyRoutes = require('./src/routes/geologyRoutesMain');
+const userRoutes = require('./src/routes/userRoutesMain');
+const studyRoutes = require('./src/routes/studyRoutesMain');
+const contactRoutes = require('./src/routes/contactRoutesMain');
+const auditRoutes = require('./src/routes/auditRoutesMain');
+const searchRoutes = require('./src/routes/searchRoutesMain');
+const statsRoutes = require('./src/routes/statsRoutesMain');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -54,7 +64,18 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
+// Integracion de rutas de API
 app.use('/api/auth', authRoutes);
+app.use('/api/fossils', fossilRoutes);
+app.use('/api/media', mediaRoutes);
+app.use('/api/taxonomy', taxonomyRoutes);
+app.use('/api/geology', geologyRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/studies', studyRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/stats', statsRoutes);
 
 // ============================================
 // MANEJO DE ERRORES

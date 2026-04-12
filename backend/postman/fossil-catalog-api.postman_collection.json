@@ -1,0 +1,168 @@
+{
+  "info": {
+    "name": "Fossil Catalog API",
+    "_postman_id": "d7f1d2d6-7e56-4f57-a0b5-4e9f8ab42e41",
+    "description": "Coleccion de endpoints para el backend Fossil Catalog.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "POST /api/auth/register", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"username\": \"demo\",\n  \"email\": \"demo@example.com\",\n  \"password\": \"123456\"\n}" }, "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] } } },
+        { "name": "POST /api/auth/login", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"demo@example.com\",\n  \"password\": \"123456\"\n}" }, "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] } } },
+        { "name": "GET /api/auth/me", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] } } },
+        { "name": "POST /api/auth/logout", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] } } },
+        { "name": "POST /api/auth/forgot-password", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"demo@example.com\"\n}" }, "url": { "raw": "{{baseUrl}}/api/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api", "auth", "forgot-password"] } } },
+        { "name": "POST /api/auth/reset-password", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"token\": \"<token>\",\n  \"password\": \"new-password\"\n}" }, "url": { "raw": "{{baseUrl}}/api/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["api", "auth", "reset-password"] } } }
+      ]
+    },
+    {
+      "name": "Fossils",
+      "item": [
+        { "name": "GET /api/fossils", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/fossils", "host": ["{{baseUrl}}"], "path": ["api", "fossils"] } } },
+        { "name": "GET /api/fossils/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/fossils/1", "host": ["{{baseUrl}}"], "path": ["api", "fossils", "1"] } } },
+        { "name": "POST /api/fossils", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Nuevo fosil\"\n}" }, "url": { "raw": "{{baseUrl}}/api/fossils", "host": ["{{baseUrl}}"], "path": ["api", "fossils"] } } },
+        { "name": "PUT /api/fossils/:id", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Fosil actualizado\"\n}" }, "url": { "raw": "{{baseUrl}}/api/fossils/1", "host": ["{{baseUrl}}"], "path": ["api", "fossils", "1"] } } },
+        { "name": "DELETE /api/fossils/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/fossils/1", "host": ["{{baseUrl}}"], "path": ["api", "fossils", "1"] } } },
+        { "name": "GET /api/fossils/admin/pending", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/fossils/admin/pending", "host": ["{{baseUrl}}"], "path": ["api", "fossils", "admin", "pending"] } } },
+        { "name": "PATCH /api/fossils/:id/approve", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/fossils/1/approve", "host": ["{{baseUrl}}"], "path": ["api", "fossils", "1", "approve"] } } },
+        { "name": "PATCH /api/fossils/:id/reject", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/fossils/1/reject", "host": ["{{baseUrl}}"], "path": ["api", "fossils", "1", "reject"] } } },
+        { "name": "GET /api/fossils/map", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/fossils/map", "host": ["{{baseUrl}}"], "path": ["api", "fossils", "map"] } } }
+      ]
+    },
+    {
+      "name": "Media",
+      "item": [
+        { "name": "POST /api/media/upload", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/media/upload", "host": ["{{baseUrl}}"], "path": ["api", "media", "upload"] } } },
+        { "name": "DELETE /api/media/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/media/1", "host": ["{{baseUrl}}"], "path": ["api", "media", "1"] } } },
+        { "name": "GET /api/media/fossil/:fossilId", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/media/fossil/1", "host": ["{{baseUrl}}"], "path": ["api", "media", "fossil", "1"] } } },
+        { "name": "PATCH /api/media/:id", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/media/1", "host": ["{{baseUrl}}"], "path": ["api", "media", "1"] } } }
+      ]
+    },
+    {
+      "name": "Taxonomy",
+      "item": [
+        { "name": "GET /api/taxonomy/kingdoms", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/kingdoms", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "kingdoms"] } } },
+        { "name": "GET /api/taxonomy/kingdoms/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/kingdoms/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "kingdoms", "1"] } } },
+        { "name": "POST /api/taxonomy/kingdoms", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/taxonomy/kingdoms", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "kingdoms"] } } },
+        { "name": "GET /api/taxonomy/phylums", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/phylums", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "phylums"] } } },
+        { "name": "GET /api/taxonomy/phylums/kingdom/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/phylums/kingdom/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "phylums", "kingdom", "1"] } } },
+        { "name": "POST /api/taxonomy/phylums", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/taxonomy/phylums", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "phylums"] } } },
+        { "name": "GET /api/taxonomy/classes", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/classes", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "classes"] } } },
+        { "name": "GET /api/taxonomy/classes/phylum/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/classes/phylum/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "classes", "phylum", "1"] } } },
+        { "name": "POST /api/taxonomy/classes", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/taxonomy/classes", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "classes"] } } },
+        { "name": "GET /api/taxonomy/orders", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/orders", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "orders"] } } },
+        { "name": "GET /api/taxonomy/orders/class/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/orders/class/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "orders", "class", "1"] } } },
+        { "name": "POST /api/taxonomy/orders", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/taxonomy/orders", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "orders"] } } },
+        { "name": "GET /api/taxonomy/families", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/families", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "families"] } } },
+        { "name": "GET /api/taxonomy/families/order/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/families/order/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "families", "order", "1"] } } },
+        { "name": "POST /api/taxonomy/families", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/taxonomy/families", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "families"] } } },
+        { "name": "GET /api/taxonomy/genera", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/genera", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "genera"] } } },
+        { "name": "GET /api/taxonomy/genera/family/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/genera/family/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "genera", "family", "1"] } } },
+        { "name": "POST /api/taxonomy/genera", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/taxonomy/genera", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "genera"] } } },
+        { "name": "GET /api/taxonomy/species", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/species", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "species"] } } },
+        { "name": "GET /api/taxonomy/species/genus/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/species/genus/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "species", "genus", "1"] } } },
+        { "name": "POST /api/taxonomy/species", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/taxonomy/species", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "species"] } } },
+        { "name": "POST /api/taxonomy/fossil/:fossilId", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/taxonomy/fossil/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "fossil", "1"] } } },
+        { "name": "GET /api/taxonomy/fossil/:fossilId", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/taxonomy/fossil/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "fossil", "1"] } } },
+        { "name": "PUT /api/taxonomy/fossil/:fossilId", "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/taxonomy/fossil/1", "host": ["{{baseUrl}}"], "path": ["api", "taxonomy", "fossil", "1"] } } }
+      ]
+    },
+    {
+      "name": "Geology",
+      "item": [
+        { "name": "GET /api/geology/eras", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/geology/eras", "host": ["{{baseUrl}}"], "path": ["api", "geology", "eras"] } } },
+        { "name": "GET /api/geology/eras/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/geology/eras/1", "host": ["{{baseUrl}}"], "path": ["api", "geology", "eras", "1"] } } },
+        { "name": "POST /api/geology/eras", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/geology/eras", "host": ["{{baseUrl}}"], "path": ["api", "geology", "eras"] } } },
+        { "name": "GET /api/geology/periods", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/geology/periods", "host": ["{{baseUrl}}"], "path": ["api", "geology", "periods"] } } },
+        { "name": "GET /api/geology/periods/era/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/geology/periods/era/1", "host": ["{{baseUrl}}"], "path": ["api", "geology", "periods", "era", "1"] } } },
+        { "name": "POST /api/geology/periods", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/geology/periods", "host": ["{{baseUrl}}"], "path": ["api", "geology", "periods"] } } },
+        { "name": "POST /api/geology/fossil/:fossilId", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/geology/fossil/1", "host": ["{{baseUrl}}"], "path": ["api", "geology", "fossil", "1"] } } },
+        { "name": "GET /api/geology/fossil/:fossilId", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/geology/fossil/1", "host": ["{{baseUrl}}"], "path": ["api", "geology", "fossil", "1"] } } },
+        { "name": "PUT /api/geology/fossil/:fossilId", "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/geology/fossil/1", "host": ["{{baseUrl}}"], "path": ["api", "geology", "fossil", "1"] } } }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "GET /api/users", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] } } },
+        { "name": "GET /api/users/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/users/1", "host": ["{{baseUrl}}"], "path": ["api", "users", "1"] } } },
+        { "name": "POST /api/users", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] } } },
+        { "name": "PUT /api/users/:id", "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/users/1", "host": ["{{baseUrl}}"], "path": ["api", "users", "1"] } } },
+        { "name": "DELETE /api/users/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/users/1", "host": ["{{baseUrl}}"], "path": ["api", "users", "1"] } } },
+        { "name": "PATCH /api/users/:id/role", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/users/1/role", "host": ["{{baseUrl}}"], "path": ["api", "users", "1", "role"] } } },
+        { "name": "PATCH /api/users/:id/activate", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/users/1/activate", "host": ["{{baseUrl}}"], "path": ["api", "users", "1", "activate"] } } },
+        { "name": "PATCH /api/users/:id/deactivate", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/users/1/deactivate", "host": ["{{baseUrl}}"], "path": ["api", "users", "1", "deactivate"] } } }
+      ]
+    },
+    {
+      "name": "Studies",
+      "item": [
+        { "name": "GET /api/studies", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/studies", "host": ["{{baseUrl}}"], "path": ["api", "studies"] } } },
+        { "name": "GET /api/studies/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/studies/1", "host": ["{{baseUrl}}"], "path": ["api", "studies", "1"] } } },
+        { "name": "GET /api/studies/fossil/:fossilId", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/studies/fossil/1", "host": ["{{baseUrl}}"], "path": ["api", "studies", "fossil", "1"] } } },
+        { "name": "POST /api/studies", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/studies", "host": ["{{baseUrl}}"], "path": ["api", "studies"] } } },
+        { "name": "PUT /api/studies/:id", "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/studies/1", "host": ["{{baseUrl}}"], "path": ["api", "studies", "1"] } } },
+        { "name": "DELETE /api/studies/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/studies/1", "host": ["{{baseUrl}}"], "path": ["api", "studies", "1"] } } }
+      ]
+    },
+    {
+      "name": "Contact",
+      "item": [
+        { "name": "POST /api/contact", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/contact", "host": ["{{baseUrl}}"], "path": ["api", "contact"] } } },
+        { "name": "GET /api/contact", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/contact", "host": ["{{baseUrl}}"], "path": ["api", "contact"] } } },
+        { "name": "GET /api/contact/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/contact/1", "host": ["{{baseUrl}}"], "path": ["api", "contact", "1"] } } },
+        { "name": "PATCH /api/contact/:id/read", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/contact/1/read", "host": ["{{baseUrl}}"], "path": ["api", "contact", "1", "read"] } } },
+        { "name": "PATCH /api/contact/:id/reply", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/api/contact/1/reply", "host": ["{{baseUrl}}"], "path": ["api", "contact", "1", "reply"] } } },
+        { "name": "DELETE /api/contact/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/contact/1", "host": ["{{baseUrl}}"], "path": ["api", "contact", "1"] } } }
+      ]
+    },
+    {
+      "name": "Audit",
+      "item": [
+        { "name": "GET /api/audit", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/audit", "host": ["{{baseUrl}}"], "path": ["api", "audit"] } } },
+        { "name": "GET /api/audit/user/:userId", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/audit/user/1", "host": ["{{baseUrl}}"], "path": ["api", "audit", "user", "1"] } } },
+        { "name": "GET /api/audit/table/:tableName", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/audit/table/users", "host": ["{{baseUrl}}"], "path": ["api", "audit", "table", "users"] } } },
+        { "name": "GET /api/audit/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/audit/1", "host": ["{{baseUrl}}"], "path": ["api", "audit", "1"] } } }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        { "name": "GET /api/search", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/search?q=ammonite", "host": ["{{baseUrl}}"], "path": ["api", "search"], "query": [{ "key": "q", "value": "ammonite" }] } } },
+        { "name": "GET /api/search/advanced", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/search/advanced", "host": ["{{baseUrl}}"], "path": ["api", "search", "advanced"] } } }
+      ]
+    },
+    {
+      "name": "Stats",
+      "item": [
+        { "name": "GET /api/stats/overview", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/stats/overview", "host": ["{{baseUrl}}"], "path": ["api", "stats", "overview"] } } },
+        { "name": "GET /api/stats/fossils", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/stats/fossils", "host": ["{{baseUrl}}"], "path": ["api", "stats", "fossils"] } } },
+        { "name": "GET /api/stats/users", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/stats/users", "host": ["{{baseUrl}}"], "path": ["api", "stats", "users"] } } },
+        { "name": "GET /api/stats/categories", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/stats/categories", "host": ["{{baseUrl}}"], "path": ["api", "stats", "categories"] } } },
+        { "name": "GET /api/stats/timeline", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/stats/timeline", "host": ["{{baseUrl}}"], "path": ["api", "stats", "timeline"] } } }
+      ]
+    }
+  ]
+}
