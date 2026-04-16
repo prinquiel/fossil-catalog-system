@@ -23,6 +23,7 @@ DROP TABLE IF EXISTS geological_periods CASCADE;
 DROP TABLE IF EXISTS geological_eras CASCADE;
 DROP TABLE IF EXISTS locations CASCADE;
 DROP TABLE IF EXISTS fossils CASCADE;
+DROP TABLE IF EXISTS user_roles CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
 -- ============================================
@@ -33,7 +34,10 @@ CREATE TABLE users (
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('explorer', 'researcher', 'admin')),
+    registration_status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (registration_status IN ('pending', 'approved', 'rejected')),
+    approved_at TIMESTAMP NULL,
+    approved_by INTEGER REFERENCES users(id),
+    rejection_reason TEXT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     country VARCHAR(100),
@@ -45,8 +49,21 @@ CREATE TABLE users (
     deleted_at TIMESTAMP NULL
 );
 
-COMMENT ON TABLE users IS 'Usuarios del sistema con diferentes roles';
-COMMENT ON COLUMN users.role IS 'Roles: explorer (registra fósiles), researcher (consulta científica), admin (gestión completa)';
+COMMENT ON TABLE users IS 'Usuarios del sistema; roles en tabla user_roles (varios por usuario)';
+COMMENT ON COLUMN users.registration_status IS 'pending=hasta aprobación admin; approved=puede iniciar sesión; rejected=registro denegado';
+
+-- ============================================
+-- TABLA: user_roles (varios roles por usuario)
+-- ============================================
+CREATE TABLE user_roles (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('explorer', 'researcher', 'admin')),
+    PRIMARY KEY (user_id, role)
+);
+
+CREATE INDEX idx_user_roles_role ON user_roles(role);
+
+COMMENT ON TABLE user_roles IS 'Asignación de uno o más roles por usuario';
 
 -- ============================================
 -- TABLA: fossils
@@ -285,6 +302,7 @@ CREATE INDEX idx_media_category ON media(media_category);
 -- Índices en users
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_registration_status ON users(registration_status) WHERE deleted_at IS NULL;
 CREATE INDEX idx_users_deleted_at ON users(deleted_at) WHERE deleted_at IS NULL;
 
 -- Índices en audit_logs

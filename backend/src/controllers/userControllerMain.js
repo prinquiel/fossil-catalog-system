@@ -1,34 +1,71 @@
 const bcrypt = require('bcryptjs');
-const { query } = require('../config/database');
+const { pool, query } = require('../config/database');
+const {
+  getRolesForUser,
+  replaceUserRoles,
+  replaceUserRolesForUser,
+  parseRolesFromBody,
+  mapUserWithRoles,
+} = require('../utils/roles');
 
 const safeSelect = `
-  id, username, email, role, first_name, last_name, country, profession, phone, workplace, created_at, updated_at, deleted_at
+  id, username, email, first_name, last_name, country, profession, phone, workplace,
+  registration_status, approved_at, approved_by, rejection_reason,
+  created_at, updated_at, deleted_at
 `;
 
 const getUsers = async (req, res) => {
   const result = await query(`SELECT ${safeSelect} FROM users ORDER BY id`, []);
-  return res.json({ success: true, data: result.rows });
+  const rows = await Promise.all(
+    result.rows.map(async (row) => {
+      const roles = await getRolesForUser(row.id);
+      return mapUserWithRoles(row, roles);
+    })
+  );
+  return res.json({ success: true, data: rows });
 };
 
 const getUserById = async (req, res) => {
   const result = await query(`SELECT ${safeSelect} FROM users WHERE id = $1`, [req.params.id]);
   if (result.rows.length === 0) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-  return res.json({ success: true, data: result.rows[0] });
+  const roles = await getRolesForUser(req.params.id);
+  return res.json({ success: true, data: mapUserWithRoles(result.rows[0], roles) });
 };
 
 const createUser = async (req, res) => {
-  const { username, email, password, role, first_name, last_name, country, profession, phone, workplace } = req.body;
-  if (!username || !email || !password || !role) {
-    return res.status(400).json({ success: false, error: 'username, email, password y role son requeridos' });
+  let roleList;
+  try {
+    roleList = parseRolesFromBody(req.body);
+  } catch {
+    return res.status(400).json({ success: false, error: 'username, email, password y role(s) son requeridos' });
+  }
+  const { username, email, password, first_name, last_name, country, profession, phone, workplace } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).json({ success: false, error: 'username, email, password y role(s) son requeridos' });
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  const created = await query(
-    `INSERT INTO users (username, email, password_hash, role, first_name, last_name, country, profession, phone, workplace)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-     RETURNING ${safeSelect}`,
-    [username, email, passwordHash, role, first_name, last_name, country, profession, phone, workplace]
-  );
-  return res.status(201).json({ success: true, data: created.rows[0] });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const created = await client.query(
+      `INSERT INTO users (username, email, password_hash, first_name, last_name, country, profession, phone, workplace, registration_status, approved_at, approved_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'approved', CURRENT_TIMESTAMP, NULL)
+       RETURNING ${safeSelect}`,
+      [username, email, passwordHash, first_name, last_name, country, profession, phone, workplace]
+    );
+    const uid = created.rows[0].id;
+    await replaceUserRoles(client, uid, roleList);
+    await client.query('COMMIT');
+    const roles = await getRolesForUser(uid);
+    return res.status(201).json({ success: true, data: mapUserWithRoles(created.rows[0], roles) });
+  } catch (e) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('Error en createUser:', e);
+    return res.status(500).json({ success: false, error: 'Error al crear usuario' });
+  } finally {
+    client.release();
+  }
 };
 
 const updateUser = async (req, res) => {
@@ -40,7 +77,8 @@ const updateUser = async (req, res) => {
   values.push(req.params.id);
   const updated = await query(`UPDATE users SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $${values.length} RETURNING ${safeSelect}`, values);
   if (updated.rows.length === 0) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-  return res.json({ success: true, data: updated.rows[0] });
+  const roles = await getRolesForUser(req.params.id);
+  return res.json({ success: true, data: mapUserWithRoles(updated.rows[0], roles) });
 };
 
 const deleteUser = async (req, res) => {
@@ -52,9 +90,11 @@ const deleteUser = async (req, res) => {
 const updateUserRole = async (req, res) => {
   const { role } = req.body;
   if (!role) return res.status(400).json({ success: false, error: 'role es requerido' });
-  const updated = await query('UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, role', [role, req.params.id]);
+  await replaceUserRolesForUser(parseInt(req.params.id, 10), [role]);
+  const updated = await query('SELECT id FROM users WHERE id = $1', [req.params.id]);
   if (updated.rows.length === 0) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-  return res.json({ success: true, data: updated.rows[0] });
+  const roles = await getRolesForUser(req.params.id);
+  return res.json({ success: true, data: { id: parseInt(req.params.id, 10), roles } });
 };
 
 const activateUser = async (req, res) => {

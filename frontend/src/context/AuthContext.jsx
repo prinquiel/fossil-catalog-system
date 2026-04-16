@@ -41,9 +41,9 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    isResearcher: user?.role === 'researcher',
-    isExplorer: user?.role === 'explorer',
+    isAdmin: user?.roles?.includes('admin') || user?.role === 'admin',
+    isResearcher: user?.roles?.includes('researcher') || user?.role === 'researcher',
+    isExplorer: user?.roles?.includes('explorer') || user?.role === 'explorer',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
