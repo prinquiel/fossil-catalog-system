@@ -17,13 +17,28 @@ const protect = async (req, res, next) => {
       roles = [decoded.role];
     }
     if (!Array.isArray(roles) || roles.length === 0) {
-      return res.status(401).json({ success: false, error: 'No autorizado - Token invalido' });
+      return res.status(403).json({
+        success: false,
+        error:
+          'El token no incluye roles. Cierra sesion y vuelve a iniciarla; si el problema continua, asigna roles en user_roles para tu usuario.',
+        code: 'TOKEN_NO_ROLES',
+      });
     }
 
     req.user = { id: decoded.id, email: decoded.email, roles };
     return next();
   } catch (error) {
     console.error('Error en middleware protect:', error);
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, error: 'No autorizado - Token expirado', code: 'TOKEN_EXPIRED' });
+    }
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        error: 'No autorizado - Token invalido (firma o formato incorrecto; revisa JWT_SECRET y el header Authorization: Bearer ...)',
+        code: 'TOKEN_INVALID',
+      });
+    }
     return res.status(401).json({ success: false, error: 'No autorizado - Token invalido' });
   }
 };

@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { testConnection } = require('./src/config/database');
+const { testConnection, pool } = require('./src/config/database');
 const authRoutes = require('./src/routes/authRoutesMain');
 const fossilRoutes = require('./src/routes/fossilRoutesReal');
 const mediaRoutes = require('./src/routes/mediaRoutes');
@@ -26,11 +26,26 @@ const PORT = process.env.PORT || 5000;
 // Seguridad
 app.use(helmet());
 
-// CORS
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true,
-}));
+// CORS: Vite usa :5173, Create React App :3000; CLIENT_URL puede ser varios separados por coma
+const corsDefaultOrigins = ['http://localhost:5173', 'http://localhost:3000'];
+const corsFromEnv = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const corsAllowedOrigins = [...new Set([...corsDefaultOrigins, ...corsFromEnv])];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || corsAllowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origen no permitido (${origin})`));
+      }
+    },
+    credentials: true,
+  })
+);
 
 // Body parser
 app.use(express.json());
@@ -56,10 +71,65 @@ app.get('/', (req, res) => {
 
 app.get('/api/health', async (req, res) => {
   const dbConnected = await testConnection();
+  let schema = null;
+  if (dbConnected) {
+    try {
+      const r = await pool.query(`
+        SELECT
+          current_database() AS connected_database,
+          current_user AS connected_user,
+          EXISTS (
+            SELECT 1
+            FROM pg_catalog.pg_class c
+            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'public'
+              AND c.relname = 'user_roles'
+              AND c.relkind IN ('r', 'p')
+          ) AS has_user_roles,
+          (
+            SELECT string_agg(n.nspname, ', ' ORDER BY n.nspname)
+            FROM pg_catalog.pg_class c
+            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relname = 'user_roles'
+              AND c.relkind IN ('r', 'p')
+          ) AS user_roles_schemas,
+          EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'role'
+          ) AS has_users_role_column,
+          EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'registration_status'
+          ) AS has_registration_status
+      `);
+      schema = r.rows[0];
+      schema.register_ready =
+        schema.has_user_roles &&
+        !schema.has_users_role_column &&
+        schema.has_registration_status;
+      if (!schema.register_ready) {
+        if (!schema.has_user_roles && schema.user_roles_schemas) {
+          schema.hint =
+            `La tabla user_roles existe en el esquema: ${schema.user_roles_schemas}. El backend usa public.user_roles. Mueve la tabla al esquema public o recreala con la migracion 004 en public.`;
+        } else if (!schema.has_user_roles) {
+          schema.hint =
+            'Falta la tabla public.user_roles. En PostgreSQL ejecuta: database/migrations/004_user_roles.sql';
+        } else if (schema.has_users_role_column) {
+          schema.hint =
+            'Queda la columna antigua users.role. Ejecuta database/migrations/004_user_roles.sql hasta el final.';
+        } else if (!schema.has_registration_status) {
+          schema.hint = 'Ejecuta database/migrations/003_user_registration_approval.sql';
+        }
+      }
+    } catch (e) {
+      schema = { error: e.message };
+    }
+  }
   res.json({
     success: true,
     status: 'OK',
     database: dbConnected ? 'Connected' : 'Disconnected',
+    schema,
     timestamp: new Date().toISOString(),
   });
 });

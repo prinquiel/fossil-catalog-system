@@ -25,7 +25,11 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     const data = await authService.register(userData);
-    setUser(data.data.user);
+    if (data.success && data.data?.token) {
+      setUser(data.data.user);
+    } else {
+      setUser(null);
+    }
     return data;
   };
 
@@ -40,7 +44,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    isAuthenticated: !!user,
+    isAuthenticated: !!(authService.getToken() && user),
     isAdmin: user?.roles?.includes('admin') || user?.role === 'admin',
     isResearcher: user?.roles?.includes('researcher') || user?.role === 'researcher',
     isExplorer: user?.roles?.includes('explorer') || user?.role === 'explorer',

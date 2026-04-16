@@ -301,7 +301,6 @@ CREATE INDEX idx_media_category ON media(media_category);
 
 -- Índices en users
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_registration_status ON users(registration_status) WHERE deleted_at IS NULL;
 CREATE INDEX idx_users_deleted_at ON users(deleted_at) WHERE deleted_at IS NULL;
 

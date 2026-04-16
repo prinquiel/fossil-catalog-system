@@ -1,14 +1,37 @@
 const nodemailer = require('nodemailer');
 
+function isTruthy(v) {
+  return v === 'true' || v === '1' || v === 'yes';
+}
+
+/**
+ * SMTP con usuario/contraseña (Gmail, etc.) o sin auth (Mailpit, MailHog en local).
+ * Requiere SMTP_HOST. Sin auth: SMTP_NO_AUTH=true y normalmente SMTP_PORT=1025.
+ */
 function createTransport() {
   const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!host || !user || !pass) {
+  if (!host) {
     return null;
   }
+
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
   const secure = process.env.SMTP_SECURE === 'true' || port === 465;
+  const noAuth = isTruthy(process.env.SMTP_NO_AUTH);
+
+  if (noAuth) {
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure,
+    });
+  }
+
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) {
+    return null;
+  }
+
   return nodemailer.createTransport({
     host,
     port,
@@ -38,7 +61,9 @@ function labelForRoles(roles) {
 async function sendRegistrationApprovedEmail({ to, firstName, roles, role }) {
   const transport = createTransport();
   if (!transport) {
-    console.warn('[email] SMTP no configurado (SMTP_HOST/SMTP_USER/SMTP_PASS); no se envió correo de aprobación');
+    console.warn(
+      '[email] SMTP no configurado: define SMTP_HOST y (SMTP_USER+SMTP_PASS) o SMTP_NO_AUTH=true para Mailpit local; ver backend/.env.example'
+    );
     return { sent: false, skipped: true };
   }
 

@@ -41,6 +41,8 @@ const register = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    const v = (x) => (x === undefined || x === '' ? null : x);
+
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -48,7 +50,7 @@ const register = async (req, res) => {
         `INSERT INTO users (username, email, password_hash, first_name, last_name, country, profession, phone, workplace, registration_status)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending')
          RETURNING ${safeUserColumns}`,
-        [username, email, passwordHash, first_name, last_name, country, profession, phone, workplace]
+        [username, email, passwordHash, v(first_name), v(last_name), v(country), v(profession), v(phone), v(workplace)]
       );
 
       const userRow = created.rows[0];
@@ -72,7 +74,37 @@ const register = async (req, res) => {
     }
   } catch (error) {
     console.error('Error en register:', error);
-    return res.status(500).json({ success: false, error: 'Error al registrar usuario' });
+    if (error.code === '23505') {
+      return res.status(400).json({ success: false, error: 'El email o username ya esta registrado' });
+    }
+    if (error.code === '42P01') {
+      return res.status(500).json({
+        success: false,
+        error:
+          'Falta una tabla en la base de datos (ej. user_roles). Ejecuta las migraciones en database/migrations/.',
+      });
+    }
+    if (error.code === '23502') {
+      return res.status(500).json({
+        success: false,
+        error:
+          'Esquema desactualizado: suele indicar que users.role sigue como NOT NULL. Ejecuta database/migrations/004_user_roles.sql.',
+      });
+    }
+    if (error.code === '42501') {
+      return res.status(500).json({
+        success: false,
+        error:
+          'Permiso denegado en la base de datos (tabla user_roles). Con usuario postgres ejecuta database/migrations/006_grant_user_roles_permissions.sql (ajusta el nombre del rol si no es fossil_admin).',
+        code: 'INSUFFICIENT_PRIVILEGE',
+      });
+    }
+    const showDetails = process.env.NODE_ENV !== 'production';
+    return res.status(500).json({
+      success: false,
+      error: showDetails ? error.message || 'Error al registrar usuario' : 'Error al registrar usuario',
+      code: showDetails ? error.code : undefined,
+    });
   }
 };
 
@@ -112,6 +144,15 @@ const login = async (req, res) => {
     }
 
     const roles = await getRolesForUser(user.id);
+    if (!roles || roles.length === 0) {
+      return res.status(403).json({
+        success: false,
+        error:
+          'Tu cuenta no tiene roles asignados. Un administrador debe asignarte al menos un rol en user_roles (o ejecuta las migraciones / seed si acabas de actualizar el esquema).',
+        code: 'NO_ROLES',
+      });
+    }
+
     const token = jwt.sign(
       { id: user.id, email: user.email, roles, role: primaryRole(roles) },
       process.env.JWT_SECRET,
