@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { Toaster } from 'react-hot-toast';
 
@@ -7,7 +7,11 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Catalog from './pages/public/Catalog';
 import RoleLayout from './layouts/RoleLayout';
+import AdminLayout from './layouts/AdminLayout';
 import PlaceholderPage from './pages/common/PlaceholderPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminPendingRegistrations from './pages/admin/AdminPendingRegistrations';
+import AdminUsers from './pages/admin/AdminUsers';
 
 const explorerLinks = [
   { to: '/explorer/dashboard', label: 'Dashboard' },
@@ -22,17 +26,6 @@ const researcherLinks = [
   { to: '/researcher/search', label: 'Search' },
   { to: '/researcher/my-studies', label: 'My Studies' },
   { to: '/researcher/map', label: 'Map' }, 
-];
-
-const adminLinks = [
-  { to: '/admin/dashboard', label: 'Dashboard' },
-  { to: '/admin/pending-fossils', label: 'Pending Fossils' },
-  { to: '/admin/fossils', label: 'Fossils' },
-  { to: '/admin/users', label: 'Users' },
-  { to: '/admin/create-user', label: 'Create User' },
-  { to: '/admin/messages', label: 'Messages' },
-  { to: '/admin/audit', label: 'Audit' },
-  { to: '/admin/stats', label: 'Stats' },
 ];
 
 function App() {
@@ -78,18 +71,20 @@ function App() {
             <Route path="map" element={<PlaceholderPage title="Researcher Map" />} />
           </Route>
 
-          <Route path="/admin" element={<RoleLayout title="Admin Dashboard" links={adminLinks} />}>
-            <Route path="dashboard" element={<PlaceholderPage title="Admin Dashboard" />} />
-            <Route path="pending-fossils" element={<PlaceholderPage title="Pending Fossils" />} />
-            <Route path="fossil/:id/review" element={<PlaceholderPage title="Review Fossil" />} />
-            <Route path="fossils" element={<PlaceholderPage title="Manage Fossils" />} />
-            <Route path="users" element={<PlaceholderPage title="Manage Users" />} />
-            <Route path="create-user" element={<PlaceholderPage title="Create User" />} />
-            <Route path="edit-user/:id" element={<PlaceholderPage title="Edit User" />} />
-            <Route path="messages" element={<PlaceholderPage title="Messages" />} />
-            <Route path="message/:id" element={<PlaceholderPage title="Message Detail" />} />
-            <Route path="audit" element={<PlaceholderPage title="Audit" />} />
-            <Route path="stats" element={<PlaceholderPage title="Admin Stats" />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="pending-registrations" element={<AdminPendingRegistrations />} />
+            <Route path="pending-fossils" element={<PlaceholderPage title="Fosiles pendientes" />} />
+            <Route path="fossil/:id/review" element={<PlaceholderPage title="Revisar fosil" />} />
+            <Route path="fossils" element={<PlaceholderPage title="Gestionar fosiles" />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="create-user" element={<PlaceholderPage title="Crear usuario" />} />
+            <Route path="edit-user/:id" element={<PlaceholderPage title="Editar usuario" />} />
+            <Route path="messages" element={<PlaceholderPage title="Mensajes" />} />
+            <Route path="message/:id" element={<PlaceholderPage title="Detalle del mensaje" />} />
+            <Route path="audit" element={<PlaceholderPage title="Auditoria" />} />
+            <Route path="stats" element={<PlaceholderPage title="Estadisticas" />} />
           </Route>
 
           <Route path="*" element={<PlaceholderPage title="404" description="Pagina no encontrada" />} />
