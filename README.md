@@ -139,7 +139,7 @@ npm install
 `frontend/.env` y `frontend/.env.example` deben tener:
 
 ```env
-VITE_API_URL=http://localhost:5001
+VITE_API_URL=http://localhost:5001/api
 ```
 
 ### 5.3 Levantar frontend

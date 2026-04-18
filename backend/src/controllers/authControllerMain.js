@@ -18,9 +18,31 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Rol invalido. Debe ser: explorer, researcher o admin' });
     }
 
-    const exists = await query('SELECT id FROM users WHERE email = $1 OR username = $2', [email, username]);
-    if (exists.rows.length > 0) {
-      return res.status(400).json({ success: false, error: 'El email o username ya esta registrado' });
+    const dup = await query(
+      `SELECT email, username FROM users
+       WHERE deleted_at IS NULL AND (email = $1 OR username = $2)`,
+      [email, username]
+    );
+    if (dup.rows.length > 0) {
+      const emailTaken = dup.rows.some((r) => r.email === email);
+      const usernameTaken = dup.rows.some((r) => r.username === username);
+      if (emailTaken && usernameTaken) {
+        return res.status(400).json({
+          success: false,
+          error: 'Ese correo y ese nombre de usuario ya estan registrados.',
+        });
+      }
+      if (emailTaken) {
+        return res.status(400).json({
+          success: false,
+          error: 'Ese correo ya esta registrado. Inicia sesion o usa otro email.',
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        error:
+          `El nombre de usuario "${username}" ya esta en uso (p. ej. usuario demo del seed). Elige otro username distinto de admin, explorador1, etc.`,
+      });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);

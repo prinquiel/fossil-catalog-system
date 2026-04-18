@@ -17,7 +17,7 @@ const searchRoutes = require('./src/routes/searchRoutesMain');
 const statsRoutes = require('./src/routes/statsRoutesMain');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // ============================================
 // MIDDLEWARES
@@ -27,8 +27,38 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 
 // CORS
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+].filter(Boolean);
+
+const isLocalhostOrigin = (origin) => {
+  try {
+    const u = new URL(origin);
+    const okHost = u.hostname === 'localhost' || u.hostname === '127.0.0.1';
+    const okProto = u.protocol === 'http:' || u.protocol === 'https:';
+    return okHost && okProto;
+  } catch {
+    return false;
+  }
+};
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Permite herramientas sin origen (curl, postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Vite puede usar 5174, 5175... si el puerto por defecto esta ocupado
+    if (process.env.NODE_ENV !== 'production' && isLocalhostOrigin(origin)) {
+      return callback(null, true);
+    }
+    console.warn(`CORS denegado para origen: ${origin}`);
+    return callback(null, false);
+  },
   credentials: true,
 }));
 

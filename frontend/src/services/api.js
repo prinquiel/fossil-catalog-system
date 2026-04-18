@@ -1,7 +1,24 @@
 import axios from 'axios';
 
+// El backend monta las rutas bajo /api (p. ej. /api/fossils). Sin el sufijo /api las peticiones fallan (404).
+const resolveApiBaseUrl = () => {
+  const fromEnv = import.meta.env.VITE_API_URL?.trim();
+  if (fromEnv) {
+    let base = fromEnv.replace(/\/$/, '');
+    // Evita 404: el servidor solo expone rutas bajo /api (p. ej. VITE_API_URL=http://localhost:5001 sin /api).
+    if (!base.endsWith('/api')) {
+      base = `${base}/api`;
+    }
+    return base;
+  }
+  if (import.meta.env.DEV) {
+    return '/api';
+  }
+  return 'http://localhost:5001/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: resolveApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },

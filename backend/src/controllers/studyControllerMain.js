@@ -17,19 +17,47 @@ const getStudiesByFossil = async (req, res) => {
 };
 
 const createStudy = async (req, res) => {
-  const { fossil_id, researcher_id, title, introduction, analysis_type, results, composition, conditions, references, study_date } = req.body;
+  const {
+    fossil_id,
+    researcher_id,
+    title,
+    introduction,
+    analysis_type,
+    results,
+    composition,
+    conditions,
+    references,
+    references_text,
+    study_date,
+  } = req.body;
   if (!fossil_id) return res.status(400).json({ success: false, error: 'fossil_id es requerido' });
   const created = await query(
-    `INSERT INTO scientific_studies (fossil_id, researcher_id, title, introduction, analysis_type, results, composition, conditions, references, study_date)
+    `INSERT INTO scientific_studies (fossil_id, researcher_id, title, introduction, analysis_type, results, composition, conditions, references_text, study_date)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-    [fossil_id, researcher_id || req.user?.id || null, title || null, introduction || null, analysis_type || null, results || null, composition || null, conditions || null, references || null, study_date || null]
+    [
+      fossil_id,
+      researcher_id || req.user?.id || null,
+      title || null,
+      introduction || null,
+      analysis_type || null,
+      results || null,
+      composition || null,
+      conditions || null,
+      references_text ?? references ?? null,
+      study_date || null,
+    ]
   );
   return res.status(201).json({ success: true, data: created.rows[0] });
 };
 
 const updateStudy = async (req, res) => {
-  const allowed = ['researcher_id', 'title', 'introduction', 'analysis_type', 'results', 'composition', 'conditions', 'references', 'study_date'];
-  const entries = Object.entries(req.body).filter(([k, v]) => allowed.includes(k) && v !== undefined);
+  const incoming = { ...req.body };
+  if (incoming.references !== undefined && incoming.references_text === undefined) {
+    incoming.references_text = incoming.references;
+  }
+
+  const allowed = ['researcher_id', 'title', 'introduction', 'analysis_type', 'results', 'composition', 'conditions', 'references_text', 'study_date'];
+  const entries = Object.entries(incoming).filter(([k, v]) => allowed.includes(k) && v !== undefined);
   if (entries.length === 0) return res.status(400).json({ success: false, error: 'No hay campos validos para actualizar' });
   const setClause = entries.map(([k], i) => `${k} = $${i + 1}`).join(', ');
   const values = entries.map(([, v]) => v);

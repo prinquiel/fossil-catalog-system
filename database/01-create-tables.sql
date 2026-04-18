@@ -221,7 +221,7 @@ CREATE TABLE scientific_studies (
     results TEXT,
     composition TEXT,
     conditions TEXT,
-    references TEXT,
+    references_text TEXT,
     study_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -269,11 +269,10 @@ CREATE INDEX idx_fossils_created_by ON fossils(created_by);
 CREATE INDEX idx_fossils_name ON fossils(name);
 CREATE INDEX idx_fossils_deleted_at ON fossils(deleted_at) WHERE deleted_at IS NULL;
 
--- Índices en locations (geoespacial con PostGIS)
+-- Índices en locations (compatibles sin PostGIS)
 CREATE INDEX idx_locations_fossil_id ON locations(fossil_id);
-CREATE INDEX idx_locations_coordinates ON locations USING GIST(
-    ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
-) WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
+CREATE INDEX idx_locations_coordinates ON locations(latitude, longitude)
+WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
 CREATE INDEX idx_locations_province ON locations(province_code);
 CREATE INDEX idx_locations_canton ON locations(canton_code);
 
