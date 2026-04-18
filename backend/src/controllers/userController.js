@@ -1,16 +1,34 @@
 const { pool } = require('../config/database');
 const bcrypt = require('bcryptjs');
+const { sendRegistrationApprovedEmail } = require('../services/emailService');
+const {
+  getRolesForUser,
+  replaceUserRoles,
+  replaceUserRolesForUser,
+  parseRolesFromBody,
+  mapUserWithRoles,
+  primaryRole,
+} = require('../utils/roles');
+
+const userListSelect = `
+  u.id, u.username, u.email, u.first_name, u.last_name,
+  u.country, u.profession, u.phone, u.workplace, u.created_at, u.deleted_at,
+  u.registration_status, u.approved_at, u.approved_by, u.rejection_reason,
+  COALESCE(
+    (SELECT ARRAY_AGG(ur.role ORDER BY ur.role) FROM user_roles ur WHERE ur.user_id = u.id),
+    ARRAY[]::varchar[]
+  ) AS roles
+`;
 
 const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 20, role, search } = req.query;
+    const { page = 1, limit = 20, role, search, registration_status } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = `
-      SELECT id, username, email, role, first_name, last_name, 
-             country, profession, workplace, created_at, deleted_at,
+    let sql = `
+      SELECT ${userListSelect},
              COUNT(*) OVER() as total_count
-      FROM users
+      FROM users u
       WHERE 1=1
     `;
 
@@ -18,35 +36,42 @@ const getAllUsers = async (req, res) => {
     let paramCount = 1;
 
     if (role) {
-      query += ` AND role = $${paramCount}`;
+      sql += ` AND EXISTS (SELECT 1 FROM user_roles urf WHERE urf.user_id = u.id AND urf.role = $${paramCount})`;
       params.push(role);
       paramCount++;
     }
 
     if (search) {
-      query += ` AND (username ILIKE $${paramCount} OR email ILIKE $${paramCount} OR first_name ILIKE $${paramCount} OR last_name ILIKE $${paramCount})`;
+      sql += ` AND (u.username ILIKE $${paramCount} OR u.email ILIKE $${paramCount} OR u.first_name ILIKE $${paramCount} OR u.last_name ILIKE $${paramCount})`;
       params.push(`%${search}%`);
       paramCount++;
     }
 
-    query += ` ORDER BY created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+    if (registration_status) {
+      sql += ` AND u.registration_status = $${paramCount}`;
+      params.push(registration_status);
+      paramCount++;
+    }
+
+    sql += ` ORDER BY u.created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
     params.push(limit, offset);
 
-    const result = await pool.query(query, params);
-    const totalCount = result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0;
+    const result = await pool.query(sql, params);
+    const totalCount = result.rows.length > 0 ? parseInt(result.rows[0].total_count, 10) : 0;
     const totalPages = Math.ceil(totalCount / limit);
 
     res.json({
       success: true,
-      data: result.rows.map(row => {
-        const { total_count, password_hash, ...user } = row;
-        return user;
+      data: result.rows.map((row) => {
+        const { total_count, ...rest } = row;
+        const roles = rest.roles || [];
+        return { ...rest, roles, role: primaryRole(roles) };
       }),
       pagination: {
-        currentPage: parseInt(page),
+        currentPage: parseInt(page, 10),
         totalPages,
         totalItems: totalCount,
-        itemsPerPage: parseInt(limit),
+        itemsPerPage: parseInt(limit, 10),
       },
     });
   } catch (error) {
@@ -60,10 +85,9 @@ const getUserById = async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT id, username, email, role, first_name, last_name, 
-              country, profession, phone, workplace, created_at, updated_at, deleted_at
-       FROM users 
-       WHERE id = $1`,
+      `SELECT ${userListSelect.replace(/\n/g, ' ')}
+       FROM users u
+       WHERE u.id = $1`,
       [id]
     );
 
@@ -71,7 +95,9 @@ const getUserById = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
     }
 
-    res.json({ success: true, data: result.rows[0] });
+    const row = result.rows[0];
+    const roles = row.roles || [];
+    res.json({ success: true, data: { ...row, roles, role: primaryRole(roles) } });
   } catch (error) {
     console.error('Error en getUserById:', error);
     res.status(500).json({ success: false, error: 'Error al obtener usuario' });
@@ -81,22 +107,24 @@ const getUserById = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     const {
-      username, email, password, role, first_name, last_name,
-      country, profession, phone, workplace
+      username, email, password, first_name, last_name,
+      country, profession, phone, workplace,
     } = req.body;
 
-    if (!username || !email || !password || !role) {
+    let roleList;
+    try {
+      roleList = parseRolesFromBody(req.body);
+    } catch {
       return res.status(400).json({
         success: false,
-        error: 'Campos requeridos: username, email, password, role'
+        error: 'Campos requeridos: role (string) o roles (array). Valores: explorer, researcher, admin',
       });
     }
 
-    const validRoles = ['explorer', 'researcher', 'admin'];
-    if (!validRoles.includes(role)) {
+    if (!username || !email || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Rol inválido. Debe ser: explorer, researcher o admin'
+        error: 'Campos requeridos: username, email, password',
       });
     }
 
@@ -108,25 +136,40 @@ const createUser = async (req, res) => {
     if (userExists.rows.length > 0) {
       return res.status(400).json({
         success: false,
-        error: 'El email o username ya está registrado'
+        error: 'El email o username ya está registrado',
       });
     }
 
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
-    const result = await pool.query(
-      `INSERT INTO users (username, email, password_hash, role, first_name, last_name, country, profession, phone, workplace)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id, username, email, role, first_name, last_name, created_at`,
-      [username, email, password_hash, role, first_name, last_name, country, profession, phone, workplace]
-    );
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    res.status(201).json({
-      success: true,
-      message: 'Usuario creado exitosamente',
-      data: result.rows[0]
-    });
+      const result = await client.query(
+        `INSERT INTO users (username, email, password_hash, first_name, last_name, country, profession, phone, workplace, registration_status, approved_at, approved_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'approved', CURRENT_TIMESTAMP, $11)
+         RETURNING id, username, email, first_name, last_name, created_at, registration_status, approved_at, approved_by`,
+        [username, email, password_hash, first_name, last_name, country, profession, phone, workplace, req.user.id]
+      );
+
+      const userRow = result.rows[0];
+      await replaceUserRoles(client, userRow.id, roleList);
+      await client.query('COMMIT');
+
+      const roles = await getRolesForUser(userRow.id);
+      return res.status(201).json({
+        success: true,
+        message: 'Usuario creado exitosamente',
+        data: mapUserWithRoles(userRow, roles),
+      });
+    } catch (inner) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw inner;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error('Error en createUser:', error);
     res.status(500).json({ success: false, error: 'Error al crear usuario' });
@@ -138,7 +181,7 @@ const updateUser = async (req, res) => {
     const { id } = req.params;
     const {
       username, email, first_name, last_name,
-      country, profession, phone, workplace
+      country, profession, phone, workplace,
     } = req.body;
 
     const checkResult = await pool.query(
@@ -159,13 +202,13 @@ const updateUser = async (req, res) => {
       if (duplicateCheck.rows.length > 0) {
         return res.status(400).json({
           success: false,
-          error: 'El email o username ya está en uso'
+          error: 'El email o username ya está en uso',
         });
       }
     }
 
     const result = await pool.query(
-      `UPDATE users 
+      `UPDATE users
        SET username = COALESCE($1, username),
            email = COALESCE($2, email),
            first_name = COALESCE($3, first_name),
@@ -176,14 +219,15 @@ const updateUser = async (req, res) => {
            workplace = COALESCE($8, workplace),
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $9
-       RETURNING id, username, email, role, first_name, last_name, country, profession, phone, workplace`,
+       RETURNING id, username, email, first_name, last_name, country, profession, phone, workplace`,
       [username, email, first_name, last_name, country, profession, phone, workplace, id]
     );
 
+    const roles = await getRolesForUser(id);
     res.json({
       success: true,
       message: 'Usuario actualizado',
-      data: result.rows[0]
+      data: mapUserWithRoles(result.rows[0], roles),
     });
   } catch (error) {
     console.error('Error en updateUser:', error);
@@ -195,10 +239,10 @@ const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (parseInt(id) === req.user.id) {
+    if (parseInt(id, 10) === req.user.id) {
       return res.status(400).json({
         success: false,
-        error: 'No puedes eliminar tu propio usuario'
+        error: 'No puedes eliminar tu propio usuario',
       });
     }
 
@@ -213,7 +257,7 @@ const deleteUser = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Usuario eliminado exitosamente'
+      message: 'Usuario eliminado exitosamente',
     });
   } catch (error) {
     console.error('Error en deleteUser:', error);
@@ -221,46 +265,91 @@ const deleteUser = async (req, res) => {
   }
 };
 
+/** Sustituye todos los roles por uno solo (compatibilidad) */
 const changeUserRole = async (req, res) => {
   try {
     const { id } = req.params;
     const { role } = req.body;
 
     const validRoles = ['explorer', 'researcher', 'admin'];
-    if (!validRoles.includes(role)) {
+    if (!role || !validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
-        error: 'Rol inválido. Debe ser: explorer, researcher o admin'
+        error: 'Rol inválido. Debe ser: explorer, researcher o admin',
       });
     }
 
-    if (parseInt(id) === req.user.id) {
+    if (parseInt(id, 10) === req.user.id) {
       return res.status(400).json({
         success: false,
-        error: 'No puedes cambiar tu propio rol'
+        error: 'No puedes cambiar tu propio rol',
       });
     }
 
-    const result = await pool.query(
-      `UPDATE users 
-       SET role = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2 AND deleted_at IS NULL
-       RETURNING id, username, email, role`,
-      [role, id]
-    );
-
-    if (result.rows.length === 0) {
+    const exists = await pool.query('SELECT id FROM users WHERE id = $1 AND deleted_at IS NULL', [id]);
+    if (exists.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
     }
 
+    await replaceUserRolesForUser(parseInt(id, 10), [role]);
+
+    const userRow = await pool.query(
+      'SELECT id, username, email, first_name, last_name FROM users WHERE id = $1',
+      [id]
+    );
+    const roles = await getRolesForUser(id);
     res.json({
       success: true,
       message: 'Rol actualizado',
-      data: result.rows[0]
+      data: mapUserWithRoles(userRow.rows[0], roles),
     });
   } catch (error) {
     console.error('Error en changeUserRole:', error);
     res.status(500).json({ success: false, error: 'Error al cambiar rol' });
+  }
+};
+
+/** Sustituye el conjunto de roles: body `{ roles: ['explorer','researcher'] }` */
+const updateUserRoles = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let roleList;
+    try {
+      roleList = parseRolesFromBody(req.body);
+    } catch {
+      return res.status(400).json({
+        success: false,
+        error: 'Envía roles (array) o role (string). Valores: explorer, researcher, admin',
+      });
+    }
+
+    if (parseInt(id, 10) === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        error: 'No puedes cambiar tus propios roles',
+      });
+    }
+
+    const exists = await pool.query('SELECT id FROM users WHERE id = $1 AND deleted_at IS NULL', [id]);
+    if (exists.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+    }
+
+    await replaceUserRolesForUser(parseInt(id, 10), roleList);
+
+    const userRow = await pool.query(
+      'SELECT id, username, email, first_name, last_name FROM users WHERE id = $1',
+      [id]
+    );
+    const roles = await getRolesForUser(id);
+    res.json({
+      success: true,
+      message: 'Roles actualizados',
+      data: mapUserWithRoles(userRow.rows[0], roles),
+    });
+  } catch (error) {
+    console.error('Error en updateUserRoles:', error);
+    res.status(500).json({ success: false, error: 'Error al actualizar roles' });
   }
 };
 
@@ -269,10 +358,10 @@ const activateUser = async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `UPDATE users 
+      `UPDATE users
        SET deleted_at = NULL, updated_at = CURRENT_TIMESTAMP
        WHERE id = $1
-       RETURNING id, username, email, role`,
+       RETURNING id, username, email`,
       [id]
     );
 
@@ -280,10 +369,11 @@ const activateUser = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
     }
 
+    const roles = await getRolesForUser(id);
     res.json({
       success: true,
       message: 'Usuario activado',
-      data: result.rows[0]
+      data: mapUserWithRoles(result.rows[0], roles),
     });
   } catch (error) {
     console.error('Error en activateUser:', error);
@@ -295,18 +385,18 @@ const deactivateUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (parseInt(id) === req.user.id) {
+    if (parseInt(id, 10) === req.user.id) {
       return res.status(400).json({
         success: false,
-        error: 'No puedes desactivar tu propio usuario'
+        error: 'No puedes desactivar tu propio usuario',
       });
     }
 
     const result = await pool.query(
-      `UPDATE users 
+      `UPDATE users
        SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
        WHERE id = $1 AND deleted_at IS NULL
-       RETURNING id, username, email, role`,
+       RETURNING id, username, email`,
       [id]
     );
 
@@ -314,10 +404,11 @@ const deactivateUser = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado o ya desactivado' });
     }
 
+    const roles = await getRolesForUser(id);
     res.json({
       success: true,
       message: 'Usuario desactivado',
-      data: result.rows[0]
+      data: mapUserWithRoles(result.rows[0], roles),
     });
   } catch (error) {
     console.error('Error en deactivateUser:', error);
@@ -325,21 +416,208 @@ const deactivateUser = async (req, res) => {
   }
 };
 
+const pendingWhere = `
+  u.registration_status = 'pending' AND u.deleted_at IS NULL
+  AND EXISTS (
+    SELECT 1 FROM user_roles ur
+    WHERE ur.user_id = u.id AND ur.role IN ('explorer', 'researcher')
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM user_roles ur
+    WHERE ur.user_id = u.id AND ur.role = 'admin'
+  )
+`;
+
+const getPendingRegistrations = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+
+    const list = await pool.query(
+      `SELECT u.id, u.username, u.email, u.first_name, u.last_name,
+              u.country, u.profession, u.phone, u.workplace, u.registration_status, u.created_at, u.updated_at,
+              COALESCE(
+                (SELECT ARRAY_AGG(ur.role ORDER BY ur.role) FROM user_roles ur WHERE ur.user_id = u.id),
+                ARRAY[]::varchar[]
+              ) AS roles
+       FROM users u
+       WHERE ${pendingWhere}
+       ORDER BY u.created_at ASC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+
+    const countResult = await pool.query(
+      `SELECT COUNT(*)::int AS c FROM users u WHERE ${pendingWhere}`
+    );
+    const totalItems = countResult.rows[0].c;
+    const totalPages = Math.ceil(totalItems / limit) || 1;
+
+    res.json({
+      success: true,
+      data: list.rows.map((row) => {
+        const roles = row.roles || [];
+        return { ...row, roles, role: primaryRole(roles) };
+      }),
+      pagination: {
+        currentPage: parseInt(page, 10),
+        totalPages,
+        totalItems,
+        itemsPerPage: parseInt(limit, 10),
+      },
+    });
+  } catch (error) {
+    console.error('Error en getPendingRegistrations:', error);
+    res.status(500).json({ success: false, error: 'Error al obtener solicitudes pendientes' });
+  }
+};
+
+const approveRegistration = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (parseInt(id, 10) === req.user.id) {
+      return res.status(400).json({ success: false, error: 'No puedes aprobar tu propia cuenta' });
+    }
+
+    const existing = await pool.query(
+      `SELECT u.id, u.email, u.registration_status, u.first_name, u.deleted_at
+       FROM users u WHERE u.id = $1`,
+      [id]
+    );
+
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+    }
+
+    const u = existing.rows[0];
+    if (u.deleted_at) {
+      return res.status(400).json({ success: false, error: 'El usuario esta desactivado' });
+    }
+
+    if (u.registration_status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        error: 'Solo se pueden aprobar cuentas en estado pendiente',
+        code: 'NOT_PENDING',
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE users SET
+         registration_status = 'approved',
+         approved_at = CURRENT_TIMESTAMP,
+         approved_by = $1,
+         rejection_reason = NULL,
+         updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 AND registration_status = 'pending'
+       RETURNING id, username, email, first_name, last_name, registration_status, approved_at, approved_by`,
+      [req.user.id, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ success: false, error: 'No se pudo aprobar el registro' });
+    }
+
+    const approved = result.rows[0];
+    const roles = await getRolesForUser(approved.id);
+    const emailResult = await sendRegistrationApprovedEmail({
+      to: approved.email,
+      firstName: approved.first_name,
+      roles,
+    });
+
+    res.json({
+      success: true,
+      message: 'Registro aprobado',
+      data: mapUserWithRoles(approved, roles),
+      email: emailResult,
+    });
+  } catch (error) {
+    console.error('Error en approveRegistration:', error);
+    res.status(500).json({ success: false, error: 'Error al aprobar el registro' });
+  }
+};
+
+const rejectRegistration = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const reason = (req.body && req.body.reason) || null;
+
+    if (parseInt(id, 10) === req.user.id) {
+      return res.status(400).json({ success: false, error: 'No puedes rechazar tu propia cuenta' });
+    }
+
+    const existing = await pool.query(
+      `SELECT id, registration_status, deleted_at FROM users WHERE id = $1`,
+      [id]
+    );
+
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+    }
+
+    const u = existing.rows[0];
+    if (u.deleted_at) {
+      return res.status(400).json({ success: false, error: 'El usuario esta desactivado' });
+    }
+
+    if (u.registration_status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        error: 'Solo se pueden rechazar cuentas en estado pendiente',
+        code: 'NOT_PENDING',
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE users SET
+         registration_status = 'rejected',
+         rejection_reason = $1,
+         approved_at = NULL,
+         approved_by = NULL,
+         updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 AND registration_status = 'pending'
+       RETURNING id, username, email, registration_status, rejection_reason`,
+      [reason, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ success: false, error: 'No se pudo rechazar el registro' });
+    }
+
+    const row = result.rows[0];
+    const roles = await getRolesForUser(id);
+    res.json({
+      success: true,
+      message: 'Registro rechazado',
+      data: mapUserWithRoles(row, roles),
+    });
+  } catch (error) {
+    console.error('Error en rejectRegistration:', error);
+    res.status(500).json({ success: false, error: 'Error al rechazar el registro' });
+  }
+};
+
 const getUserStats = async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         COUNT(*) FILTER (WHERE deleted_at IS NULL) as total_active,
         COUNT(*) FILTER (WHERE deleted_at IS NOT NULL) as total_inactive,
-        COUNT(*) FILTER (WHERE role = 'explorer' AND deleted_at IS NULL) as explorers,
-        COUNT(*) FILTER (WHERE role = 'researcher' AND deleted_at IS NULL) as researchers,
-        COUNT(*) FILTER (WHERE role = 'admin' AND deleted_at IS NULL) as admins
+        (SELECT COUNT(DISTINCT ur.user_id) FROM user_roles ur
+         JOIN users u ON u.id = ur.user_id WHERE ur.role = 'explorer' AND u.deleted_at IS NULL) as explorers,
+        (SELECT COUNT(DISTINCT ur.user_id) FROM user_roles ur
+         JOIN users u ON u.id = ur.user_id WHERE ur.role = 'researcher' AND u.deleted_at IS NULL) as researchers,
+        (SELECT COUNT(DISTINCT ur.user_id) FROM user_roles ur
+         JOIN users u ON u.id = ur.user_id WHERE ur.role = 'admin' AND u.deleted_at IS NULL) as admins,
+        (SELECT COUNT(*) FROM users u WHERE ${pendingWhere.replace(/\n/g, ' ')}) as pending_registrations
       FROM users
     `);
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: result.rows[0],
     });
   } catch (error) {
     console.error('Error en getUserStats:', error);
@@ -354,7 +632,11 @@ module.exports = {
   updateUser,
   deleteUser,
   changeUserRole,
+  updateUserRoles,
   activateUser,
   deactivateUser,
+  getPendingRegistrations,
+  approveRegistration,
+  rejectRegistration,
   getUserStats,
 };

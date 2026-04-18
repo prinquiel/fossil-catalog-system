@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 const { processImage, deleteImage } = require('../services/imageProcessor');
+const { isExplorerOnlyScope } = require('../utils/roles');
 const path = require('path');
 
 const uploadMedia = async (req, res) => {
@@ -36,7 +37,7 @@ const uploadMedia = async (req, res) => {
 
     const fossil = fossilCheck.rows[0];
 
-    if (req.user.role === 'explorer' && fossil.created_by !== req.user.id) {
+    if (isExplorerOnlyScope(req.user.roles) && fossil.created_by !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'No tienes permiso para subir imágenes a este fósil'
@@ -141,7 +142,7 @@ const deleteMedia = async (req, res) => {
 
     const media = mediaResult.rows[0];
 
-    if (req.user.role === 'explorer' && media.created_by !== req.user.id) {
+    if (isExplorerOnlyScope(req.user.roles) && media.created_by !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'No tienes permiso para eliminar esta imagen'

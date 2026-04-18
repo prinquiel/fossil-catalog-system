@@ -24,7 +24,14 @@ const getFossilStats = async (req, res) => {
 };
 
 const getUserStats = async (req, res) => {
-  const byRole = await query('SELECT role, COUNT(*)::int AS total FROM users WHERE deleted_at IS NULL GROUP BY role ORDER BY role', []);
+  const byRole = await query(
+    `SELECT ur.role, COUNT(DISTINCT ur.user_id)::int AS total
+     FROM user_roles ur
+     JOIN users u ON u.id = ur.user_id AND u.deleted_at IS NULL
+     GROUP BY ur.role
+     ORDER BY ur.role`,
+    []
+  );
   return res.json({ success: true, data: byRole.rows });
 };
 

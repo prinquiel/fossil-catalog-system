@@ -1,22 +1,38 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { query } = require('../config/database');
+const { pool, query } = require('../config/database');
+const {
+  getRolesForUser,
+  replaceUserRoles,
+  parseRegistrationRoles,
+  mapUserWithRoles,
+  primaryRole,
+} = require('../utils/roles');
 
-const safeUserFields = `
-  id, username, email, role, first_name, last_name, country, profession, phone, workplace, created_at, updated_at
+const safeUserColumns = `
+  id, username, email, first_name, last_name, country, profession, phone, workplace,
+  registration_status, approved_at, approved_by, rejection_reason,
+  created_at, updated_at
 `;
+
+async function buildSafeUser(userRow) {
+  const roles = await getRolesForUser(userRow.id);
+  const { password_hash, ...rest } = userRow;
+  return mapUserWithRoles(rest, roles);
+}
 
 const register = async (req, res) => {
   try {
-    const { username, email, password, role, first_name, last_name, country, profession, phone, workplace } = req.body;
+    const { username, email, password, first_name, last_name, country, profession, phone, workplace } = req.body;
     if (!username || !email || !password) {
       return res.status(400).json({ success: false, error: 'username, email y password son requeridos' });
     }
 
-    const validRoles = ['explorer', 'researcher', 'admin'];
-    if (role && !validRoles.includes(role)) {
-      return res.status(400).json({ success: false, error: 'Rol invalido. Debe ser: explorer, researcher o admin' });
+    const parsed = parseRegistrationRoles(req.body);
+    if (parsed.error) {
+      return res.status(400).json({ success: false, error: parsed.error });
     }
+    const requestedRoles = parsed.roles;
 
     const dup = await query(
       `SELECT email, username FROM users
@@ -46,22 +62,71 @@ const register = async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const created = await query(
-      `INSERT INTO users (username, email, password_hash, role, first_name, last_name, country, profession, phone, workplace)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING ${safeUserFields}`,
-      [username, email, passwordHash, role || 'explorer', first_name, last_name, country, profession, phone, workplace]
-    );
 
-    const user = created.rows[0];
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE,
-    });
+    const v = (x) => (x === undefined || x === '' ? null : x);
 
-    return res.status(201).json({ success: true, message: 'Usuario registrado exitosamente', data: { user, token } });
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const created = await client.query(
+        `INSERT INTO users (username, email, password_hash, first_name, last_name, country, profession, phone, workplace, registration_status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending')
+         RETURNING ${safeUserColumns}`,
+        [username, email, passwordHash, v(first_name), v(last_name), v(country), v(profession), v(phone), v(workplace)]
+      );
+
+      const userRow = created.rows[0];
+      await replaceUserRoles(client, userRow.id, requestedRoles);
+      await client.query('COMMIT');
+
+      const roles = await getRolesForUser(userRow.id);
+      const user = mapUserWithRoles(userRow, roles);
+
+      return res.status(201).json({
+        success: true,
+        message:
+          'Registro recibido. Un administrador debe aprobar tu cuenta antes de que puedas iniciar sesión.',
+        data: { user },
+      });
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error('Error en register:', error);
-    return res.status(500).json({ success: false, error: 'Error al registrar usuario' });
+    if (error.code === '23505') {
+      return res.status(400).json({ success: false, error: 'El email o username ya esta registrado' });
+    }
+    if (error.code === '42P01') {
+      return res.status(500).json({
+        success: false,
+        error:
+          'Falta una tabla en la base de datos (ej. user_roles). Ejecuta las migraciones en database/migrations/.',
+      });
+    }
+    if (error.code === '23502') {
+      return res.status(500).json({
+        success: false,
+        error:
+          'Esquema desactualizado: suele indicar que users.role sigue como NOT NULL. Ejecuta database/migrations/004_user_roles.sql.',
+      });
+    }
+    if (error.code === '42501') {
+      return res.status(500).json({
+        success: false,
+        error:
+          'Permiso denegado en la base de datos (tabla user_roles). Con usuario postgres ejecuta database/migrations/006_grant_user_roles_permissions.sql (ajusta el nombre del rol si no es fossil_admin).',
+        code: 'INSUFFICIENT_PRIVILEGE',
+      });
+    }
+    const showDetails = process.env.NODE_ENV !== 'production';
+    return res.status(500).json({
+      success: false,
+      error: showDetails ? error.message || 'Error al registrar usuario' : 'Error al registrar usuario',
+      code: showDetails ? error.code : undefined,
+    });
   }
 };
 
@@ -83,24 +148,40 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Credenciales invalidas' });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE,
-    });
+    if (user.registration_status === 'pending') {
+      return res.status(403).json({
+        success: false,
+        error: 'Tu cuenta esta pendiente de aprobacion por un administrador.',
+        code: 'REGISTRATION_PENDING',
+      });
+    }
 
-    const safeUser = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      country: user.country,
-      profession: user.profession,
-      phone: user.phone,
-      workplace: user.workplace,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-    };
+    if (user.registration_status === 'rejected') {
+      return res.status(403).json({
+        success: false,
+        error: 'Tu registro fue rechazado. Contacta al administrador si necesitas ayuda.',
+        code: 'REGISTRATION_REJECTED',
+        details: user.rejection_reason ? { rejection_reason: user.rejection_reason } : undefined,
+      });
+    }
+
+    const roles = await getRolesForUser(user.id);
+    if (!roles || roles.length === 0) {
+      return res.status(403).json({
+        success: false,
+        error:
+          'Tu cuenta no tiene roles asignados. Un administrador debe asignarte al menos un rol en user_roles (o ejecuta las migraciones / seed si acabas de actualizar el esquema).',
+        code: 'NO_ROLES',
+      });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, roles, role: primaryRole(roles) },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRE }
+    );
+
+    const safeUser = await buildSafeUser(user);
 
     return res.json({ success: true, message: 'Login exitoso', data: { user: safeUser, token } });
   } catch (error) {
@@ -111,11 +192,12 @@ const login = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
-    const me = await query(`SELECT ${safeUserFields} FROM users WHERE id = $1 AND deleted_at IS NULL`, [req.user.id]);
+    const me = await query(`SELECT ${safeUserColumns} FROM users WHERE id = $1 AND deleted_at IS NULL`, [req.user.id]);
     if (me.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
     }
-    return res.json({ success: true, data: me.rows[0] });
+    const roles = await getRolesForUser(req.user.id);
+    return res.json({ success: true, data: mapUserWithRoles(me.rows[0], roles) });
   } catch (error) {
     console.error('Error en getMe:', error);
     return res.status(500).json({ success: false, error: 'Error al obtener informacion del usuario' });

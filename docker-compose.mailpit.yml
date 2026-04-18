@@ -1,0 +1,10 @@
+# SMTP de prueba + bandeja web. Uso:
+#   docker compose -f docker-compose.mailpit.yml up -d
+# Luego en backend/.env: SMTP_HOST=127.0.0.1 SMTP_PORT=1025 SMTP_NO_AUTH=true
+# Bandeja: http://localhost:8025
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'

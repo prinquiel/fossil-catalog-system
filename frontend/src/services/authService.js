@@ -3,9 +3,12 @@ import api from './api';
 export const authService = {
   async register(userData) {
     const response = await api.post('/auth/register', userData);
-    if (response.data.success && response.data.data.token) {
+    if (response.data.success && response.data.data?.token) {
       localStorage.setItem('token', response.data.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
+    } else if (response.data.success) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
     return response.data;
   },

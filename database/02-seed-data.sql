@@ -33,12 +33,20 @@ ALTER SEQUENCE taxonomic_kingdoms_id_seq RESTART WITH 1;
 -- USUARIOS
 -- ============================================
 -- Password para todos: Admin123! (hash con bcrypt)
-INSERT INTO users (username, email, password_hash, role, first_name, last_name, country, profession, workplace) VALUES
-('admin', 'admin@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'admin', 'Admin', 'Sistema', 'Costa Rica', 'Administrador de Sistema', 'Centro de Investigación Paleontológica'),
-('investigador1', 'carlos.mendez@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'researcher', 'Dr. Carlos', 'Méndez', 'Costa Rica', 'Paleontólogo', 'Universidad de Costa Rica'),
-('investigador2', 'maria.rodriguez@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'researcher', 'Dra. María', 'Rodríguez', 'Costa Rica', 'Geóloga', 'Universidad Nacional'),
-('explorador1', 'jose.gonzalez@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'explorer', 'José', 'González', 'Costa Rica', 'Geólogo de Campo', 'Independiente'),
-('explorador2', 'ana.jimenez@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'explorer', 'Ana', 'Jiménez', 'Costa Rica', 'Estudiante de Geología', 'Universidad de Costa Rica');
+INSERT INTO users (username, email, password_hash, registration_status, first_name, last_name, country, profession, workplace) VALUES
+('admin', 'admin@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'approved', 'Admin', 'Sistema', 'Costa Rica', 'Administrador de Sistema', 'Centro de Investigación Paleontológica'),
+('investigador1', 'carlos.mendez@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'approved', 'Dr. Carlos', 'Méndez', 'Costa Rica', 'Paleontólogo', 'Universidad de Costa Rica'),
+('investigador2', 'maria.rodriguez@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'approved', 'Dra. María', 'Rodríguez', 'Costa Rica', 'Geóloga', 'Universidad Nacional'),
+('explorador1', 'jose.gonzalez@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'approved', 'José', 'González', 'Costa Rica', 'Geólogo de Campo', 'Independiente'),
+('explorador2', 'ana.jimenez@unadeca.net', '$2a$10$rQ8KvVPzJ.KqVx6kH9vEzOX8pGqX7nwYNWzJ3VH0cK3WXBmkEu7Ga', 'approved', 'Ana', 'Jiménez', 'Costa Rica', 'Estudiante de Geología', 'Universidad de Costa Rica');
+
+INSERT INTO user_roles (user_id, role) VALUES
+(1, 'admin'),
+(2, 'researcher'),
+(2, 'explorer'),
+(3, 'researcher'),
+(4, 'explorer'),
+(5, 'explorer');
 
 -- ============================================
 -- ERAS GEOLÓGICAS
