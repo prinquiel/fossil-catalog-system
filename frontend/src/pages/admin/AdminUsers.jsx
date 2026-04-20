@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { adminService } from '../../services/adminService';
+import { getApiErrorMessage } from '../../utils/apiError.js';
 
 const STATUS_LABEL = {
   pending: 'Pendiente',
@@ -30,8 +31,8 @@ function AdminUsers() {
       } else {
         toast.error(res.error || 'Error al cargar usuarios');
       }
-    } catch {
-      toast.error('Error al cargar usuarios');
+    } catch (e) {
+      toast.error(getApiErrorMessage(e));
     } finally {
       setLoading(false);
     }

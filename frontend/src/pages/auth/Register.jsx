@@ -1,161 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext';
-import './Auth.css';
-
-const resolveRolePath = (role) => {
-  if (role === 'admin') return '/admin/dashboard';
-  if (role === 'researcher') return '/researcher/dashboard';
-  return '/explorer/dashboard';
-};
-
-function Register() {
-  const navigate = useNavigate();
-  const { register } = useAuth();
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    role: 'explorer',
-    first_name: '',
-    last_name: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!formData.username || !formData.email || !formData.password) {
-      toast.error('Completa username, email y contraseña.');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      toast.error('La contraseña debe tener al menos 8 caracteres.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await register(formData);
-      const userRole = response?.data?.user?.role;
-      toast.success('Cuenta creada correctamente.');
-      navigate(resolveRolePath(userRole));
-    } catch (error) {
-      const message = error?.response?.data?.error || 'No se pudo completar el registro.';
-      toast.error(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <main className="auth-shell">
-      <section className="auth-panel">
-        <p className="auth-kicker">Nuevo usuario</p>
-        <h1>Crear cuenta</h1>
-        <p className="auth-subtitle">
-          Registra tu perfil para colaborar en documentación y análisis paleontológico.
-        </p>
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label htmlFor="username">
-            Nombre de usuario
-            <input
-              id="username"
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              autoComplete="username"
-              placeholder="usuario_unico"
-            />
-          </label>
-
-          <label htmlFor="email">
-            Correo electrónico
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              autoComplete="email"
-              placeholder="usuario@dominio.com"
-            />
-          </label>
-
-          <label htmlFor="password">
-            Contraseña
-            <input
-              id="password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              autoComplete="new-password"
-              placeholder="Mínimo 8 caracteres"
-            />
-          </label>
-
-          <div className="auth-row">
-            <label htmlFor="first_name">
-              Nombre
-              <input
-                id="first_name"
-                type="text"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                placeholder="Nombre"
-              />
-            </label>
-
-            <label htmlFor="last_name">
-              Apellido
-              <input
-                id="last_name"
-                type="text"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                placeholder="Apellido"
-              />
-            </label>
-          </div>
-
-          <label htmlFor="role">
-            Rol
-            <select id="role" name="role" value={formData.role} onChange={handleChange}>
-              <option value="explorer">Explorer</option>
-              <option value="researcher">Researcher</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-
-          <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
-          </button>
-        </form>
-
-        <p className="auth-footnote">
-          ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
-        </p>
-      </section>
-import { Link, useLocation } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
+import SiteHeader from '../../components/layout/SiteHeader.jsx';
 import './AuthPages.css';
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function Register() {
-  const location = useLocation();
   const { register } = useAuth();
 
   const [submitted, setSubmitted] = useState(false);
@@ -176,6 +28,8 @@ function Register() {
   const [roleProfile, setRoleProfile] = useState('explorer');
 
   const [fieldErrors, setFieldErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const validate = () => {
     const err = {};
@@ -196,8 +50,7 @@ function Register() {
       return;
     }
 
-    const roles =
-      roleProfile === 'both' ? ['explorer', 'researcher'] : [roleProfile];
+    const roles = roleProfile === 'both' ? ['explorer', 'researcher'] : [roleProfile];
 
     const payload = {
       username: username.trim(),
@@ -218,6 +71,7 @@ function Register() {
       if (data.success) {
         setSubmittedEmail(email.trim());
         setSubmitted(true);
+        toast.success('Solicitud enviada');
       }
     } catch (error) {
       const msg = error.response?.data?.error || 'No se pudo completar el registro';
@@ -230,21 +84,20 @@ function Register() {
   if (submitted) {
     return (
       <main className="auth-shell">
-        <nav className="auth-nav" aria-label="Menu principal">
-          <Link to="/">Inicio</Link>
-          <Link to="/register" className={location.pathname === '/register' ? 'auth-nav-active' : undefined}>
-            Registrarse
-          </Link>
-          <Link to="/login" className={location.pathname === '/login' ? 'auth-nav-active' : undefined}>
-            Iniciar sesión
-          </Link>
-        </nav>
+        <SiteHeader />
 
         <div className="auth-main">
           <div className="auth-card">
             <div className="auth-success">
               <div className="auth-success-icon" aria-hidden="true">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
@@ -257,8 +110,9 @@ function Register() {
               <div className="auth-email-callout">
                 <strong>Notificación por correo</strong>
                 <p>
-                  Cuando un administrador apruebe tu registro, recibirás un <strong>correo de confirmación</strong>{' '}
-                  en esa dirección (si el servidor de correo está configurado). Revisa también la carpeta de spam.
+                  Cuando un administrador apruebe tu registro, recibirás un{' '}
+                  <strong>correo de confirmación</strong> en esa dirección (si el servidor de correo está
+                  configurado). Revisa también la carpeta de spam.
                 </p>
               </div>
               <div className="auth-success-actions">
@@ -278,15 +132,7 @@ function Register() {
 
   return (
     <main className="auth-shell">
-      <nav className="auth-nav" aria-label="Menu principal">
-        <Link to="/">Inicio</Link>
-        <Link to="/register" className={location.pathname === '/register' ? 'auth-nav-active' : undefined}>
-          Registrarse
-        </Link>
-        <Link to="/login" className={location.pathname === '/login' ? 'auth-nav-active' : undefined}>
-          Iniciar sesión
-        </Link>
-      </nav>
+      <SiteHeader />
 
       <div className="auth-main">
         <p className="auth-eyebrow">Cuenta de acceso</p>
@@ -305,17 +151,19 @@ function Register() {
                   id="reg-first"
                   type="text"
                   autoComplete="given-name"
+                  placeholder="Nombre"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                 />
                 {fieldErrors.firstName && <p className="auth-field-error">{fieldErrors.firstName}</p>}
               </div>
               <div className="auth-field">
-                <label htmlFor="reg-last">Apellidos</label>
+                <label htmlFor="reg-last">Apellido</label>
                 <input
                   id="reg-last"
                   type="text"
                   autoComplete="family-name"
+                  placeholder="Apellido"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                 />
@@ -329,6 +177,7 @@ function Register() {
                 id="reg-user"
                 type="text"
                 autoComplete="username"
+                placeholder="Usuario"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -341,6 +190,7 @@ function Register() {
                 id="reg-email"
                 type="email"
                 autoComplete="email"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -351,25 +201,51 @@ function Register() {
             <div className="auth-row-2">
               <div className="auth-field">
                 <label htmlFor="reg-pass">Contraseña</label>
-                <input
-                  id="reg-pass"
-                  type="password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="auth-password-row">
+                  <input
+                    id="reg-pass"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="Mínimo 8 caracteres"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="auth-toggle-visibility"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-pressed={showPassword}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {showPassword ? 'Ocultar' : 'Ver'}
+                  </button>
+                </div>
                 {fieldErrors.password && <p className="auth-field-error">{fieldErrors.password}</p>}
               </div>
               <div className="auth-field">
                 <label htmlFor="reg-pass2">Confirmar contraseña</label>
-                <input
-                  id="reg-pass2"
-                  type="password"
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                {fieldErrors.confirmPassword && <p className="auth-field-error">{fieldErrors.confirmPassword}</p>}
+                <div className="auth-password-row">
+                  <input
+                    id="reg-pass2"
+                    type={showConfirm ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="Confirmar contraseña"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="auth-toggle-visibility"
+                    onClick={() => setShowConfirm((v) => !v)}
+                    aria-pressed={showConfirm}
+                    aria-label={showConfirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
+                  >
+                    {showConfirm ? 'Ocultar' : 'Ver'}
+                  </button>
+                </div>
+                {fieldErrors.confirmPassword && (
+                  <p className="auth-field-error">{fieldErrors.confirmPassword}</p>
+                )}
               </div>
             </div>
 
@@ -387,8 +263,8 @@ function Register() {
                 <option value="both">Explorador e investigador</option>
               </select>
               <p id="reg-role-hint" className="auth-field-hint" style={{ marginTop: 8 }}>
-                Explorador: registro de hallazgos en campo. Investigador: consulta del catálogo y estudios. Puedes
-                solicitar ambos permisos en una sola cuenta.
+                Explorador: registro de hallazgos en campo. Investigador: consulta del catálogo y estudios.
+                Puedes solicitar ambos permisos en una sola cuenta.
               </p>
             </div>
 

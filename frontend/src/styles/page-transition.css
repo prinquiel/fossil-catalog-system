@@ -1,0 +1,27 @@
+.route-transition {
+  animation: routeEnter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.role-main-inner,
+.admin-main-inner {
+  animation: routeEnter 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes routeEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-transition,
+  .role-main-inner,
+  .admin-main-inner {
+    animation: none;
+  }
+}

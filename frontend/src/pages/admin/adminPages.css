@@ -52,7 +52,10 @@
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(91, 76, 58, 0.14);
   box-shadow: 0 8px 24px rgba(91, 76, 58, 0.08);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
   animation: adminCardIn 0.6s ease-out backwards;
 }
 
@@ -103,7 +106,10 @@
   text-decoration: none;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .admin-btn:disabled {
@@ -182,7 +188,9 @@
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(91, 76, 58, 0.1);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   animation: adminCardIn 0.5s ease-out backwards;
 }
 

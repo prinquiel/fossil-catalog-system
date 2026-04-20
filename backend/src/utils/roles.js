@@ -2,6 +2,20 @@ const { pool } = require('../config/database');
 
 const VALID_ROLES = ['explorer', 'researcher', 'admin'];
 
+/** Valores legados o manuales en `user_roles` que deben tratarse como `admin` en JWT y middleware. */
+const ADMIN_ROLE_ALIASES = new Set(['superadmin', 'super_admin']);
+
+function canonicalizeAuthRoles(roles) {
+  if (!Array.isArray(roles)) return [];
+  const out = [];
+  for (const r of roles) {
+    if (typeof r !== 'string' || !r.trim()) continue;
+    const mapped = ADMIN_ROLE_ALIASES.has(r.toLowerCase()) ? 'admin' : r;
+    if (!out.includes(mapped)) out.push(mapped);
+  }
+  return out;
+}
+
 function primaryRole(roles) {
   if (!roles || roles.length === 0) return 'explorer';
   if (roles.includes('admin')) return 'admin';
@@ -98,6 +112,7 @@ function isExplorerOnlyScope(roles) {
 
 module.exports = {
   VALID_ROLES,
+  canonicalizeAuthRoles,
   primaryRole,
   getRolesForUser,
   replaceUserRoles,

@@ -29,11 +29,19 @@ git --version
 
 ```text
 fossil-catalog-system/
-├── backend/      # API Express + PostgreSQL
-├── frontend/     # React + Vite
+├── package.json  # Solo scripts que delegan a frontend/ y backend/
+├── backend/      # API Express + PostgreSQL (npm install aqui)
+├── frontend/     # React + Vite (npm install aqui)
 ├── database/     # Scripts SQL (schema + seed)
+├── docs/         # Guías (pgAdmin, Postman, resumen backend)
 └── README.md
 ```
+
+Guías útiles:
+
+- [docs/DEVTOOLS.md](docs/DEVTOOLS.md) — pgAdmin 4, Postman.
+- [docs/DATABASE_USERS.md](docs/DATABASE_USERS.md) — roles, registro y `POST /api/users`.
+- [docs/BACKEND_OVERVIEW.md](docs/BACKEND_OVERVIEW.md) — novedades del backend (roles, registro pendiente, health, correo).
 
 ---
 
@@ -156,22 +164,28 @@ Frontend esperado en:
 
 ## 6) Flujo recomendado de ejecucion diaria
 
+**Importante:** en la **raíz** del repo **no** hay `package.json` de la app; los comandos npm van dentro de **`backend/`** o **`frontend/`**. Si ejecutas `npm run dev` solo en la raíz sin usar los scripts de abajo, veras error `ENOENT` / no such file `package.json`.
+
 Cada vez que vuelvas al proyecto:
 
 1. Inicia PostgreSQL.
-2. En terminal 1:
+2. En terminal 1 (API):
 
 ```bash
 cd backend
 npm run dev
 ```
 
-3. En terminal 2:
+(O desde la raíz: `npm run dev:backend`.)
+
+3. En terminal 2 (interfaz):
 
 ```bash
 cd frontend
 npm run dev
 ```
+
+(O desde la raíz: `npm run dev:frontend`.)
 
 4. Abre `http://localhost:5173`.
 
@@ -179,15 +193,19 @@ npm run dev
 
 ## 7) Endpoints y coleccion Postman
 
-Existe una coleccion Postman en:
+Una sola coleccion: **`backend/postman/fossil-catalog-api.postman_collection.json`**. Variables `baseUrl` y `token` (JWT tras login como admin). Incluye ejemplos de registro, login seed, creacion de usuario admin y rutas de usuarios pendientes.
 
-- `backend/postman/fossil-catalog-api.postman_collection.json`
-
-Importala en Postman para probar rutas rapidamente.
+Importar en Postman: **File → Import**. Mas detalle: [docs/DEVTOOLS.md](docs/DEVTOOLS.md). Usuarios y roles: [docs/DATABASE_USERS.md](docs/DATABASE_USERS.md).
 
 ---
 
 ## 8) Problemas comunes (y solucion)
+
+- **`npm run dev` / `npm start` en la raíz: ENOENT package.json**  
+  Entra a `frontend/` o `backend/`, o usa desde la raíz: `npm run dev:frontend`, `npm run dev:backend`, `npm run start:backend`.
+
+- **El navegador abre `http://localhost:5173/...` pero “no arranque nada” en tus terminales**  
+  Suele ser un **Vite u otro proceso que quedo abierto** en segundo plano, otra pestaña de terminal, o Cursor con el servidor ya levantado. Comprueba con `lsof -i :5173` (macOS) quien usa el puerto; para detenerlo, mata ese proceso o cierra la terminal donde quedo `npm run dev`.
 
 - **Error `EADDRINUSE` en backend**  
   El puerto ya esta ocupado. Cierra procesos previos o cambia `PORT` en `backend/.env`.
@@ -200,6 +218,12 @@ Importala en Postman para probar rutas rapidamente.
 
 - **Cambios en DB no aparecen**  
   Si cambias schema, vuelve a correr scripts SQL o crea migracion manual.
+
+- **`column "registration_status" of relation "users" does not exist`**  
+  La BD es anterior al esquema nuevo. Ejecuta en orden `database/migrations/003` … `006` (ver [docs/DATABASE_USERS.md](docs/DATABASE_USERS.md)).
+
+- **Registro publico: "Solo se permiten roles explorer y researcher"**  
+  Es normal: no podes pedir `admin` en `/api/auth/register`. Crear admins con **POST /api/users** y token de admin (misma guia).
 
 ---
 

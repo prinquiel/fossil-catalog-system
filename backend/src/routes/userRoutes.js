@@ -17,9 +17,10 @@ const {
   getUserStats,
 } = require('../controllers/userController');
 
-router.get('/', protect, authorize('admin'), getAllUsers);
+// Rutas fijas antes de `GET /` y `/:id` para evitar colisiones con parámetros.
 router.get('/stats', protect, authorize('admin'), getUserStats);
 router.get('/pending', protect, authorize('admin'), getPendingRegistrations);
+router.get('/', protect, authorize('admin'), getAllUsers);
 router.post('/', protect, authorize('admin'), createUser);
 router.patch('/:id/role', protect, authorize('admin'), changeUserRole);
 router.patch('/:id/roles', protect, authorize('admin'), updateUserRoles);

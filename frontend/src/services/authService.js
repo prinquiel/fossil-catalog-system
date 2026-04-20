@@ -27,9 +27,14 @@ export const authService = {
     return response.data;
   },
 
-  logout() {
+  clearSession() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+  },
+
+  /** @deprecated Prefer AuthContext.logout() para evitar recarga completa */
+  logout() {
+    this.clearSession();
     window.location.href = '/';
   },
 

@@ -20,4 +20,8 @@ export const adminService = {
   getUsers(params) {
     return api.get('/users', { params }).then((r) => r.data);
   },
+
+  createUser(payload) {
+    return api.post('/users', payload).then((r) => r.data);
+  },
 };

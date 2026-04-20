@@ -1,17 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap');
-
 .admin-shell {
-  --clay-deep: #5b4c3a;
-  --earth-brown: #8a7356;
-  --mushroom: #c4b39a;
-  --putty: #ded1ba;
-  --bone: #f4efe6;
-  --ruby-dark: #9f1838;
-  --ruby-dark-hover: #86122f;
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-ui: 'Source Sans 3', system-ui, sans-serif;
-
   min-height: 100vh;
+  font-family: var(--font-body);
   background: radial-gradient(circle at top right, #e7dccb 0%, var(--bone) 38%, #f9f5ee 100%);
   color: var(--clay-deep);
   position: relative;
@@ -104,7 +93,10 @@
   background: rgba(255, 255, 255, 0.55);
   color: var(--clay-deep);
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .admin-menu-btn:hover {
@@ -205,7 +197,7 @@
 }
 
 .admin-sidebar__tag {
-  font-family: var(--font-ui);
+  font-family: var(--font-body);
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -221,7 +213,7 @@
 }
 
 .admin-nav__link {
-  font-family: var(--font-ui);
+  font-family: var(--font-body);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -231,8 +223,27 @@
   color: var(--clay-deep);
   font-weight: 600;
   font-size: 0.92rem;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
   border: 1px solid transparent;
-  transition: background 0.22s ease, border-color 0.22s ease, transform 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-nav__link,
+.admin-nav__link:visited {
+  color: var(--clay-deep);
+}
+
+.admin-nav__link *:not(svg) {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  color: inherit;
 }
 
 .admin-nav__link:hover {
@@ -261,7 +272,7 @@
 }
 
 .admin-user-chip {
-  font-family: var(--font-ui);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   color: var(--earth-brown);
   margin-bottom: 10px;
@@ -269,7 +280,7 @@
 }
 
 .admin-btn-ghost {
-  font-family: var(--font-ui);
+  font-family: var(--font-body);
   width: 100%;
   padding: 10px 14px;
   border-radius: 12px;
@@ -278,7 +289,9 @@
   color: var(--clay-deep);
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .admin-btn-ghost:hover {
@@ -289,7 +302,7 @@
 .admin-link-home {
   display: inline-block;
   margin-top: 10px;
-  font-family: var(--font-ui);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--ruby-dark);
   text-decoration: none;

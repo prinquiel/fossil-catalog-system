@@ -13,15 +13,25 @@
 }
 
 .catalog-nav-link {
+  font-family: inherit;
   text-decoration: none;
   font-weight: 700;
   font-size: 0.88rem;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
   padding: 8px 14px;
   border-radius: 999px;
   color: #5b4433;
   border: 1px solid rgba(91, 68, 51, 0.2);
   background: rgba(255, 255, 255, 0.55);
-  transition: transform 160ms ease, background 160ms ease;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.catalog-nav-link:visited {
+  color: #5b4433;
 }
 
 .catalog-nav-link:hover {
@@ -37,6 +47,7 @@
 .catalog-shell {
   min-height: 100vh;
   padding: 28px 20px 56px;
+  font-family: var(--font-body);
   background:
     radial-gradient(120% 90% at 20% 0%, rgba(210, 181, 141, 0.28), transparent 50%),
     radial-gradient(100% 70% at 100% 0%, rgba(140, 103, 73, 0.2), transparent 45%),
@@ -73,6 +84,7 @@
   margin: 8px 0 10px;
   font-size: clamp(1.85rem, 5vw, 3rem);
   line-height: 1.1;
+  font-family: var(--font-display);
 }
 
 .catalog-subtitle {
@@ -96,7 +108,10 @@
   padding: 10px 16px;
   font-weight: 700;
   border: 1px solid transparent;
-  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
 }
 
 .catalog-btn:hover {
@@ -226,13 +241,22 @@
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(91, 68, 51, 0.08);
   transform-style: preserve-3d;
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
 }
 
 .fossil-card:hover {
   transform: perspective(900px) rotateX(2deg) rotateY(-2deg) translateY(-2px);
   box-shadow: 0 14px 30px rgba(91, 68, 51, 0.16);
   border-color: rgba(108, 80, 58, 0.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fossil-card:hover {
+    transform: none;
+  }
 }
 
 .fossil-card:focus-visible {
@@ -242,7 +266,9 @@
 
 .fossil-card.active {
   border-color: rgba(91, 68, 51, 0.55);
-  box-shadow: 0 14px 28px rgba(78, 58, 42, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.56);
+  box-shadow:
+    0 14px 28px rgba(78, 58, 42, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.56);
 }
 
 .fossil-card-code {
@@ -333,6 +359,16 @@
 .catalog-detail dd {
   margin: 4px 0 0;
   color: #4e3a28;
+}
+
+.catalog-detail-footnote {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(115, 83, 57, 0.18);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #7a6652;
+  font-style: italic;
 }
 
 .detail-empty {

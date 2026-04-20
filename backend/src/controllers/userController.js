@@ -129,7 +129,7 @@ const createUser = async (req, res) => {
     }
 
     const userExists = await pool.query(
-      'SELECT * FROM users WHERE email = $1 OR username = $2',
+      'SELECT id FROM users WHERE deleted_at IS NULL AND (email = $1 OR username = $2)',
       [email, username]
     );
 
@@ -142,6 +142,7 @@ const createUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
+    const nullIfEmpty = (v) => (v === undefined || v === null || v === '' ? null : v);
 
     const client = await pool.connect();
     try {
@@ -149,9 +150,20 @@ const createUser = async (req, res) => {
 
       const result = await client.query(
         `INSERT INTO users (username, email, password_hash, first_name, last_name, country, profession, phone, workplace, registration_status, approved_at, approved_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'approved', CURRENT_TIMESTAMP, $11)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'approved', CURRENT_TIMESTAMP, $10)
          RETURNING id, username, email, first_name, last_name, created_at, registration_status, approved_at, approved_by`,
-        [username, email, password_hash, first_name, last_name, country, profession, phone, workplace, req.user.id]
+        [
+          username,
+          email,
+          password_hash,
+          nullIfEmpty(first_name),
+          nullIfEmpty(last_name),
+          nullIfEmpty(country),
+          nullIfEmpty(profession),
+          nullIfEmpty(phone),
+          nullIfEmpty(workplace),
+          req.user.id,
+        ]
       );
 
       const userRow = result.rows[0];
@@ -172,7 +184,9 @@ const createUser = async (req, res) => {
     }
   } catch (error) {
     console.error('Error en createUser:', error);
-    res.status(500).json({ success: false, error: 'Error al crear usuario' });
+    const detail =
+      process.env.NODE_ENV !== 'production' && error.message ? ` (${error.message})` : '';
+    res.status(500).json({ success: false, error: `Error al crear usuario${detail}` });
   }
 };
 

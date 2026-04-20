@@ -1,68 +1,48 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext';
-import './Auth.css';
-
-const resolveRolePath = (role) => {
-  if (role === 'admin') return '/admin/dashboard';
-  if (role === 'researcher') return '/researcher/dashboard';
-  return '/explorer/dashboard';
-};
-
-function Login() {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!formData.email || !formData.password) {
-      toast.error('Completa email y contraseña.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await login(formData);
-      const userRole = response?.data?.user?.role;
-      toast.success('Sesión iniciada correctamente.');
-      navigate(resolveRolePath(userRole));
-    } catch (error) {
-      const message = error?.response?.data?.error || 'No se pudo iniciar sesión.';
-      toast.error(message);
-    } finally {
-      setIsSubmitting(false);
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
+import SiteHeader from '../../components/layout/SiteHeader.jsx';
+import { workspaceHomePath } from '../../utils/workspace.js';
 import './AuthPages.css';
 
 function postLoginPath(user) {
-  const r = user?.roles || (user?.role ? [user.role] : []);
-  if (r.includes('admin')) return '/admin/dashboard';
-  if (r.includes('researcher')) return '/researcher/dashboard';
-  if (r.includes('explorer')) return '/explorer/dashboard';
-  return '/catalog';
+  return workspaceHomePath(user) || '/catalog';
+}
+
+/** @param {string | null} raw */
+function safeInternalPath(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  let path = raw;
+  try {
+    path = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+  if (!path.startsWith('/') || path.startsWith('//')) return null;
+  return path;
 }
 
 function Login() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('expired') === '1') {
+      toast.error('La sesión expiró o ya no es válida. Inicie sesión de nuevo.');
+      const next = new URLSearchParams(searchParams);
+      next.delete('expired');
+      next.delete('from');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,7 +56,8 @@ function Login() {
       const data = await login({ email: email.trim(), password });
       if (data.success && data.data?.user) {
         toast.success('Sesión iniciada');
-        const to = location.state?.from?.pathname || postLoginPath(data.data.user);
+        const fromQuery = safeInternalPath(searchParams.get('from'));
+        const to = location.state?.from?.pathname || fromQuery || postLoginPath(data.data.user);
         navigate(to, { replace: true });
       }
     } catch (error) {
@@ -103,65 +84,14 @@ function Login() {
 
   return (
     <main className="auth-shell">
-      <section className="auth-panel">
-        <p className="auth-kicker">Acceso al sistema</p>
-        <h1>Iniciar sesión</h1>
-        <p className="auth-subtitle">
-          Ingresa con tus credenciales para consultar, publicar y administrar hallazgos fósiles.
-        </p>
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label htmlFor="email">
-            Correo electrónico
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              autoComplete="email"
-              placeholder="usuario@dominio.com"
-            />
-          </label>
-
-          <label htmlFor="password">
-            Contraseña
-            <input
-              id="password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              autoComplete="current-password"
-              placeholder="Tu contraseña"
-            />
-          </label>
-
-          <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Ingresando...' : 'Entrar'}
-          </button>
-        </form>
-
-        <p className="auth-footnote">
-          ¿No tienes cuenta? <Link to="/register">Regístrate aquí</Link>
-        </p>
-      </section>
-      <nav className="auth-nav" aria-label="Menu principal">
-        <Link to="/">Inicio</Link>
-        <Link to="/register" className={location.pathname === '/register' ? 'auth-nav-active' : undefined}>
-          Registrarse
-        </Link>
-        <Link to="/login" className={location.pathname === '/login' ? 'auth-nav-active' : undefined}>
-          Iniciar sesión
-        </Link>
-      </nav>
+      <SiteHeader />
 
       <div className="auth-main">
         <p className="auth-eyebrow">Bienvenido de nuevo</p>
         <h1 className="auth-title">Iniciar sesión</h1>
         <p className="auth-lead">
-          Accede con el correo y la contraseña de tu cuenta. Si acabas de registrarte, espera la aprobación del
-          administrador; recibirás un correo cuando tu acceso esté activo.
+          Accede con el correo y la contraseña de tu cuenta. Si acabas de registrarte, espera la aprobación
+          del administrador; recibirás un correo cuando tu acceso esté activo.
         </p>
 
         <div className="auth-card">
@@ -172,19 +102,32 @@ function Login() {
                 id="login-email"
                 type="email"
                 autoComplete="email"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="auth-field">
               <label htmlFor="login-pass">Contraseña</label>
-              <input
-                id="login-pass"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="auth-password-row">
+                <input
+                  id="login-pass"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="auth-toggle-visibility"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-pressed={showPassword}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? 'Ocultar' : 'Ver'}
+                </button>
+              </div>
             </div>
             <button type="submit" className="auth-submit" disabled={loading}>
               {loading ? 'Entrando…' : 'Entrar'}
@@ -193,6 +136,9 @@ function Login() {
 
           <p className="auth-footer-text">
             ¿No tienes cuenta? <Link to="/register">Crear cuenta</Link>
+          </p>
+          <p className="auth-footer-text auth-footer-muted">
+            ¿Solo quieres ver el archivo público? <Link to="/catalog">Ir al catálogo</Link>
           </p>
         </div>
       </div>

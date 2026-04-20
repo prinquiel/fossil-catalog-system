@@ -26,15 +26,19 @@ const PORT = process.env.PORT || 5001;
 // Seguridad
 app.use(helmet());
 
-// CORS
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  'http://localhost:3000',
+// CORS: Vite (:5173+), CRA (:3000); CLIENT_URL puede listar varios orígenes separados por coma
+const corsDefaultOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
+  'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
-].filter(Boolean);
+];
+const corsFromEnv = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const corsAllowedOrigins = [...new Set([...corsDefaultOrigins, ...corsFromEnv])];
 
 const isLocalhostOrigin = (origin) => {
   try {
@@ -47,36 +51,16 @@ const isLocalhostOrigin = (origin) => {
   }
 };
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Permite herramientas sin origen (curl, postman)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    // Vite puede usar 5174, 5175... si el puerto por defecto esta ocupado
-    if (process.env.NODE_ENV !== 'production' && isLocalhostOrigin(origin)) {
-      return callback(null, true);
-    }
-    console.warn(`CORS denegado para origen: ${origin}`);
-    return callback(null, false);
-  },
-  credentials: true,
-}));
-// CORS: Vite usa :5173, Create React App :3000; CLIENT_URL puede ser varios separados por coma
-const corsDefaultOrigins = ['http://localhost:5173', 'http://localhost:3000'];
-const corsFromEnv = (process.env.CLIENT_URL || '')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
-const corsAllowedOrigins = [...new Set([...corsDefaultOrigins, ...corsFromEnv])];
-
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || corsAllowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS: origen no permitido (${origin})`));
+      if (!origin) return callback(null, true);
+      if (corsAllowedOrigins.includes(origin)) return callback(null, true);
+      if (process.env.NODE_ENV !== 'production' && isLocalhostOrigin(origin)) {
+        return callback(null, true);
       }
+      console.warn(`CORS denegado para origen: ${origin}`);
+      return callback(null, false);
     },
     credentials: true,
   })
@@ -213,23 +197,22 @@ const startServer = async () => {
     const dbConnected = await testConnection();
     
     if (!dbConnected) {
-      console.error('❌ No se pudo conectar a la base de datos');
+      console.error('No se pudo conectar a la base de datos');
       process.exit(1);
     }
 
     // Iniciar servidor
     app.listen(PORT, () => {
       console.log('');
-      console.log('🚀 ========================================');
-      console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-      console.log('🚀 ========================================');
-      console.log(`📝 Entorno: ${process.env.NODE_ENV}`);
-      console.log(`💾 Base de datos: ${process.env.DB_NAME}`);
-      console.log('🚀 ========================================');
+      console.log('========================================');
+      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+      console.log('========================================');
+      console.log(`Entorno: ${process.env.NODE_ENV}`);
+      console.log(`Base de datos: ${process.env.DB_NAME}`);
       console.log('');
     });
   } catch (error) {
-    console.error('❌ Error al iniciar servidor:', error);
+    console.error('Error al iniciar servidor:', error);
     process.exit(1);
   }
 };

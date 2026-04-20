@@ -1,49 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import SiteHeader from '../../components/layout/SiteHeader.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { fossilService } from '../../services/fossilService';
 import './Catalog.css';
-
-const demoFossils = [
-  {
-    id: 'demo-1',
-    unique_code: 'CRI-ALA-SRM-FOS-10321',
-    name: 'Amonite de Punta Arenas',
-    category: 'FOS',
-    status: 'published',
-    description:
-      'Ejemplar espiralado conservado en matriz arenosa, hallado en un estrato marino de grano fino.',
-    geological_context: 'Jurásico tardío',
-    discovery_date: '2026-02-15',
-    created_at: '2026-02-16',
-    created_by_username: 'explorador1',
-  },
-  {
-    id: 'demo-2',
-    unique_code: 'CRI-CAR-TLP-PAL-54900',
-    name: 'Fragmento vertebral terrestre',
-    category: 'PAL',
-    status: 'pending',
-    description:
-      'Sección parcial con mineralización homogénea y patrón de compactación notable en sección transversal.',
-    geological_context: 'Cretácico temprano',
-    discovery_date: '2026-03-03',
-    created_at: '2026-03-04',
-    created_by_username: 'explorador2',
-  },
-  {
-    id: 'demo-3',
-    unique_code: 'CRI-GUA-NAN-ROC-22119',
-    name: 'Roca sedimentaria con impresión',
-    category: 'ROC',
-    status: 'published',
-    description:
-      'Lámina de roca con huella biótica superficial, útil para contexto estratigráfico comparativo.',
-    geological_context: 'Paleozoico superior',
-    discovery_date: '2026-01-09',
-    created_at: '2026-01-10',
-    created_by_username: 'investigador1',
-  },
-];
 
 const categoryLabels = {
   FOS: 'Fósil',
@@ -70,6 +30,7 @@ const formatDate = (value) => {
 };
 
 function Catalog() {
+  const { loading: authLoading, isAuthenticated } = useAuth();
   const [allFossils, setAllFossils] = useState([]);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
@@ -88,20 +49,21 @@ function Catalog() {
       try {
         const response = await fossilService.getAll();
         const records = Array.isArray(response?.data) ? response.data : [];
-        const source = records.length > 0 ? records : demoFossils;
 
         if (isMounted) {
-          setAllFossils(source);
-          setSelectedId(source[0]?.id ?? null);
+          setAllFossils(records);
+          setSelectedId(records[0]?.id ?? null);
           if (records.length === 0) {
-            setErrorMessage('No hay fósiles registrados todavía. Se muestran ejemplos visuales.');
+            setErrorMessage(
+              'Aún no hay registros en el catálogo. Los exploradores pueden crear fichas desde su panel; un administrador las publica cuando correspondan.'
+            );
           }
         }
       } catch {
         if (isMounted) {
-          setAllFossils(demoFossils);
-          setSelectedId(demoFossils[0]?.id ?? null);
-          setErrorMessage('No se logró conectar al backend. Se cargó un catálogo de demostración.');
+          setAllFossils([]);
+          setSelectedId(null);
+          setErrorMessage('No se pudo conectar al servidor. Compruebe que la API esté en ejecución y vuelva a intentar.');
         }
       } finally {
         if (isMounted) {
@@ -161,17 +123,7 @@ function Catalog() {
 
   return (
     <main className="catalog-shell">
-      <nav className="catalog-top-nav" aria-label="Acceso y navegación">
-        <Link className="catalog-nav-link" to="/">
-          Inicio
-        </Link>
-        <Link className="catalog-nav-link" to="/login">
-          Iniciar sesión
-        </Link>
-        <Link className="catalog-nav-link accent" to="/register">
-          Registrarse
-        </Link>
-      </nav>
+      <SiteHeader />
 
       <header className="catalog-hero">
         <p className="catalog-kicker">Archivo Paleontológico</p>
@@ -179,14 +131,16 @@ function Catalog() {
         <p className="catalog-subtitle">
           Interfaz diseñada para explorar piezas fósiles de forma clara, visual y accesible.
         </p>
-        <div className="catalog-hero-actions">
-          <Link className="catalog-btn solid" to="/">
-            Volver al inicio
-          </Link>
-          <Link className="catalog-btn ghost" to="/register">
-            Crear cuenta
-          </Link>
-        </div>
+        {!authLoading && !isAuthenticated && (
+          <div className="catalog-hero-actions">
+            <Link className="catalog-btn solid" to="/">
+              Volver al inicio
+            </Link>
+            <Link className="catalog-btn ghost" to="/register">
+              Crear cuenta
+            </Link>
+          </div>
+        )}
       </header>
 
       <section className="catalog-toolbar" aria-label="Filtros de catálogo">
@@ -309,16 +263,12 @@ function Catalog() {
                   <div>
                     <dt>Tipo</dt>
                     <dd>
-                      {categoryLabels[selectedFossil.category] ||
-                        selectedFossil.category ||
-                        'No definido'}
+                      {categoryLabels[selectedFossil.category] || selectedFossil.category || 'No definido'}
                     </dd>
                   </div>
                   <div>
                     <dt>Estado</dt>
-                    <dd>
-                      {statusLabels[selectedFossil.status] || selectedFossil.status || 'No definido'}
-                    </dd>
+                    <dd>{statusLabels[selectedFossil.status] || selectedFossil.status || 'No definido'}</dd>
                   </div>
                   <div>
                     <dt>Fecha de descubrimiento</dt>
@@ -329,10 +279,35 @@ function Catalog() {
                     <dd>{selectedFossil.geological_context || 'Sin contexto registrado'}</dd>
                   </div>
                   <div>
-                    <dt>Creado por</dt>
+                    <dt>Registrado por</dt>
                     <dd>{selectedFossil.created_by_username || 'No indicado'}</dd>
                   </div>
+                  {selectedFossil.status === 'published' && (
+                    <div>
+                      <dt>Publicado por</dt>
+                      <dd>
+                        {selectedFossil.approved_by_username ||
+                          'Sin dato de curador (registro anterior o publicación fuera del flujo estándar).'}
+                      </dd>
+                    </div>
+                  )}
+                  {selectedFossil.status === 'rejected' && (
+                    <div>
+                      <dt>Rechazado por</dt>
+                      <dd>{selectedFossil.approved_by_username || 'Sin dato'}</dd>
+                    </div>
+                  )}
+                  {selectedFossil.status === 'pending' && (
+                    <div>
+                      <dt>Curación editorial</dt>
+                      <dd>En revisión: aún no consta publicación ni rechazo en el sistema.</dd>
+                    </div>
+                  )}
                 </dl>
+                <p className="catalog-detail-footnote">
+                  «Registrado por» es quien ingresó la ficha. «Publicado por» es el administrador que ejecutó la
+                  aprobación en el panel (no se reasigna si el registro ya no está en revisión).
+                </p>
               </>
             ) : (
               <p className="detail-empty">Selecciona una ficha para visualizar su detalle.</p>

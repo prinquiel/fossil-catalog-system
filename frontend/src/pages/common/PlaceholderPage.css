@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap');
+
+.placeholder-card {
+  --clay-deep: #5b4c3a;
+  --earth-brown: #8a7356;
+  --putty: #ded1ba;
+  --bone: #f4efe6;
+  --ruby-dark: #9f1838;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-ui: 'Source Sans 3', system-ui, sans-serif;
+
+  font-family: var(--font-ui);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(244, 239, 230, 0.75) 100%);
+  border: 1px solid rgba(91, 76, 58, 0.14);
+  border-radius: 18px;
+  padding: 28px 24px 32px;
+  box-shadow: 0 12px 40px rgba(91, 76, 58, 0.08);
+  color: var(--clay-deep);
+}
+
+.placeholder-card__eyebrow {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--earth-brown);
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.placeholder-card__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 3.5vw, 1.85rem);
+  font-weight: 700;
+  margin: 0 0 14px;
+  line-height: 1.2;
+  color: var(--clay-deep);
+}
+
+.placeholder-card__text {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: var(--clay-deep);
+  max-width: 52ch;
+}
+
+.placeholder-card__text + .placeholder-card__text {
+  margin-top: 12px;
+}
+
+.placeholder-card__actions {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.placeholder-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 12px;
+  background: var(--ruby-dark);
+  color: #fff !important;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.placeholder-card__link:hover {
+  background: #86122f;
+  transform: translateY(-1px);
+}
+
+.placeholder-card__link--secondary {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--clay-deep) !important;
+  border: 1px solid rgba(91, 76, 58, 0.2);
+}
+
+.placeholder-card__link--secondary:hover {
+  background: #fff;
+  border-color: rgba(159, 24, 56, 0.3);
+}
+
+.placeholder-card__note {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(91, 76, 58, 0.1);
+  font-size: 0.88rem;
+  color: var(--earth-brown);
+  line-height: 1.45;
+}

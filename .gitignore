@@ -11,16 +11,9 @@ frontend/.env
 .env.local
 .env.*.local
 
-# Uploads (archivos temporales, no código)
+# Uploads (no versionar binarios de usuarios; no usar *.png/*.jpg globales: rompen assets en frontend/public)
 backend/uploads/
 uploads/
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.mp4
-*.webm
-*.webp
 
 # Logs
 *.log
@@ -57,6 +50,11 @@ backend/dist/
 # Coverage
 coverage/
 .nyc_output/
+
+# Playwright (por si se ejecuta desde la raíz)
+playwright-report/
+test-results/
+blob-report/
 
 # Temporary files
 *.tmp

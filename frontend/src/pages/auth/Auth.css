@@ -83,7 +83,10 @@
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
   box-shadow: 0 8px 18px rgba(79, 58, 41, 0.2);
 }
 

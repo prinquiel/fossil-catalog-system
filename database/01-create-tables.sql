@@ -97,9 +97,9 @@ COMMENT ON COLUMN fossils.status IS 'pending=En revisión, published=Visible al 
 CREATE TABLE locations (
     id SERIAL PRIMARY KEY,
     fossil_id INTEGER UNIQUE NOT NULL REFERENCES fossils(id) ON DELETE CASCADE,
-    country_code VARCHAR(3) DEFAULT 'CRI',
-    province_code VARCHAR(5) NOT NULL,
-    canton_code VARCHAR(5) NOT NULL,
+    country_code VARCHAR(3),
+    province_code VARCHAR(5),
+    canton_code VARCHAR(5),
     latitude DECIMAL(10, 8),
     longitude DECIMAL(11, 8),
     location_description TEXT,

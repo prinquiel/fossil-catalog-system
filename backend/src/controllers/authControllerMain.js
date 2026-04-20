@@ -7,6 +7,7 @@ const {
   parseRegistrationRoles,
   mapUserWithRoles,
   primaryRole,
+  canonicalizeAuthRoles,
 } = require('../utils/roles');
 
 const safeUserColumns = `
@@ -16,7 +17,7 @@ const safeUserColumns = `
 `;
 
 async function buildSafeUser(userRow) {
-  const roles = await getRolesForUser(userRow.id);
+  const roles = canonicalizeAuthRoles(await getRolesForUser(userRow.id));
   const { password_hash, ...rest } = userRow;
   return mapUserWithRoles(rest, roles);
 }
@@ -165,7 +166,8 @@ const login = async (req, res) => {
       });
     }
 
-    const roles = await getRolesForUser(user.id);
+    let roles = await getRolesForUser(user.id);
+    roles = canonicalizeAuthRoles(roles);
     if (!roles || roles.length === 0) {
       return res.status(403).json({
         success: false,
@@ -196,7 +198,7 @@ const getMe = async (req, res) => {
     if (me.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
     }
-    const roles = await getRolesForUser(req.user.id);
+    const roles = canonicalizeAuthRoles(await getRolesForUser(req.user.id));
     return res.json({ success: true, data: mapUserWithRoles(me.rows[0], roles) });
   } catch (error) {
     console.error('Error en getMe:', error);

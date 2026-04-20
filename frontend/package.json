@@ -7,6 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"e2e/**/*.ts\" \"*.{js,ts,json,html}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"e2e/**/*.ts\" \"*.{js,ts,json,html}\"",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -28,13 +35,22 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.59.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.4",
     "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
-    "vite": "^8.0.4"
+    "jsdom": "^29.0.2",
+    "prettier": "^3.8.3",
+    "vite": "^8.0.4",
+    "vitest": "^4.1.4"
   }
 }

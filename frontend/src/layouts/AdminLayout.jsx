@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useFocusTrap } from '../hooks/useFocusTrap.js';
 import '../pages/admin/adminPages.css';
 import './AdminLayout.css';
 
@@ -97,10 +98,21 @@ function AdminLayout() {
   const { user, loading, isAuthenticated, isAdmin, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const trapRef = useFocusTrap(menuOpen);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- cerrar menú móvil al navegar
     setMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
 
   if (loading) {
     return (
@@ -129,7 +141,8 @@ function AdminLayout() {
             type="button"
             className="admin-menu-btn"
             aria-expanded={menuOpen}
-            aria-label="Abrir menu de navegacion"
+            aria-controls="admin-sidebar-panel"
+            aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú de navegación'}
             onClick={() => setMenuOpen((o) => !o)}
           >
             {menuOpen ? (
@@ -152,7 +165,12 @@ function AdminLayout() {
               onKeyDown={(e) => e.key === 'Escape' && setMenuOpen(false)}
               role="presentation"
             />
-            <div className="admin-sidebar__panel">
+            <div
+              ref={trapRef}
+              id="admin-sidebar-panel"
+              className="admin-sidebar__panel"
+              {...(menuOpen ? { role: 'dialog', 'aria-modal': true } : {})}
+            >
               <p className="admin-sidebar__brand">Administración</p>
               <p className="admin-sidebar__tag">Panel curatorial</p>
               <nav className="admin-nav" aria-label="Secciones admin">
@@ -184,7 +202,9 @@ function AdminLayout() {
           </aside>
 
           <main className="admin-main">
-            <Outlet />
+            <div className="admin-main-inner" key={location.pathname}>
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

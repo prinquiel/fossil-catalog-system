@@ -40,4 +40,9 @@ export const fossilService = {
     const response = await api.get('/fossils/admin/pending');
     return response.data;
   },
+
+  async getMap() {
+    const response = await api.get('/fossils/map');
+    return response.data;
+  },
 };

@@ -136,8 +136,7 @@ function AdminPendingRegistrations() {
                 </h2>
                 <p className="admin-user-card__meta">
                   {u.email}
-                  <br />
-                  @{u.username}
+                  <br />@{u.username}
                   {u.country ? ` · ${u.country}` : ''}
                   <br />
                   <span style={{ opacity: 0.85 }}>Solicitud: {formatDate(u.created_at)}</span>

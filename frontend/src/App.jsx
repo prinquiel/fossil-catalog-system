@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { Toaster } from 'react-hot-toast';
 
@@ -12,85 +13,166 @@ import PlaceholderPage from './pages/common/PlaceholderPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPendingRegistrations from './pages/admin/AdminPendingRegistrations';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminCreateUser from './pages/admin/AdminCreateUser';
+import AdminFossils from './pages/admin/AdminFossils';
+import AdminPendingFossils from './pages/admin/AdminPendingFossils';
+import AdminFossilReview from './pages/admin/AdminFossilReview';
+import AdminMessages from './pages/admin/AdminMessages';
+import AdminMessageDetail from './pages/admin/AdminMessageDetail';
+import AdminAudit from './pages/admin/AdminAudit';
+import AdminStats from './pages/admin/AdminStats';
+import ExplorerDashboard from './pages/explorer/ExplorerDashboard';
+import ExplorerCreateFossil from './pages/explorer/ExplorerCreateFossil';
+import ExplorerMyFossils from './pages/explorer/ExplorerMyFossils';
+import ExplorerEditFossil from './pages/explorer/ExplorerEditFossil';
+import ExplorerProfile from './pages/explorer/ExplorerProfile';
+import ResearcherDashboard from './pages/researcher/ResearcherDashboard';
+import ResearcherCatalog from './pages/researcher/ResearcherCatalog';
+import ResearcherFossilDetail from './pages/researcher/ResearcherFossilDetail';
+import ResearcherSearch from './pages/researcher/ResearcherSearch';
+import ResearcherCreateStudy from './pages/researcher/ResearcherCreateStudy';
+import ResearcherMyStudies from './pages/researcher/ResearcherMyStudies';
+
+const ResearcherMap = lazy(() => import('./pages/researcher/ResearcherMap'));
+import GlobalLoadingBar from './components/system/GlobalLoadingBar.jsx';
+import { AppErrorBoundary } from './components/system/AppErrorBoundary.jsx';
 
 const explorerLinks = [
-  { to: '/explorer/dashboard', label: 'Dashboard' },
-  { to: '/explorer/create-fossil', label: 'Create Fossil' },
-  { to: '/explorer/my-fossils', label: 'My Fossils' },
-  { to: '/explorer/profile', label: 'Profile' },
+  { to: '/explorer/dashboard', label: 'Inicio' },
+  { to: '/explorer/create-fossil', label: 'Nuevo fósil' },
+  { to: '/explorer/my-fossils', label: 'Mis fósiles' },
+  { to: '/explorer/profile', label: 'Perfil' },
 ];
 
 const researcherLinks = [
-  { to: '/researcher/dashboard', label: 'Dashboard' },
-  { to: '/researcher/catalog', label: 'Catalog' },
-  { to: '/researcher/search', label: 'Search' },
-  { to: '/researcher/my-studies', label: 'My Studies' },
-  { to: '/researcher/map', label: 'Map' }, 
+  { to: '/researcher/dashboard', label: 'Inicio' },
+  { to: '/researcher/catalog', label: 'Catálogo' },
+  { to: '/researcher/search', label: 'Buscar' },
+  { to: '/researcher/my-studies', label: 'Mis estudios' },
+  { to: '/researcher/map', label: 'Mapa' },
 ];
+
+function PublicRouteTransition() {
+  const location = useLocation();
+  return (
+    <div className="route-transition" key={location.pathname}>
+      <Outlet />
+    </div>
+  );
+}
+
+function NotFoundRoute() {
+  const location = useLocation();
+  return (
+    <div className="route-transition" key={location.pathname}>
+      <PlaceholderPage title="404" description="Pagina no encontrada" />
+    </div>
+  );
+}
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Toaster position="top-right" />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <BrowserRouter>
+      <AuthProvider>
+        <AppErrorBoundary>
+          <GlobalLoadingBar />
+          <Toaster position="top-right" />
+          <Routes>
+            <Route element={<PublicRouteTransition />}>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-          {/* Publico */}
-          <Route path="/catalog" element={<Catalog />} />
-          <Route path="/fossil/:id" element={<PlaceholderPage title="Fossil Detail" />} />
-          <Route path="/map" element={<PlaceholderPage title="Public Map" />} />
-          <Route path="/about" element={<PlaceholderPage title="About" />} />
-          <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
+              <Route path="/catalog" element={<Catalog />} />
+              <Route path="/fossil/:id" element={<PlaceholderPage title="Fossil Detail" />} />
+              <Route path="/map" element={<PlaceholderPage title="Public Map" />} />
+              <Route path="/about" element={<PlaceholderPage title="About" />} />
+              <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
 
-          {/* Compartidas */}
-          <Route path="/profile" element={<PlaceholderPage title="Profile" />} />
-          <Route path="/notifications" element={<PlaceholderPage title="Notifications" />} />
-          <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
-          <Route path="/403" element={<PlaceholderPage title="403" description="No autorizado" />} />
-          <Route path="/404" element={<PlaceholderPage title="404" description="Pagina no encontrada" />} />
-          <Route path="/500" element={<PlaceholderPage title="500" description="Error interno del servidor" />} />
+              <Route path="/profile" element={<PlaceholderPage title="Profile" />} />
+              <Route path="/notifications" element={<PlaceholderPage title="Notifications" />} />
+              <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+              <Route path="/403" element={<PlaceholderPage title="403" description="No autorizado" />} />
+              <Route path="/404" element={<PlaceholderPage title="404" description="Pagina no encontrada" />} />
+              <Route
+                path="/500"
+                element={<PlaceholderPage title="500" description="Error interno del servidor" />}
+              />
+            </Route>
 
-          <Route path="/explorer" element={<RoleLayout title="Explorer Dashboard" links={explorerLinks} />}>
-            <Route path="dashboard" element={<PlaceholderPage title="Explorer Dashboard" />} />
-            <Route path="create-fossil" element={<PlaceholderPage title="Create Fossil" />} />
-            <Route path="my-fossils" element={<PlaceholderPage title="My Fossils" />} />
-            <Route path="edit-fossil/:id" element={<PlaceholderPage title="Edit Fossil" />} />
-            <Route path="profile" element={<PlaceholderPage title="Explorer Profile" />} />
-          </Route>
+            <Route
+              path="/explorer"
+              element={<RoleLayout variant="explorer" navTitle="Explorador" links={explorerLinks} />}
+            >
+              <Route path="dashboard" element={<ExplorerDashboard />} />
+              <Route path="create-fossil" element={<ExplorerCreateFossil />} />
+              <Route path="my-fossils" element={<ExplorerMyFossils />} />
+              <Route path="edit-fossil/:id" element={<ExplorerEditFossil />} />
+              <Route path="profile" element={<ExplorerProfile />} />
+            </Route>
 
-          <Route path="/researcher" element={<RoleLayout title="Researcher Dashboard" links={researcherLinks} />}>
-            <Route path="dashboard" element={<PlaceholderPage title="Researcher Dashboard" />} />
-            <Route path="catalog" element={<PlaceholderPage title="Researcher Catalog" />} />
-            <Route path="fossil/:id" element={<PlaceholderPage title="Researcher Fossil Detail" />} />
-            <Route path="search" element={<PlaceholderPage title="Researcher Search" />} />
-            <Route path="create-study/:fossilId" element={<PlaceholderPage title="Create Study" />} />
-            <Route path="my-studies" element={<PlaceholderPage title="My Studies" />} />
-            <Route path="map" element={<PlaceholderPage title="Researcher Map" />} />
-          </Route>
+            <Route
+              path="/researcher"
+              element={<RoleLayout variant="researcher" navTitle="Investigador" links={researcherLinks} />}
+            >
+              <Route path="dashboard" element={<ResearcherDashboard />} />
+              <Route path="catalog" element={<ResearcherCatalog />} />
+              <Route path="fossil/:id" element={<ResearcherFossilDetail />} />
+              <Route path="search" element={<ResearcherSearch />} />
+              <Route path="create-study/:fossilId" element={<ResearcherCreateStudy />} />
+              <Route path="my-studies" element={<ResearcherMyStudies />} />
+              <Route
+                path="map"
+                element={
+                  <Suspense
+                    fallback={
+                      <div
+                        style={{
+                          padding: '1.5rem',
+                          fontFamily: 'var(--font-body)',
+                          color: 'var(--ink-muted)',
+                        }}
+                      >
+                        Cargando mapa…
+                      </div>
+                    }
+                  >
+                    <ResearcherMap />
+                  </Suspense>
+                }
+              />
+            </Route>
 
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="pending-registrations" element={<AdminPendingRegistrations />} />
-            <Route path="pending-fossils" element={<PlaceholderPage title="Fosiles pendientes" />} />
-            <Route path="fossil/:id/review" element={<PlaceholderPage title="Revisar fosil" />} />
-            <Route path="fossils" element={<PlaceholderPage title="Gestionar fosiles" />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="create-user" element={<PlaceholderPage title="Crear usuario" />} />
-            <Route path="edit-user/:id" element={<PlaceholderPage title="Editar usuario" />} />
-            <Route path="messages" element={<PlaceholderPage title="Mensajes" />} />
-            <Route path="message/:id" element={<PlaceholderPage title="Detalle del mensaje" />} />
-            <Route path="audit" element={<PlaceholderPage title="Auditoria" />} />
-            <Route path="stats" element={<PlaceholderPage title="Estadisticas" />} />
-          </Route>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="pending-registrations" element={<AdminPendingRegistrations />} />
+              <Route path="pending-fossils" element={<AdminPendingFossils />} />
+              <Route path="fossil/:id/review" element={<AdminFossilReview />} />
+              <Route path="fossils" element={<AdminFossils />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="create-user" element={<AdminCreateUser />} />
+              <Route
+                path="edit-user/:id"
+                element={
+                  <PlaceholderPage
+                    title="Editar usuario"
+                    description="La edición detallada de perfiles puede hacerse desde la API o ampliando esta vista. Use el listado de usuarios para consultar datos actuales."
+                    eyebrow="Administración"
+                  />
+                }
+              />
+              <Route path="messages" element={<AdminMessages />} />
+              <Route path="message/:id" element={<AdminMessageDetail />} />
+              <Route path="audit" element={<AdminAudit />} />
+              <Route path="stats" element={<AdminStats />} />
+            </Route>
 
-          <Route path="*" element={<PlaceholderPage title="404" description="Pagina no encontrada" />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            <Route path="*" element={<NotFoundRoute />} />
+          </Routes>
+        </AppErrorBoundary>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

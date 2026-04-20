@@ -1,25 +1,70 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  const [user, setUser] = useState(() => authService.getCurrentUser());
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const initAuth = () => {
-      const currentUser = authService.getCurrentUser();
-      setUser(currentUser);
-      setLoading(false);
-    };
+  const refreshUser = useCallback(async () => {
+    const token = authService.getToken();
+    if (!token) {
+      setUser(null);
+      return null;
+    }
+    try {
+      const me = await authService.getMe();
+      if (me.success && me.data) {
+        setUser(me.data);
+        localStorage.setItem('user', JSON.stringify(me.data));
+        return me.data;
+      }
+    } catch {
+      authService.clearSession();
+      setUser(null);
+    }
+    return null;
+  }, []);
 
-    initAuth();
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const token = authService.getToken();
+      if (!token) {
+        if (!cancelled) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+      try {
+        const me = await authService.getMe();
+        if (!cancelled && me.success && me.data) {
+          setUser(me.data);
+          localStorage.setItem('user', JSON.stringify(me.data));
+        }
+      } catch {
+        if (!cancelled) {
+          authService.clearSession();
+          setUser(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = async (credentials) => {
     const data = await authService.login(credentials);
-    setUser(data.data.user);
+    if (data.success && data.data?.user) {
+      setUser(data.data.user);
+    }
     return data;
   };
 
@@ -33,14 +78,16 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = useCallback(() => {
+    authService.clearSession();
     setUser(null);
-  };
+    navigate('/', { replace: true });
+  }, [navigate]);
 
   const value = {
     user,
     loading,
+    refreshUser,
     login,
     register,
     logout,
