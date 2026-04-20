@@ -5,6 +5,7 @@ import L from 'leaflet';
 import { MapContainer, TileLayer, Popup, CircleMarker, useMap } from 'react-leaflet';
 import { fossilService } from '../../services/fossilService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
+import { hasValidCoords, normalizeGeoPoint } from '../../utils/geoNormalize.js';
 import 'leaflet/dist/leaflet.css';
 import '../workspace/workspace-pages.css';
 
@@ -31,6 +32,7 @@ function MapFitBounds({ points }) {
 }
 
 function ResearcherMap() {
+  const [rows, setRows] = useState([]);
   const [points, setPoints] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,9 +40,11 @@ function ResearcherMap() {
     let mounted = true;
     (async () => {
       try {
-        const res = await fossilService.getMap();
+        const res = await fossilService.getAll();
         if (!mounted) return;
-        setPoints(Array.isArray(res?.data) ? res.data : []);
+        const allPublished = (Array.isArray(res?.data) ? res.data : []).filter((f) => f.status === 'published');
+        setRows(allPublished);
+        setPoints(allPublished.map((p) => normalizeGeoPoint(p)).filter((p) => hasValidCoords(p)));
       } catch (e) {
         toast.error(getApiErrorMessage(e));
       } finally {
@@ -60,44 +64,71 @@ function ResearcherMap() {
       <p className="workspace-page__kicker">Georreferencia</p>
       <h1 className="workspace-page__title">Mapa de hallazgos</h1>
       <p className="workspace-page__lead">
-        Solo aparecen fichas <strong>publicadas</strong> con latitud y longitud. La vista ajusta el encuadre
-        automáticamente si los puntos están fuera de Costa Rica.
+        Vista geográfica de registros publicados. Si una ficha no tiene coordenadas válidas, aparece en el listado
+        pero no se grafica en el mapa.
       </p>
 
       {loading ? (
         <p className="workspace-muted">Cargando coordenadas…</p>
-      ) : points.length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="workspace-card workspace-muted">
-          No hay ejemplares publicados con coordenadas. Cuando existan ubicaciones aprobadas, aparecerán aquí.
+          No hay ejemplares publicados para mostrar en el mapa.
         </div>
       ) : (
-        <div className="workspace-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ height: 420, width: '100%' }}>
-            <MapContainer center={center} zoom={DEFAULT_ZOOM} style={{ height: '100%', width: '100%' }}>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <MapFitBounds points={points} />
-              {points.map((p) => (
-                <CircleMarker
-                  key={p.id}
-                  center={[Number(p.latitude), Number(p.longitude)]}
-                  radius={8}
-                  pathOptions={{ color: '#8b1532', fillColor: '#c44d6a', fillOpacity: 0.65 }}
-                >
-                  <Popup>
-                    <strong>{p.name}</strong>
-                    <br />
-                    {p.unique_code}
-                    <br />
-                    <Link to={`/researcher/fossil/${p.id}`}>Abrir ficha</Link>
-                  </Popup>
-                </CircleMarker>
-              ))}
-            </MapContainer>
+        <>
+          <div className="workspace-card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div style={{ height: 420, width: '100%' }}>
+              {points.length > 0 ? (
+                <MapContainer center={center} zoom={DEFAULT_ZOOM} style={{ height: '100%', width: '100%' }}>
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <MapFitBounds points={points} />
+                  {points.map((p) => (
+                    <CircleMarker
+                      key={p.id}
+                      center={[Number(p.latitude), Number(p.longitude)]}
+                      radius={8}
+                      pathOptions={{ color: '#8b1532', fillColor: '#c44d6a', fillOpacity: 0.65 }}
+                    >
+                      <Popup>
+                        <strong>{p.name}</strong>
+                        <br />
+                        {p.unique_code}
+                        <br />
+                        <Link to={`/researcher/fossil/${p.id}`}>Abrir ficha</Link>
+                      </Popup>
+                    </CircleMarker>
+                  ))}
+                </MapContainer>
+              ) : (
+                <div className="workspace-card workspace-muted" style={{ margin: 0, borderRadius: 0, height: '100%' }}>
+                  No hay coordenadas válidas para graficar por ahora.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+          <div className="workspace-card">
+            <p className="workspace-page__kicker" style={{ marginTop: 0 }}>
+              Registros publicados
+            </p>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {rows.map((r) => (
+                <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                  <Link className="workspace-link" to={`/researcher/fossil/${r.id}`}>
+                    {r.unique_code} · {r.name}
+                  </Link>
+                  {hasValidCoords(r) ? (
+                    <span className="workspace-muted">Con coordenadas</span>
+                  ) : (
+                    <span className="workspace-muted">Sin coordenadas</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

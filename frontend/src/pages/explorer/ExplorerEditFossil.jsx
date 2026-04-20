@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { fossilService } from '../../services/fossilService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { FOSSIL_CATEGORIES } from '../../constants/fossilMeta.js';
+import FossilMediaEditor from '../../components/fossil/FossilMediaEditor.jsx';
 import '../workspace/workspace-pages.css';
 
 function ExplorerEditFossil() {
@@ -219,6 +220,9 @@ function ExplorerEditFossil() {
           <label htmlFor="e-loc">Descripción del lugar</label>
           <input id="e-loc" value={form.location_description} onChange={set('location_description')} />
         </div>
+
+        <hr className="np-rule" style={{ margin: '22px 0' }} />
+        <FossilMediaEditor fossilId={id} />
 
         <p className="workspace-muted" style={{ marginTop: 12 }}>
           El estado editorial (publicado / revisión / rechazado) lo define un administrador con el flujo de

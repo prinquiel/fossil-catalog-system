@@ -61,13 +61,41 @@ function IconBook() {
   );
 }
 
+/** Cuadrícula — catálogo de trabajo */
+function IconCatalog() {
+  return (
+    <svg className="role-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 4h7v7H4V4zM13 4h7v4h-7V4zM13 10h7v10h-7V10zM4 13h7v7H4v-7z" />
+    </svg>
+  );
+}
+
+/** Documentos / estudios (no confundir con "search" dentro de "researcher") */
+function IconStudies() {
+  return (
+    <svg className="role-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+    </svg>
+  );
+}
+
+/**
+ * Rutas absolutas: NO usar includes('search') porque la palabra "researcher" la contiene.
+ */
 const pickIcon = (to) => {
-  if (to.includes('dashboard')) return IconHome;
-  if (to.includes('create') || to.includes('study')) return IconPlus;
-  if (to.includes('profile')) return IconUser;
-  if (to.includes('search')) return IconSearch;
-  if (to.includes('map')) return IconMap;
-  if (to.includes('catalog') || to.includes('fossils')) return IconList;
+  const path = to.split('?')[0];
+  if (path.endsWith('/dashboard')) return IconHome;
+  if (path.includes('/profile')) return IconUser;
+  if (path.includes('/create-fossil') || path.includes('/create-study')) return IconPlus;
+  if (path.includes('/my-fossils')) return IconList;
+  if (path.includes('/catalog')) return IconCatalog;
+  if (path.includes('/search')) return IconSearch;
+  if (path.includes('/my-studies')) return IconStudies;
+  if (path.includes('/study/')) return IconStudies;
+  if (path.includes('/map')) return IconMap;
+  if (path.includes('/fossil/')) return IconBook;
+  if (path.includes('/edit-fossil')) return IconPlus;
   return IconBook;
 };
 
@@ -112,7 +140,11 @@ function RoleLayout({ variant, navTitle, tagline, links }) {
     return <Navigate to="/403" replace />;
   }
 
-  const subtitle = tagline || (variant === 'explorer' ? 'Campo y catalogación' : 'Estudios y catálogo');
+  const subtitle =
+    tagline ||
+    (variant === 'explorer'
+      ? 'Registros en campo'
+      : 'Archivo publicado y estudios');
 
   return (
     <div className="role-shell">
@@ -175,14 +207,15 @@ function RoleLayout({ variant, navTitle, tagline, links }) {
                 })}
               </nav>
               <div className="role-sidebar__footer">
+                <div className="role-link-row">
+                  <Link to="/">Inicio</Link>
+                  <Link to="/catalog">Ver catálogo público</Link>
+                </div>
+                <hr className="role-footer-rule" />
                 <div className="role-user-chip">{user?.email || user?.username}</div>
-                <button type="button" className="role-btn-ghost" onClick={() => logout()}>
+                <button type="button" className="role-btn-ghost role-btn-ghost--logout" onClick={() => logout()}>
                   Cerrar sesión
                 </button>
-                <div className="role-link-row">
-                  <Link to="/catalog">Ver catálogo público</Link>
-                  <Link to="/">Inicio</Link>
-                </div>
               </div>
             </div>
           </aside>

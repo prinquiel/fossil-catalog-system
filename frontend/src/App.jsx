@@ -7,6 +7,7 @@ import Landing from './pages/public/Landing';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Catalog from './pages/public/Catalog';
+import PublicMap from './pages/public/PublicMap';
 import RoleLayout from './layouts/RoleLayout';
 import AdminLayout from './layouts/AdminLayout';
 import PlaceholderPage from './pages/common/PlaceholderPage';
@@ -32,6 +33,7 @@ import ResearcherFossilDetail from './pages/researcher/ResearcherFossilDetail';
 import ResearcherSearch from './pages/researcher/ResearcherSearch';
 import ResearcherCreateStudy from './pages/researcher/ResearcherCreateStudy';
 import ResearcherMyStudies from './pages/researcher/ResearcherMyStudies';
+import ResearcherStudyDetail from './pages/researcher/ResearcherStudyDetail';
 
 const ResearcherMap = lazy(() => import('./pages/researcher/ResearcherMap'));
 import GlobalLoadingBar from './components/system/GlobalLoadingBar.jsx';
@@ -85,7 +87,7 @@ function App() {
 
               <Route path="/catalog" element={<Catalog />} />
               <Route path="/fossil/:id" element={<PlaceholderPage title="Fossil Detail" />} />
-              <Route path="/map" element={<PlaceholderPage title="Public Map" />} />
+              <Route path="/map" element={<PublicMap />} />
               <Route path="/about" element={<PlaceholderPage title="About" />} />
               <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
 
@@ -120,6 +122,7 @@ function App() {
               <Route path="fossil/:id" element={<ResearcherFossilDetail />} />
               <Route path="search" element={<ResearcherSearch />} />
               <Route path="create-study/:fossilId" element={<ResearcherCreateStudy />} />
+              <Route path="study/:id" element={<ResearcherStudyDetail />} />
               <Route path="my-studies" element={<ResearcherMyStudies />} />
               <Route
                 path="map"

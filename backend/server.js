@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -24,7 +25,11 @@ const PORT = process.env.PORT || 5001;
 // ============================================
 
 // Seguridad
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
 // CORS: Vite (:5173+), CRA (:3000); CLIENT_URL puede listar varios orígenes separados por coma
 const corsDefaultOrigins = [
@@ -69,6 +74,9 @@ app.use(
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Imágenes y derivados subidos (file_path en BD: uploads/images/...)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Logger
 if (process.env.NODE_ENV === 'development') {

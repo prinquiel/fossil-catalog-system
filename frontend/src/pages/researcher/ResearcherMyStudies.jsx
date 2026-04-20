@@ -49,7 +49,8 @@ function ResearcherMyStudies() {
       <p className="workspace-page__kicker">Producción científica</p>
       <h1 className="workspace-page__title">Mis estudios</h1>
       <p className="workspace-page__lead">
-        Estudios donde usted figura como investigador principal en el sistema.
+        Estudios donde usted figura como investigador principal. El título abre la <strong>ficha del estudio</strong>; el
+        enlace del fósil abre el <strong>ejemplar</strong> del catálogo.
       </p>
 
       {loading ? (
@@ -65,14 +66,18 @@ function ResearcherMyStudies() {
               <thead>
                 <tr>
                   <th>Título</th>
-                  <th>Fósil</th>
+                  <th>Fósil (ejemplar)</th>
                   <th>Fecha</th>
                 </tr>
               </thead>
               <tbody>
                 {slice.map((s) => (
                   <tr key={s.id}>
-                    <td>{s.title || 'Sin título'}</td>
+                    <td>
+                      <Link className="workspace-link" to={`/researcher/study/${s.id}`}>
+                        {s.title || 'Sin título'}
+                      </Link>
+                    </td>
                     <td>
                       <Link className="workspace-link" to={`/researcher/fossil/${s.fossil_id}`}>
                         Ver ejemplar #{s.fossil_id}

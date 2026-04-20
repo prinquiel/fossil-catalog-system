@@ -40,6 +40,12 @@ function SiteHeader() {
           >
             Catálogo
           </NavLink>
+          <NavLink
+            to="/map"
+            className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
+          >
+            Mapa
+          </NavLink>
 
           {!loading && !isAuthenticated && (
             <>

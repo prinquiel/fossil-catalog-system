@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { searchService } from '../../services/searchService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import '../workspace/workspace-pages.css';
+import './researcher-pages.css';
 
 function ResearcherSearch() {
   const [q, setQ] = useState('');
@@ -38,23 +39,33 @@ function ResearcherSearch() {
   }, [run]);
 
   return (
-    <div className="workspace-page">
-      <p className="workspace-page__kicker">Consulta</p>
+    <div className="workspace-page rw-animate-in">
+      <p className="workspace-page__kicker">Consulta avanzada</p>
       <h1 className="workspace-page__title">Búsqueda en catálogo</h1>
       <p className="workspace-page__lead">
         Búsqueda por coincidencia en nombre, descripción o código. Escriba al menos dos caracteres; la
         consulta se envía automáticamente al detener la escritura.
       </p>
 
-      <div className="workspace-card workspace-form">
-        <label htmlFor="search-q">Término</label>
-        <input
-          id="search-q"
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Ej. amonita, código CRI…"
-        />
+      <div className="workspace-card workspace-form researcher-search-card">
+        <label htmlFor="search-q">Término de búsqueda</label>
+        <div className="researcher-search-input-wrap">
+          <span className="researcher-search-icon" aria-hidden="true">
+            ⌕
+          </span>
+          <input
+            id="search-q"
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Ej. amonita, código CRI…"
+          />
+          {q ? (
+            <button type="button" className="researcher-search-clear" onClick={() => setQ('')}>
+              Limpiar
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {loading && <p className="workspace-muted">Buscando…</p>}

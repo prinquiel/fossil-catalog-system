@@ -86,7 +86,7 @@ function Login() {
     <main className="auth-shell">
       <SiteHeader />
 
-      <div className="auth-main">
+      <div className="auth-main auth-main--login">
         <p className="auth-eyebrow">Bienvenido de nuevo</p>
         <h1 className="auth-title">Iniciar sesión</h1>
         <p className="auth-lead">
@@ -95,6 +95,10 @@ function Login() {
         </p>
 
         <div className="auth-card">
+          <div className="auth-card-badge-row" aria-hidden="true">
+            <span>Acceso seguro</span>
+            <span>Sesión institucional</span>
+          </div>
           <form className="auth-form-grid" onSubmit={handleSubmit} noValidate>
             <div className="auth-field">
               <label htmlFor="login-email">Correo electrónico</label>

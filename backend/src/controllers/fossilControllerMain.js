@@ -126,11 +126,19 @@ const getFossils = async (req, res) => {
   try {
     const result = await query(
       `SELECT f.*,
+              l.country_code, l.province_code, l.canton_code, l.latitude, l.longitude, l.location_description,
               cu.username AS created_by_username,
-              au.username AS approved_by_username
+              au.username AS approved_by_username,
+              COALESCE(m.media_count, 0)::int AS media_count
        FROM fossils f
+       LEFT JOIN locations l ON l.fossil_id = f.id
        JOIN users cu ON cu.id = f.created_by
        LEFT JOIN users au ON au.id = f.approved_by
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*)::int AS media_count
+         FROM media md
+         WHERE md.fossil_id = f.id
+       ) m ON TRUE
        WHERE f.deleted_at IS NULL
        ORDER BY f.created_at DESC`,
       []

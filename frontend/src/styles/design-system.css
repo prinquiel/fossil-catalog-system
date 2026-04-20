@@ -72,6 +72,27 @@ a:visited {
   color: var(--ruby-dark);
 }
 
+/* Enlaces con apariencia de botón: el color del botón debe ganar a la regla global `a` (y a Tailwind base). */
+#root a.workspace-btn:not(.workspace-btn--ghost),
+#root a.workspace-btn:not(.workspace-btn--ghost):visited {
+  color: #fff;
+}
+
+#root a.workspace-btn--ghost,
+#root a.workspace-btn--ghost:visited {
+  color: var(--ruby-dark);
+}
+
+#root a.admin-btn--primary,
+#root a.admin-btn--primary:visited {
+  color: #fff;
+}
+
+#root a.admin-btn--ghost,
+#root a.admin-btn--ghost:visited {
+  color: var(--clay-deep, #5b4c3a);
+}
+
 .np-kicker {
   font-family: var(--font-body);
   text-transform: uppercase;

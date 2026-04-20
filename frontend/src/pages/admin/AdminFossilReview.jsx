@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { fossilService } from '../../services/fossilService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
+import FossilMediaGallery from '../../components/fossil/FossilMediaGallery.jsx';
 import '../admin/adminPages.css';
 
 function AdminFossilReview() {
@@ -78,6 +79,11 @@ function AdminFossilReview() {
             {f.discoverer_name || '—'}
           </dd>
         </dl>
+
+        <div style={{ marginTop: 20 }}>
+          <FossilMediaGallery fossilId={f.id} title="Imágenes aportadas" />
+        </div>
+
         {f.status === 'pending' && (
           <div className="admin-actions-row" style={{ marginTop: 24 }}>
             <button type="button" className="admin-btn" onClick={approve}>

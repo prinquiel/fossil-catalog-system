@@ -86,7 +86,7 @@ function Register() {
       <main className="auth-shell">
         <SiteHeader />
 
-        <div className="auth-main">
+        <div className="auth-main auth-main--register">
           <div className="auth-card">
             <div className="auth-success">
               <div className="auth-success-icon" aria-hidden="true">
@@ -134,7 +134,7 @@ function Register() {
     <main className="auth-shell">
       <SiteHeader />
 
-      <div className="auth-main">
+      <div className="auth-main auth-main--register">
         <p className="auth-eyebrow">Cuenta de acceso</p>
         <h1 className="auth-title">Crear cuenta</h1>
         <p className="auth-lead">
@@ -143,6 +143,11 @@ function Register() {
         </p>
 
         <div className="auth-card">
+          <div className="auth-card-badge-row" aria-hidden="true">
+            <span>Perfil verificable</span>
+            <span>Aprobación administrativa</span>
+            <span>Acceso por roles</span>
+          </div>
           <form className="auth-form-grid" onSubmit={handleSubmit} noValidate>
             <div className="auth-row-2">
               <div className="auth-field">

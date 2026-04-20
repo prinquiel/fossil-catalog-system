@@ -82,6 +82,10 @@ a.auth-nav-active {
   animation: authFadeIn 0.55s ease-out;
 }
 
+.auth-main--register {
+  max-width: 760px;
+}
+
 @keyframes authFadeIn {
   from {
     opacity: 0;
@@ -129,11 +133,42 @@ a.auth-nav-active {
   box-shadow:
     0 12px 36px rgba(91, 76, 58, 0.1),
     0 0 0 1px rgba(159, 24, 56, 0.06) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(100% 60% at 100% 0%, rgba(139, 21, 50, 0.09), transparent 60%);
+}
+
+.auth-card-badge-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 14px;
+}
+
+.auth-card-badge-row span {
+  border-radius: 999px;
+  border: 1px solid rgba(91, 76, 58, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  color: #5f4b39;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 5px 10px;
 }
 
 .auth-form-grid {
   display: grid;
   gap: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .auth-row-2 {

@@ -1,8 +1,35 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { statsService } from '../../services/statsService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import '../admin/adminPages.css';
+import './admin-stats.css';
+
+const DONUT_COLORS = ['#8b1532', '#c4b39a', '#6b5844', '#b08968', '#3d3428'];
+
+function StatusDonut({ rows }) {
+  const total = useMemo(() => rows.reduce((s, r) => s + (r.total || 0), 0), [rows]);
+  const style = useMemo(() => {
+    if (total === 0) return { background: '#e8e0d4' };
+    let acc = 0;
+    const parts = rows.map((r, i) => {
+      const pct = ((r.total || 0) / total) * 100;
+      const start = acc;
+      acc += pct;
+      return `${DONUT_COLORS[i % DONUT_COLORS.length]} ${start}% ${acc}%`;
+    });
+    return { background: `conic-gradient(${parts.join(', ')})` };
+  }, [rows, total]);
+
+  return (
+    <div
+      className="admin-stats-donut"
+      style={style}
+      role="img"
+      aria-label="Distribución de fósiles por estado"
+    />
+  );
+}
 
 function AdminStats() {
   const [overview, setOverview] = useState(null);
@@ -12,6 +39,10 @@ function AdminStats() {
   const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fatalError, setFatalError] = useState(null);
+
+  const maxStatus = useMemo(() => Math.max(0, ...byStatus.map((r) => r.total || 0), 1), [byStatus]);
+  const maxCat = useMemo(() => Math.max(0, ...byCategory.map((r) => r.total || 0), 1), [byCategory]);
+  const maxTimeline = useMemo(() => Math.max(0, ...timeline.map((r) => r.total || 0), 1), [timeline]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,13 +83,13 @@ function AdminStats() {
   }, [load]);
 
   return (
-    <>
+    <div className="admin-stats-page">
       <header className="admin-page-header">
         <p className="admin-page-eyebrow">Indicadores</p>
         <h1 className="admin-page-title">Estadísticas</h1>
         <p className="admin-page-desc">
-          Resumen numérico del archivo y de la actividad registrada. Los datos provienen directamente de la
-          base de datos vía API de estadísticas.
+          Vista consolidada del archivo: KPIs, distribuciones, roles y tendencia de altas mensuales. Los datos provienen
+          de la API de estadísticas en tiempo real.
         </p>
       </header>
 
@@ -68,8 +99,7 @@ function AdminStats() {
         <div className="admin-panel" style={{ marginTop: 8 }}>
           <p className="admin-page-desc">{fatalError}</p>
           <p className="admin-page-desc" style={{ fontSize: '0.88rem' }}>
-            Si el mensaje indica falta de permisos, cerrá sesión y volvé a entrar con una cuenta que tenga rol
-            de administrador en la base de datos.
+            Si el mensaje indica falta de permisos, cerrá sesión y volvé a entrar con una cuenta administradora.
           </p>
           <button type="button" className="admin-btn admin-btn--primary" style={{ marginTop: 10 }} onClick={load}>
             Reintentar
@@ -78,87 +108,139 @@ function AdminStats() {
       )}
 
       {!loading && overview && (
-        <div className="admin-card-grid">
-          <article className="admin-stat-card admin-stat-card--accent">
-            <div className="admin-stat-card__value">{overview.fossils}</div>
-            <div className="admin-stat-card__label">Fósiles activos</div>
+        <section className="admin-stats-kpis" aria-label="Indicadores principales">
+          <article className="admin-stats-kpi admin-stats-kpi--accent">
+            <div className="admin-stats-kpi__value">{overview.fossils}</div>
+            <div className="admin-stats-kpi__label">Fósiles activos</div>
           </article>
-          <article className="admin-stat-card">
-            <div className="admin-stat-card__value">{overview.users}</div>
-            <div className="admin-stat-card__label">Usuarios</div>
+          <article className="admin-stats-kpi">
+            <div className="admin-stats-kpi__value">{overview.users}</div>
+            <div className="admin-stats-kpi__label">Usuarios</div>
           </article>
-          <article className="admin-stat-card">
-            <div className="admin-stat-card__value">{overview.studies}</div>
-            <div className="admin-stat-card__label">Estudios científicos</div>
+          <article className="admin-stats-kpi">
+            <div className="admin-stats-kpi__value">{overview.studies}</div>
+            <div className="admin-stats-kpi__label">Estudios científicos</div>
           </article>
-          <article className="admin-stat-card">
-            <div className="admin-stat-card__value">{overview.media}</div>
-            <div className="admin-stat-card__label">Archivos multimedia</div>
+          <article className="admin-stats-kpi">
+            <div className="admin-stats-kpi__value">{overview.media}</div>
+            <div className="admin-stats-kpi__label">Archivos multimedia</div>
           </article>
-        </div>
+        </section>
       )}
 
       {!loading && (
-        <div
-          style={{ display: 'grid', gap: 24, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}
-        >
-          <div className="admin-panel">
-            <h2 className="admin-page-title" style={{ fontSize: '1.15rem', marginBottom: 12 }}>
-              Fósiles por estado
-            </h2>
+        <section className="admin-stats-grid">
+          <div className="admin-stats-panel">
+            <h2 className="admin-stats-panel__title">Fósiles por estado</h2>
             {byStatus.length === 0 ? (
               <p className="admin-page-desc">Sin datos.</p>
             ) : (
-              <ul style={{ margin: 0, paddingLeft: 18 }} className="admin-page-desc">
+              <>
+                <div className="admin-stats-donut-wrap">
+                  <StatusDonut rows={byStatus} />
+                  <ul className="admin-stats-legend">
+                    {byStatus.map((row, i) => (
+                      <li key={row.status}>
+                        <span style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }} aria-hidden />
+                        <span>
+                          <strong>{row.status}</strong> — {row.total}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
                 {byStatus.map((row) => (
-                  <li key={row.status}>
-                    <strong>{row.status}</strong>: {row.total}
-                  </li>
+                  <div key={row.status} className="admin-stats-bar-row">
+                    <span className="admin-stats-bar-label">{row.status}</span>
+                    <div className="admin-stats-bar-track">
+                      <div
+                        className="admin-stats-bar-fill"
+                        style={{ width: `${(row.total / maxStatus) * 100}%` }}
+                      />
+                    </div>
+                    <span className="admin-stats-bar-num">{row.total}</span>
+                  </div>
                 ))}
-              </ul>
+              </>
             )}
           </div>
-          <div className="admin-panel">
-            <h2 className="admin-page-title" style={{ fontSize: '1.15rem', marginBottom: 12 }}>
-              Usuarios por rol
-            </h2>
+
+          <div className="admin-stats-panel">
+            <h2 className="admin-stats-panel__title">Usuarios por rol</h2>
             {byRole.length === 0 ? (
               <p className="admin-page-desc">Sin datos.</p>
             ) : (
-              <ul style={{ margin: 0, paddingLeft: 18 }} className="admin-page-desc">
-                {byRole.map((row) => (
-                  <li key={row.role}>
-                    <strong>{row.role}</strong>: {row.total}
-                  </li>
-                ))}
-              </ul>
+              <div className="admin-stats-table-wrap">
+                <table className="admin-stats-table">
+                  <thead>
+                    <tr>
+                      <th>Rol</th>
+                      <th>Cantidad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {byRole.map((row) => (
+                      <tr key={row.role}>
+                        <td>{row.role}</td>
+                        <td>{row.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
-          <div className="admin-panel">
-            <h2 className="admin-page-title" style={{ fontSize: '1.15rem', marginBottom: 12 }}>
-              Por categoría
-            </h2>
+
+          <div className="admin-stats-panel">
+            <h2 className="admin-stats-panel__title">Fósiles por categoría</h2>
             {byCategory.length === 0 ? (
               <p className="admin-page-desc">Sin datos.</p>
             ) : (
-              <ul style={{ margin: 0, paddingLeft: 18 }} className="admin-page-desc">
-                {byCategory.map((row) => (
-                  <li key={row.category}>
-                    <strong>{row.category}</strong>: {row.total}
-                  </li>
-                ))}
-              </ul>
+              byCategory.map((row) => (
+                <div key={row.category} className="admin-stats-bar-row">
+                  <span className="admin-stats-bar-label">{row.category}</span>
+                  <div className="admin-stats-bar-track">
+                    <div
+                      className="admin-stats-bar-fill"
+                      style={{
+                        width: `${(row.total / maxCat) * 100}%`,
+                        opacity: 0.85,
+                      }}
+                    />
+                  </div>
+                  <span className="admin-stats-bar-num">{row.total}</span>
+                </div>
+              ))
             )}
           </div>
-        </div>
+        </section>
       )}
 
       {!loading && timeline.length > 0 && (
-        <div className="admin-panel" style={{ marginTop: 24 }}>
-          <h2 className="admin-page-title" style={{ fontSize: '1.15rem', marginBottom: 12 }}>
-            Altas de fósiles por mes
-          </h2>
-          <div className="admin-table-wrap">
+        <div className="admin-stats-panel" style={{ marginTop: 8 }}>
+          <h2 className="admin-stats-panel__title">Altas de fósiles por mes (tendencia)</h2>
+          <div className="admin-stats-timeline-chart" role="img" aria-label="Gráfico de barras mensual">
+            {timeline.map((row) => (
+              <div
+                key={String(row.month)}
+                className="admin-stats-timeline-bar"
+                style={{
+                  height: `${Math.max(12, (row.total / maxTimeline) * 140)}px`,
+                }}
+                title={`${row.total} registros`}
+              />
+            ))}
+          </div>
+          <div className="admin-stats-timeline-labels">
+            {timeline.map((row) => (
+              <span key={String(row.month)}>
+                {row.month
+                  ? new Date(row.month).toLocaleDateString('es-CR', { month: 'short', year: '2-digit' })
+                  : '—'}
+              </span>
+            ))}
+          </div>
+          <div className="admin-table-wrap" style={{ marginTop: 16 }}>
             <table className="admin-table">
               <thead>
                 <tr>
@@ -182,7 +264,7 @@ function AdminStats() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

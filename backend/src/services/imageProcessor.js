@@ -8,14 +8,14 @@ const processImage = async (filePath) => {
     const dir = path.dirname(filePath);
     const ext = path.extname(filename);
     const nameWithoutExt = path.basename(filename, ext);
-    
-    const thumbnailPath = path.join(dir, `${nameWithoutExt}-thumb${ext}`);
-    const optimizedPath = path.join(dir, `${nameWithoutExt}-optimized${ext}`);
+
+    const thumbnailPath = path.join(dir, `${nameWithoutExt}-thumb.jpg`);
+    const optimizedPath = path.join(dir, `${nameWithoutExt}-optimized.jpg`);
 
     await sharp(filePath)
       .resize(200, 200, {
         fit: 'cover',
-        position: 'center'
+        position: 'center',
       })
       .jpeg({ quality: 80 })
       .toFile(thumbnailPath);
@@ -23,7 +23,7 @@ const processImage = async (filePath) => {
     await sharp(filePath)
       .resize(1200, 1200, {
         fit: 'inside',
-        withoutEnlargement: true
+        withoutEnlargement: true,
       })
       .jpeg({ quality: 85 })
       .toFile(optimizedPath);
@@ -35,16 +35,16 @@ const processImage = async (filePath) => {
     return {
       original: {
         path: filePath,
-        size: stats.size
+        size: stats.size,
       },
       thumbnail: {
         path: thumbnailPath,
-        size: thumbStats.size
+        size: thumbStats.size,
       },
       optimized: {
         path: optimizedPath,
-        size: optStats.size
-      }
+        size: optStats.size,
+      },
     };
   } catch (error) {
     console.error('Error procesando imagen:', error);
@@ -55,16 +55,20 @@ const processImage = async (filePath) => {
 const deleteImage = async (filePath) => {
   try {
     const dir = path.dirname(filePath);
-    const ext = path.extname(filePath);
-    const nameWithoutExt = path.basename(filePath, ext);
-    
-    const thumbnailPath = path.join(dir, `${nameWithoutExt}-thumb${ext}`);
-    const optimizedPath = path.join(dir, `${nameWithoutExt}-optimized${ext}`);
+    const base = path.basename(filePath);
+
+    const stemOptimized = base.match(/^(.+)-optimized\.(jpg|jpeg|png|webp)$/i);
+    if (stemOptimized) {
+      const stem = stemOptimized[1];
+      await fs.unlink(path.join(dir, `${stem}-optimized.jpg`)).catch(() => {});
+      await fs.unlink(path.join(dir, `${stem}-thumb.jpg`)).catch(() => {});
+      for (const ext of ['.jpg', '.jpeg', '.png', '.webp', '.JPG', '.JPEG', '.PNG', '.WEBP']) {
+        await fs.unlink(path.join(dir, stem + ext)).catch(() => {});
+      }
+      return true;
+    }
 
     await fs.unlink(filePath).catch(() => {});
-    await fs.unlink(thumbnailPath).catch(() => {});
-    await fs.unlink(optimizedPath).catch(() => {});
-
     return true;
   } catch (error) {
     console.error('Error eliminando imagen:', error);

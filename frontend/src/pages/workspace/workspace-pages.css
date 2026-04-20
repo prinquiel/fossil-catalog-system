@@ -114,6 +114,11 @@
   font-weight: 700;
   background: var(--ruby-dark);
   color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .workspace-btn:disabled {

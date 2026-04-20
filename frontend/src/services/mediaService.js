@@ -27,6 +27,16 @@ export function validateImageFiles(files) {
 }
 
 export const mediaService = {
+  async getByFossil(fossilId) {
+    const response = await api.get(`/media/fossil/${fossilId}`);
+    return response.data;
+  },
+
+  async deleteMedia(mediaId) {
+    const response = await api.delete(`/media/${mediaId}`);
+    return response.data;
+  },
+
   /**
    * POST /api/media/upload (multipart). Requiere fósil ya creado.
    * Usa fetch para no forzar Content-Type: application/json del cliente axios.

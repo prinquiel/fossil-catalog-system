@@ -6,12 +6,19 @@ import { fossilService } from '../../services/fossilService';
 import { studyService } from '../../services/studyService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import '../workspace/workspace-pages.css';
+import './researcher-dashboard.css';
 
 function ResearcherDashboard() {
   const { user } = useAuth();
   const [fossils, setFossils] = useState([]);
   const [studies, setStudies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const quickActions = [
+    { to: '/researcher/catalog', label: 'Catalogo', hint: 'Fichas publicadas' },
+    { to: '/researcher/search', label: 'Buscar', hint: 'Consulta directa' },
+    { to: '/researcher/my-studies', label: 'Estudios', hint: 'Gestion personal' },
+    { to: '/researcher/map', label: 'Mapa', hint: 'Vista espacial' },
+  ];
 
   useEffect(() => {
     let mounted = true;
@@ -40,45 +47,50 @@ function ResearcherDashboard() {
 
   return (
     <div className="workspace-page">
-      <p className="workspace-page__kicker">Mesa de trabajo</p>
-      <h1 className="workspace-page__title">Panel del investigador</h1>
-      <p className="workspace-page__lead">
-        Panorama del catálogo publicado y de sus estudios científicos asociados a ejemplares del archivo.
-      </p>
-
-      {loading ? (
-        <p className="workspace-muted">Cargando…</p>
-      ) : (
-        <div className="workspace-grid-2">
-          <article className="workspace-stat">
-            <strong>{published}</strong>
-            <span>Fichas publicadas en catálogo</span>
-          </article>
-          <article className="workspace-stat">
-            <strong>{fossils.length}</strong>
-            <span>Total de registros (todos los estados)</span>
-          </article>
-          <article className="workspace-stat">
-            <strong>{myStudies.length}</strong>
-            <span>Mis estudios registrados</span>
-          </article>
-        </div>
-      )}
-
-      <div className="workspace-card" style={{ marginTop: 22 }}>
-        <p className="workspace-page__kicker" style={{ marginBottom: 10 }}>
-          Accesos
+      <div className="researcher-dash-hero">
+        <p className="workspace-page__kicker">Mesa de trabajo</p>
+        <h1 className="workspace-page__title" style={{ border: 0, paddingBottom: 8, marginBottom: 0 }}>
+          Panel del investigador
+        </h1>
+        <p className="workspace-page__lead" style={{ marginBottom: 0 }}>
+          Espacio profesional para analizar hallazgos publicados, registrar estudios y navegar evidencias visuales y
+          geográficas en un solo flujo.
         </p>
-        <div className="workspace-actions">
-          <Link to="/researcher/catalog" className="workspace-btn">
-            Catálogo de trabajo
-          </Link>
-          <Link to="/researcher/search" className="workspace-btn workspace-btn--ghost">
-            Búsqueda rápida
-          </Link>
-          <Link to="/researcher/map" className="workspace-btn workspace-btn--ghost">
-            Mapa de coordenadas
-          </Link>
+
+        {loading ? (
+          <p className="workspace-muted" style={{ marginTop: 16 }}>
+            Cargando…
+          </p>
+        ) : (
+          <div className="researcher-dash-stats">
+            <div className="researcher-dash-stat">
+              <strong>{published}</strong>
+              <span>Fichas publicadas en catálogo</span>
+            </div>
+            <div className="researcher-dash-stat">
+              <strong>{fossils.length}</strong>
+              <span>Registros cargados en la base</span>
+            </div>
+            <div className="researcher-dash-stat">
+              <strong>{myStudies.length}</strong>
+              <span>Mis estudios registrados</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="researcher-dash-accesos">
+        <div className="researcher-dash-quickbar-head">
+          <p className="workspace-page__kicker">Acceso rapido</p>
+          <span>Atajos directos del panel</span>
+        </div>
+        <div className="researcher-dash-quickbar" role="navigation" aria-label="Accesos rapidos de investigador">
+          {quickActions.map((item) => (
+            <Link key={item.to} to={item.to} className="researcher-dash-quickbar-item">
+              <strong>{item.label}</strong>
+              <small>{item.hint}</small>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

@@ -53,10 +53,8 @@ const uploadMedia = async (req, res) => {
 
       const processed = await processImage(file.path);
 
-      const relativePath = path.relative(
-        path.join(__dirname, '../../'),
-        processed.optimized.path
-      );
+      let relativePath = path.relative(path.join(__dirname, '../../'), processed.optimized.path);
+      relativePath = relativePath.split(path.sep).join('/');
 
       const result = await client.query(
         `INSERT INTO media (fossil_id, file_name, file_path, file_type, media_category, angle, file_size)

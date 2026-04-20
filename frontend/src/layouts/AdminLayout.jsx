@@ -190,13 +190,19 @@ function AdminLayout() {
                 })}
               </nav>
               <div className="admin-sidebar__footer">
+                <div className="admin-footer-links">
+                <Link to="/" className="admin-link-home">
+                    Inicio
+                  </Link>
+                  <Link to="/catalog" className="admin-link-home">
+                    Ver catálogo público
+                  </Link>
+                </div>
+                <hr className="admin-footer-rule" />
                 <div className="admin-user-chip">{user?.email || user?.username}</div>
-                <button type="button" className="admin-btn-ghost" onClick={() => logout()}>
+                <button type="button" className="admin-btn-ghost admin-btn-ghost--logout" onClick={() => logout()}>
                   Cerrar sesión
                 </button>
-                <Link to="/" className="admin-link-home">
-                  Volver al inicio
-                </Link>
               </div>
             </div>
           </aside>
