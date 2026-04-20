@@ -9,6 +9,12 @@ import '../workspace/workspace-pages.css';
 
 const PAGE_SIZE = 8;
 
+const PUBLICATION_LABEL = {
+  pending: 'En revisión',
+  published: 'Publicado',
+  rejected: 'Rechazado',
+};
+
 function ResearcherMyStudies() {
   const { user } = useAuth();
   const [rows, setRows] = useState([]);
@@ -67,6 +73,7 @@ function ResearcherMyStudies() {
                 <tr>
                   <th>Título</th>
                   <th>Fósil (ejemplar)</th>
+                  <th>Estado</th>
                   <th>Fecha</th>
                 </tr>
               </thead>
@@ -83,6 +90,7 @@ function ResearcherMyStudies() {
                         Ver ejemplar #{s.fossil_id}
                       </Link>
                     </td>
+                    <td>{PUBLICATION_LABEL[s.publication_status] || s.publication_status || '—'}</td>
                     <td>{s.study_date ? String(s.study_date).slice(0, 10) : '—'}</td>
                   </tr>
                 ))}

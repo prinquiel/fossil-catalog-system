@@ -36,9 +36,20 @@ function SiteHeader() {
           </NavLink>
           <NavLink
             to="/catalog"
+            end
             className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
           >
             Catálogo
+          </NavLink>
+          <NavLink
+            to="/catalog/estudios"
+            className={() => {
+              const p = pathname;
+              const onStudies = p === '/catalog/estudios' || /^\/catalog\/estudio\/[^/]+$/.test(p);
+              return `site-header__pill${onStudies ? ' is-active' : ''}`;
+            }}
+          >
+            Estudios
           </NavLink>
           <NavLink
             to="/map"

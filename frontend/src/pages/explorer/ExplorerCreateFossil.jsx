@@ -1,33 +1,121 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { fossilService } from '../../services/fossilService';
 import { mediaService, validateImageFiles, MEDIA_MAX_FILES } from '../../services/mediaService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
+import { formatCoord, requestCurrentPosition } from '../../utils/geolocation.js';
+import {
+  clearFossilCreateDraft,
+  loadFossilCreateDraft,
+  saveFossilCreateDraft,
+} from '../../utils/fossilDraftStorage.js';
 import { FOSSIL_CATEGORIES } from '../../constants/fossilMeta.js';
+import FossilGeoTaxonomyFields from '../../components/fossil/FossilGeoTaxonomyFields.jsx';
 import '../workspace/workspace-pages.css';
+
+const DEFAULT_FORM = {
+  name: '',
+  category: 'FOS',
+  description: '',
+  discoverer_name: '',
+  discovery_date: '',
+  geological_context: '',
+  original_state_description: '',
+  era_id: '',
+  period_id: '',
+  kingdom_id: '',
+  phylum_id: '',
+  class_id: '',
+  order_id: '',
+  family_id: '',
+  genus_id: '',
+  species_id: '',
+  country_code: '',
+  province_code: '',
+  canton_code: '',
+  latitude: '',
+  longitude: '',
+  location_description: '',
+};
+
+function appendClassificationToPayload(payload, form) {
+  const keys = [
+    'era_id',
+    'period_id',
+    'kingdom_id',
+    'phylum_id',
+    'class_id',
+    'order_id',
+    'family_id',
+    'genus_id',
+    'species_id',
+  ];
+  keys.forEach((k) => {
+    const v = form[k];
+    if (v === '' || v == null) payload[k] = '';
+    else payload[k] = Number(v);
+  });
+}
+
+function formatSavedAt(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' });
+  } catch {
+    return '';
+  }
+}
 
 function ExplorerCreateFossil() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+  /** Borrador en disco detectado al cargar la página (recuperar o descartar). */
+  const [recoverableDraft, setRecoverableDraft] = useState(
+    /** @type {{ form: typeof DEFAULT_FORM, savedAt: string } | null} */ (null)
+  );
+  const [lastLocalSaveLabel, setLastLocalSaveLabel] = useState('');
   const [imageFiles, setImageFiles] = useState(/** @type {File[]} */ ([]));
-  const [form, setForm] = useState({
-    name: '',
-    category: 'FOS',
-    description: '',
-    discoverer_name: '',
-    discovery_date: '',
-    geological_context: '',
-    original_state_description: '',
-    country_code: '',
-    province_code: '',
-    canton_code: '',
-    latitude: '',
-    longitude: '',
-    location_description: '',
-  });
+  const [form, setForm] = useState({ ...DEFAULT_FORM });
+
+  useEffect(() => {
+    const d = loadFossilCreateDraft();
+    if (d?.form) setRecoverableDraft({ form: { ...DEFAULT_FORM, ...d.form }, savedAt: d.savedAt });
+  }, []);
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleUseMyLocation = async () => {
+    setGeoLoading(true);
+    try {
+      const { latitude, longitude } = await requestCurrentPosition();
+      setForm((f) => ({
+        ...f,
+        latitude: formatCoord(latitude),
+        longitude: formatCoord(longitude),
+      }));
+      toast.success('Coordenadas GPS aplicadas.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'No se pudo obtener la ubicación.');
+    } finally {
+      setGeoLoading(false);
+    }
+  };
 
   const onPickImages = (e) => {
     const picked = Array.from(e.target.files || []);
@@ -45,8 +133,36 @@ function ExplorerCreateFossil() {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleSaveDraftLocally = () => {
+    const ok = saveFossilCreateDraft(form);
+    if (!ok) {
+      toast.error('No se pudo guardar en este dispositivo (almacenamiento lleno o bloqueado).');
+      return;
+    }
+    const label = formatSavedAt(new Date().toISOString());
+    setLastLocalSaveLabel(label);
+    toast.success('Borrador guardado en este navegador. Podés enviar la ficha cuando haya conexión.');
+  };
+
+  const handleRestoreDraft = () => {
+    if (!recoverableDraft) return;
+    setForm(recoverableDraft.form);
+    setRecoverableDraft(null);
+    toast.success('Borrador recuperado. Las fotos hay que volver a seleccionarlas si las tenías.');
+  };
+
+  const handleDiscardDraft = () => {
+    clearFossilCreateDraft();
+    setRecoverableDraft(null);
+    toast('Borrador local eliminado.');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isOnline) {
+      toast.error('Sin conexión. Guardá un borrador local con el botón inferior y enviá cuando vuelva internet.');
+      return;
+    }
     if (!form.name.trim()) {
       toast.error('El nombre del hallazgo es obligatorio.');
       return;
@@ -79,6 +195,7 @@ function ExplorerCreateFossil() {
         payload.longitude = Number(form.longitude);
       }
       if (form.location_description.trim()) payload.location_description = form.location_description.trim();
+      appendClassificationToPayload(payload, form);
       const res = await fossilService.create(payload);
       if (res.success && res.data?.id) {
         const id = res.data.id;
@@ -97,6 +214,8 @@ function ExplorerCreateFossil() {
         } else {
           toast.success('Registro creado. Queda en revisión hasta su publicación.');
         }
+        clearFossilCreateDraft();
+        setLastLocalSaveLabel('');
         navigate(`/explorer/my-fossils`);
       }
     } catch (err) {
@@ -115,6 +234,39 @@ function ExplorerCreateFossil() {
         si no indica uno propio acreditado. Podés <strong>adjuntar fotos</strong> en la sección siguiente al
         resumen del hallazgo.
       </p>
+
+      {!isOnline ? (
+        <div className="workspace-alert" role="status" style={{ marginBottom: 16 }}>
+          <strong>Sin conexión a internet.</strong> Podés seguir completando la ficha y usar{' '}
+          <strong>Guardar borrador en este dispositivo</strong> abajo; cuando vuelva la red, abrí esta página,
+          recuperá el borrador si hace falta y pulsá <strong>Enviar ficha</strong>.
+        </div>
+      ) : null}
+
+      {recoverableDraft ? (
+        <div
+          className="workspace-card"
+          style={{
+            marginBottom: 16,
+            padding: '14px 18px',
+            borderStyle: 'dashed',
+            background: 'var(--workspace-muted-bg, rgba(0,0,0,0.04))',
+          }}
+        >
+          <p style={{ margin: '0 0 10px', fontSize: '0.95rem' }}>
+            Hay un <strong>borrador guardado</strong> en este navegador
+            {recoverableDraft.savedAt ? ` (${formatSavedAt(recoverableDraft.savedAt)})` : ''}.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            <button type="button" className="workspace-btn" onClick={handleRestoreDraft}>
+              Recuperar borrador
+            </button>
+            <button type="button" className="workspace-btn workspace-btn--ghost" onClick={handleDiscardDraft}>
+              Descartar borrador
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <form className="workspace-card workspace-form" onSubmit={handleSubmit}>
         <div className="workspace-form__row">
@@ -211,6 +363,8 @@ function ExplorerCreateFossil() {
           />
         </div>
 
+        <FossilGeoTaxonomyFields form={form} setForm={setForm} disabled={loading} />
+
         <hr className="np-rule" style={{ margin: '22px 0' }} />
         <p className="workspace-muted" style={{ marginBottom: 12 }}>
           Ubicación (opcional): puede guardar solo <strong>WGS84</strong> (latitud y longitud) para yacimientos
@@ -248,15 +402,53 @@ function ExplorerCreateFossil() {
             <input id="lng" inputMode="decimal" value={form.longitude} onChange={set('longitude')} />
           </div>
         </div>
+        <div style={{ marginTop: 10 }}>
+          <button
+            type="button"
+            className="workspace-btn workspace-btn--ghost"
+            disabled={loading || geoLoading}
+            onClick={handleUseMyLocation}
+          >
+            {geoLoading ? 'Obteniendo ubicación…' : 'Usar mi ubicación (GPS)'}
+          </button>
+        </div>
         <div style={{ marginTop: 14 }}>
           <label htmlFor="loc-desc">Descripción del lugar</label>
           <input id="loc-desc" value={form.location_description} onChange={set('location_description')} />
         </div>
 
+        <hr className="np-rule" style={{ margin: '22px 0' }} />
+        <p className="workspace-page__kicker" style={{ marginBottom: 8 }}>
+          Borrador local (sin conexión o respaldo)
+        </p>
+        <p className="workspace-muted" style={{ marginBottom: 12, fontSize: '0.9rem', maxWidth: 640 }}>
+          <strong>No incluye fotos</strong> (por tamaño); tendrás que volver a elegirlas al enviar.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+          <button
+            type="button"
+            className="workspace-btn workspace-btn--ghost"
+            disabled={loading}
+            onClick={handleSaveDraftLocally}
+          >
+            Guardar borrador en este dispositivo
+          </button>
+          {lastLocalSaveLabel ? (
+            <span className="workspace-muted" style={{ fontSize: '0.86rem' }}>
+              Último guardado: {lastLocalSaveLabel}
+            </span>
+          ) : null}
+        </div>
+
         <div className="workspace-actions">
-          <button type="submit" className="workspace-btn" disabled={loading}>
+          <button type="submit" className="workspace-btn" disabled={loading || !isOnline}>
             {loading ? 'Guardando…' : 'Enviar ficha'}
           </button>
+          {!isOnline ? (
+            <span className="workspace-muted" style={{ fontSize: '0.88rem' }}>
+              Enviar requiere conexión.
+            </span>
+          ) : null}
         </div>
       </form>
     </div>

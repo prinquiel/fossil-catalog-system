@@ -29,10 +29,17 @@ function FitBounds({ points }) {
  * points: Array<{id:number|string, name:string, unique_code?:string, latitude:number|string, longitude:number|string}>,
  * selectedId?: number|string|null,
  * onSelectId?: (id:number|string)=>void,
- * height?: number
+ * height?: number,
+ * showFossilCode?: boolean
  * }} props
  */
-export default function FossilPublicMap({ points, selectedId = null, onSelectId, height = 320 }) {
+export default function FossilPublicMap({
+  points,
+  selectedId = null,
+  onSelectId,
+  height = 320,
+  showFossilCode = false,
+}) {
   const normalizedPoints = Array.isArray(points)
     ? points.filter((p) => p?.latitude != null && p?.longitude != null)
     : [];
@@ -66,8 +73,12 @@ export default function FossilPublicMap({ points, selectedId = null, onSelectId,
             >
               <Popup>
                 <strong>{p.name}</strong>
-                <br />
-                {p.unique_code || 'Registro'}
+                {showFossilCode && p.unique_code ? (
+                  <>
+                    <br />
+                    <span style={{ fontWeight: 600 }}>{p.unique_code}</span>
+                  </>
+                ) : null}
                 <br />
                 <Link to={`/catalog#fossil-${p.id}`}>Ver en catálogo</Link>
               </Popup>

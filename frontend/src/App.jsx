@@ -7,6 +7,8 @@ import Landing from './pages/public/Landing';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Catalog from './pages/public/Catalog';
+import PublicStudiesIndex from './pages/public/PublicStudiesIndex';
+import PublicStudyDetail from './pages/public/PublicStudyDetail';
 import PublicMap from './pages/public/PublicMap';
 import RoleLayout from './layouts/RoleLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -15,8 +17,11 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPendingRegistrations from './pages/admin/AdminPendingRegistrations';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminCreateUser from './pages/admin/AdminCreateUser';
+import AdminEditUser from './pages/admin/AdminEditUser';
 import AdminFossils from './pages/admin/AdminFossils';
 import AdminPendingFossils from './pages/admin/AdminPendingFossils';
+import AdminPendingStudies from './pages/admin/AdminPendingStudies';
+import AdminStudyView from './pages/admin/AdminStudyView';
 import AdminFossilReview from './pages/admin/AdminFossilReview';
 import AdminMessages from './pages/admin/AdminMessages';
 import AdminMessageDetail from './pages/admin/AdminMessageDetail';
@@ -86,6 +91,8 @@ function App() {
               <Route path="/register" element={<Register />} />
 
               <Route path="/catalog" element={<Catalog />} />
+              <Route path="/catalog/estudios" element={<PublicStudiesIndex />} />
+              <Route path="/catalog/estudio/:id" element={<PublicStudyDetail />} />
               <Route path="/fossil/:id" element={<PlaceholderPage title="Fossil Detail" />} />
               <Route path="/map" element={<PublicMap />} />
               <Route path="/about" element={<PlaceholderPage title="About" />} />
@@ -151,20 +158,13 @@ function App() {
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="pending-registrations" element={<AdminPendingRegistrations />} />
               <Route path="pending-fossils" element={<AdminPendingFossils />} />
+              <Route path="pending-studies" element={<AdminPendingStudies />} />
+              <Route path="study/:id" element={<AdminStudyView />} />
               <Route path="fossil/:id/review" element={<AdminFossilReview />} />
               <Route path="fossils" element={<AdminFossils />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="create-user" element={<AdminCreateUser />} />
-              <Route
-                path="edit-user/:id"
-                element={
-                  <PlaceholderPage
-                    title="Editar usuario"
-                    description="La edición detallada de perfiles puede hacerse desde la API o ampliando esta vista. Use el listado de usuarios para consultar datos actuales."
-                    eyebrow="Administración"
-                  />
-                }
-              />
+              <Route path="edit-user/:id" element={<AdminEditUser />} />
               <Route path="messages" element={<AdminMessages />} />
               <Route path="message/:id" element={<AdminMessageDetail />} />
               <Route path="audit" element={<AdminAudit />} />

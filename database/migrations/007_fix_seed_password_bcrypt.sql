@@ -1,6 +1,5 @@
--- Corrige password_hash de usuarios cargados con 02-seed-data.sql antiguo:
--- el hash guardado no correspondia a la contrasena documentada "Admin123!".
--- Contrasena tras este script: Admin123! (misma que en seed actualizado).
+-- Legado: corrige password_hash si en el pasado se cargó un seed antiguo con hash incorrecto.
+-- El seed actual (02-seed-data.sql) ya no inserta usuarios de demostración.
 UPDATE users
 SET password_hash = '$2a$10$3wSvsYAItgU2CR.u8Fz5RegyaP1mPyEGUABMr4TQHqLI1a5E2PiZe',
     updated_at = CURRENT_TIMESTAMP

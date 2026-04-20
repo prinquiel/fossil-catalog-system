@@ -460,3 +460,88 @@
   line-height: 1.55;
   max-width: 52ch;
 }
+
+/* Modal de confirmación (reemplazo de window.confirm en admin) */
+.admin-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(35, 30, 26, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-sizing: border-box;
+  animation: adminConfirmFadeIn 0.2s ease-out;
+}
+
+@keyframes adminConfirmFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.admin-confirm-dialog {
+  width: min(100%, 440px);
+  border-radius: 20px;
+  padding: 26px 24px 22px;
+  background: linear-gradient(165deg, rgba(255, 252, 248, 0.99) 0%, rgba(245, 238, 227, 0.98) 100%);
+  border: 1px solid rgba(91, 76, 58, 0.2);
+  box-shadow:
+    0 24px 60px rgba(45, 36, 28, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset;
+  animation: adminConfirmPop 0.22s ease-out;
+}
+
+@keyframes adminConfirmPop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.admin-confirm-dialog__title {
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-size: 1.38rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--clay-deep, #5b4c3a);
+  line-height: 1.25;
+}
+
+.admin-confirm-dialog__body {
+  font-family: var(--font-ui, 'Source Sans 3', sans-serif);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--earth-brown, #6b5a47);
+  margin: 0 0 22px;
+}
+
+.admin-confirm-dialog__body strong {
+  color: var(--clay-deep, #5b4c3a);
+  font-weight: 700;
+}
+
+.admin-confirm-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-confirm-backdrop,
+  .admin-confirm-dialog {
+    animation: none;
+  }
+}

@@ -9,6 +9,7 @@ const NAV = [
   { to: '/admin/dashboard', label: 'Panel', end: false },
   { to: '/admin/pending-registrations', label: 'Registros pendientes', end: false },
   { to: '/admin/pending-fossils', label: 'Fósiles pendientes', end: false },
+  { to: '/admin/pending-studies', label: 'Estudios pendientes', end: false },
   { to: '/admin/fossils', label: 'Fósiles', end: false },
   { to: '/admin/users', label: 'Usuarios', end: false },
   { to: '/admin/create-user', label: 'Crear usuario', end: false },
@@ -82,10 +83,20 @@ function IconChart() {
   );
 }
 
+function IconStudies() {
+  return (
+    <svg className="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+    </svg>
+  );
+}
+
 const ICONS = {
   '/admin/dashboard': IconPanel,
   '/admin/pending-registrations': IconInbox,
   '/admin/pending-fossils': IconLeaf,
+  '/admin/pending-studies': IconStudies,
   '/admin/fossils': IconLeaf,
   '/admin/users': IconUsers,
   '/admin/create-user': IconPlusUser,

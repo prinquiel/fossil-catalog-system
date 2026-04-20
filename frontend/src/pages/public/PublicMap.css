@@ -140,6 +140,12 @@
   color: #7d5f44;
 }
 
+.public-map-item__code {
+  font-family: 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
 .public-map-item strong {
   font-size: 0.95rem;
   color: #4e3a28;
@@ -168,10 +174,8 @@
   padding-top: 10px;
 }
 
-.public-map-selected p {
-  margin: 0;
-  font-size: 0.75rem;
-  color: #7d5f44;
+.public-map-selected__code {
+  margin: 0 0 8px;
 }
 
 .public-map-selected h3 {

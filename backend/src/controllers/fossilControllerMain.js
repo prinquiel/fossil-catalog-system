@@ -122,6 +122,142 @@ async function syncLocationForFossil(fossilId, body, { allowClear } = {}) {
   );
 }
 
+function parseIdField(v) {
+  if (v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function hasGeologyBody(body) {
+  if (!body || typeof body !== 'object') return false;
+  return (
+    Object.prototype.hasOwnProperty.call(body, 'era_id') ||
+    Object.prototype.hasOwnProperty.call(body, 'period_id')
+  );
+}
+
+const TAXONOMY_KEYS = [
+  'kingdom_id',
+  'phylum_id',
+  'class_id',
+  'order_id',
+  'family_id',
+  'genus_id',
+  'species_id',
+];
+
+function hasTaxonomyBody(body) {
+  if (!body || typeof body !== 'object') return false;
+  return TAXONOMY_KEYS.some((k) => Object.prototype.hasOwnProperty.call(body, k));
+}
+
+async function syncGeologyForFossil(fossilId, body) {
+  if (!hasGeologyBody(body)) return;
+  const era_id = parseIdField(body.era_id);
+  const period_id = parseIdField(body.period_id);
+  if (era_id == null && period_id == null) {
+    await query('DELETE FROM fossil_geological_classification WHERE fossil_id = $1', [fossilId]);
+    return;
+  }
+  const existing = await query('SELECT fossil_id FROM fossil_geological_classification WHERE fossil_id = $1', [
+    fossilId,
+  ]);
+  if (existing.rows.length > 0) {
+    await query(
+      `UPDATE fossil_geological_classification SET era_id = $1, period_id = $2 WHERE fossil_id = $3`,
+      [era_id, period_id, fossilId]
+    );
+  } else {
+    await query(
+      `INSERT INTO fossil_geological_classification (fossil_id, era_id, period_id) VALUES ($1, $2, $3)`,
+      [fossilId, era_id, period_id]
+    );
+  }
+}
+
+async function syncTaxonomyForFossil(fossilId, body) {
+  if (!hasTaxonomyBody(body)) return;
+  const kingdom_id = parseIdField(body.kingdom_id);
+  const phylum_id = parseIdField(body.phylum_id);
+  const class_id = parseIdField(body.class_id);
+  const order_id = parseIdField(body.order_id);
+  const family_id = parseIdField(body.family_id);
+  const genus_id = parseIdField(body.genus_id);
+  const species_id = parseIdField(body.species_id);
+  const allEmpty =
+    kingdom_id == null &&
+    phylum_id == null &&
+    class_id == null &&
+    order_id == null &&
+    family_id == null &&
+    genus_id == null &&
+    species_id == null;
+  if (allEmpty) {
+    await query('DELETE FROM fossil_taxonomic_classification WHERE fossil_id = $1', [fossilId]);
+    return;
+  }
+  const existing = await query('SELECT fossil_id FROM fossil_taxonomic_classification WHERE fossil_id = $1', [
+    fossilId,
+  ]);
+  const updateVals = [kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id, fossilId];
+  if (existing.rows.length > 0) {
+    await query(
+      `UPDATE fossil_taxonomic_classification
+       SET kingdom_id = $1, phylum_id = $2, class_id = $3, order_id = $4,
+           family_id = $5, genus_id = $6, species_id = $7
+       WHERE fossil_id = $8`,
+      updateVals
+    );
+  } else {
+    await query(
+      `INSERT INTO fossil_taxonomic_classification
+        (fossil_id, kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [fossilId, kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id]
+    );
+  }
+}
+
+/** SELECT + FROM + joins para una ficha con ubicación, era/período y taxonomía. */
+const FOSSIL_FULL_SELECT = `
+      SELECT f.*,
+              l.country_code, l.province_code, l.canton_code, l.latitude, l.longitude, l.location_description,
+              cu.username AS created_by_username,
+              au.username AS approved_by_username,
+              fgc.era_id, fgc.period_id,
+              ge.name AS era_name,
+              gp.name AS period_name,
+              ftc.kingdom_id, ftc.phylum_id, ftc.class_id, ftc.order_id AS taxonomic_order_id,
+              ftc.family_id, ftc.genus_id, ftc.species_id,
+              tk.name AS kingdom_name,
+              tph.name AS phylum_name,
+              tcl.name AS class_name,
+              tord.name AS order_name,
+              tfa.name AS family_name,
+              tge.name AS genus_name,
+              tsp.name AS species_name,
+              tsp.common_name AS species_common_name
+       FROM fossils f
+       LEFT JOIN locations l ON l.fossil_id = f.id
+       JOIN users cu ON cu.id = f.created_by
+       LEFT JOIN users au ON au.id = f.approved_by
+       LEFT JOIN fossil_geological_classification fgc ON fgc.fossil_id = f.id
+       LEFT JOIN geological_eras ge ON ge.id = fgc.era_id
+       LEFT JOIN geological_periods gp ON gp.id = fgc.period_id
+       LEFT JOIN fossil_taxonomic_classification ftc ON ftc.fossil_id = f.id
+       LEFT JOIN taxonomic_kingdoms tk ON tk.id = ftc.kingdom_id
+       LEFT JOIN taxonomic_phylums tph ON tph.id = ftc.phylum_id
+       LEFT JOIN taxonomic_classes tcl ON tcl.id = ftc.class_id
+       LEFT JOIN taxonomic_orders tord ON tord.id = ftc.order_id
+       LEFT JOIN taxonomic_families tfa ON tfa.id = ftc.family_id
+       LEFT JOIN taxonomic_genera tge ON tge.id = ftc.genus_id
+       LEFT JOIN taxonomic_species tsp ON tsp.id = ftc.species_id`;
+
+async function getFossilRowFullById(id) {
+  const result = await query(`${FOSSIL_FULL_SELECT} WHERE f.id = $1 AND f.deleted_at IS NULL`, [id]);
+  return result.rows[0] || null;
+}
+
 const getFossils = async (req, res) => {
   try {
     const result = await query(
@@ -129,11 +265,22 @@ const getFossils = async (req, res) => {
               l.country_code, l.province_code, l.canton_code, l.latitude, l.longitude, l.location_description,
               cu.username AS created_by_username,
               au.username AS approved_by_username,
+              fgc.era_id, fgc.period_id,
+              ge.name AS era_name,
+              gp.name AS period_name,
+              tk.name AS kingdom_name,
+              tsp.name AS species_name,
               COALESCE(m.media_count, 0)::int AS media_count
        FROM fossils f
        LEFT JOIN locations l ON l.fossil_id = f.id
        JOIN users cu ON cu.id = f.created_by
        LEFT JOIN users au ON au.id = f.approved_by
+       LEFT JOIN fossil_geological_classification fgc ON fgc.fossil_id = f.id
+       LEFT JOIN geological_eras ge ON ge.id = fgc.era_id
+       LEFT JOIN geological_periods gp ON gp.id = fgc.period_id
+       LEFT JOIN fossil_taxonomic_classification ftc ON ftc.fossil_id = f.id
+       LEFT JOIN taxonomic_kingdoms tk ON tk.id = ftc.kingdom_id
+       LEFT JOIN taxonomic_species tsp ON tsp.id = ftc.species_id
        LEFT JOIN LATERAL (
          SELECT COUNT(*)::int AS media_count
          FROM media md
@@ -152,22 +299,11 @@ const getFossils = async (req, res) => {
 
 const getFossilById = async (req, res) => {
   try {
-    const result = await query(
-      `SELECT f.*,
-              l.country_code, l.province_code, l.canton_code, l.latitude, l.longitude, l.location_description,
-              cu.username AS created_by_username,
-              au.username AS approved_by_username
-       FROM fossils f
-       LEFT JOIN locations l ON l.fossil_id = f.id
-       JOIN users cu ON cu.id = f.created_by
-       LEFT JOIN users au ON au.id = f.approved_by
-       WHERE f.id = $1 AND f.deleted_at IS NULL`,
-      [req.params.id]
-    );
-    if (result.rows.length === 0) {
+    const row = await getFossilRowFullById(req.params.id);
+    if (!row) {
       return res.status(404).json({ success: false, error: 'Fosil no encontrado' });
     }
-    return res.json({ success: true, data: result.rows[0] });
+    return res.json({ success: true, data: row });
   } catch (error) {
     console.error('Error en getFossilById:', error);
     return res.status(500).json({ success: false, error: 'Error al obtener fosil' });
@@ -216,7 +352,16 @@ const createFossil = async (req, res) => {
       throw locErr;
     }
 
-    return res.status(201).json({ success: true, message: 'Fosil creado', data: fossil });
+    try {
+      await syncGeologyForFossil(fossil.id, req.body);
+      await syncTaxonomyForFossil(fossil.id, req.body);
+    } catch (geoErr) {
+      console.error('sync geo/tax create:', geoErr);
+      return res.status(400).json({ success: false, error: 'No se pudo guardar era, periodo o taxonomia.' });
+    }
+
+    const full = await getFossilRowFullById(fossil.id);
+    return res.status(201).json({ success: true, message: 'Fosil creado', data: full || fossil });
   } catch (error) {
     console.error('Error en createFossil:', error);
     return res.status(500).json({ success: false, error: 'Error al crear fosil' });
@@ -259,7 +404,9 @@ const updateFossil = async (req, res) => {
     const entries = Object.entries(body).filter(([k, v]) => allowed.includes(k) && v !== undefined);
 
     const locTouched = locationPayloadTouched(body);
-    if (entries.length === 0 && !locTouched) {
+    const geoTouched = hasGeologyBody(body);
+    const taxTouched = hasTaxonomyBody(body);
+    if (entries.length === 0 && !locTouched && !geoTouched && !taxTouched) {
       return res.status(400).json({ success: false, error: 'No hay campos validos para actualizar' });
     }
 
@@ -298,20 +445,18 @@ const updateFossil = async (req, res) => {
       }
     }
 
-    const full = await query(
-      `SELECT f.*,
-              l.country_code, l.province_code, l.canton_code, l.latitude, l.longitude, l.location_description,
-              cu.username AS created_by_username,
-              au.username AS approved_by_username
-       FROM fossils f
-       LEFT JOIN locations l ON l.fossil_id = f.id
-       JOIN users cu ON cu.id = f.created_by
-       LEFT JOIN users au ON au.id = f.approved_by
-       WHERE f.id = $1 AND f.deleted_at IS NULL`,
-      [id]
-    );
+    if (geoTouched || taxTouched) {
+      try {
+        if (geoTouched) await syncGeologyForFossil(id, body);
+        if (taxTouched) await syncTaxonomyForFossil(id, body);
+      } catch (geoErr) {
+        console.error('sync geo/tax update:', geoErr);
+        return res.status(400).json({ success: false, error: 'No se pudo actualizar era, periodo o taxonomia.' });
+      }
+    }
 
-    return res.json({ success: true, message: 'Fosil actualizado', data: full.rows[0] || updatedRow });
+    const full = await getFossilRowFullById(id);
+    return res.json({ success: true, message: 'Fosil actualizado', data: full || updatedRow });
   } catch (error) {
     console.error('Error en updateFossil:', error);
     return res.status(500).json({ success: false, error: 'Error al actualizar fosil' });

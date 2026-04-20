@@ -58,7 +58,7 @@ const register = async (req, res) => {
       return res.status(400).json({
         success: false,
         error:
-          `El nombre de usuario "${username}" ya esta en uso (p. ej. usuario demo del seed). Elige otro username distinto de admin, explorador1, etc.`,
+          `El nombre de usuario "${username}" ya esta en uso. Elige otro.`,
       });
     }
 

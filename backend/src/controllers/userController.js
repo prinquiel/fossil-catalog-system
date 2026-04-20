@@ -22,7 +22,7 @@ const userListSelect = `
 
 const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 20, role, search, registration_status } = req.query;
+    const { page = 1, limit = 20, role, search, registration_status, deleted_filter } = req.query;
     const offset = (page - 1) * limit;
 
     let sql = `
@@ -34,6 +34,14 @@ const getAllUsers = async (req, res) => {
 
     const params = [];
     let paramCount = 1;
+
+    const df = String(deleted_filter || 'active').toLowerCase();
+    if (df === 'active') {
+      sql += ` AND u.deleted_at IS NULL`;
+    } else if (df === 'deleted') {
+      sql += ` AND u.deleted_at IS NOT NULL`;
+    }
+    /* df === 'all' → sin filtro por deleted_at */
 
     if (role) {
       sql += ` AND EXISTS (SELECT 1 FROM user_roles urf WHERE urf.user_id = u.id AND urf.role = $${paramCount})`;

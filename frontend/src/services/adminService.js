@@ -21,7 +21,27 @@ export const adminService = {
     return api.get('/users', { params }).then((r) => r.data);
   },
 
+  getUserById(id) {
+    return api.get(`/users/${id}`).then((r) => r.data);
+  },
+
   createUser(payload) {
     return api.post('/users', payload).then((r) => r.data);
+  },
+
+  updateUser(id, payload) {
+    return api.put(`/users/${id}`, payload).then((r) => r.data);
+  },
+
+  updateUserRoles(id, roles) {
+    return api.patch(`/users/${id}/roles`, { roles }).then((r) => r.data);
+  },
+
+  deleteUser(id) {
+    return api.delete(`/users/${id}`).then((r) => r.data);
+  },
+
+  activateUser(id) {
+    return api.patch(`/users/${id}/activate`).then((r) => r.data);
   },
 };

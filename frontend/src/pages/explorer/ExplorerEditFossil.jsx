@@ -4,8 +4,11 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { fossilService } from '../../services/fossilService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
+import { formatCoord, requestCurrentPosition } from '../../utils/geolocation.js';
 import { FOSSIL_CATEGORIES } from '../../constants/fossilMeta.js';
 import FossilMediaEditor from '../../components/fossil/FossilMediaEditor.jsx';
+import FossilGeoTaxonomyFields from '../../components/fossil/FossilGeoTaxonomyFields.jsx';
+import { mapFossilApiToForm, buildFossilUpdatePayload } from '../../utils/fossilEditForm.js';
 import '../workspace/workspace-pages.css';
 
 function ExplorerEditFossil() {
@@ -14,22 +17,9 @@ function ExplorerEditFossil() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
   const [fossil, setFossil] = useState(null);
-  const [form, setForm] = useState({
-    name: '',
-    category: 'FOS',
-    description: '',
-    discoverer_name: '',
-    discovery_date: '',
-    geological_context: '',
-    original_state_description: '',
-    country_code: '',
-    province_code: '',
-    canton_code: '',
-    latitude: '',
-    longitude: '',
-    location_description: '',
-  });
+  const [form, setForm] = useState(() => mapFossilApiToForm({}));
 
   useEffect(() => {
     let mounted = true;
@@ -43,21 +33,7 @@ function ExplorerEditFossil() {
           return;
         }
         setFossil(f);
-        setForm({
-          name: f.name || '',
-          category: f.category || 'FOS',
-          description: f.description || '',
-          discoverer_name: f.discoverer_name || '',
-          discovery_date: f.discovery_date ? String(f.discovery_date).slice(0, 10) : '',
-          geological_context: f.geological_context || '',
-          original_state_description: f.original_state_description || '',
-          country_code: f.country_code != null ? String(f.country_code) : '',
-          province_code: f.province_code != null ? String(f.province_code) : '',
-          canton_code: f.canton_code != null ? String(f.canton_code) : '',
-          latitude: f.latitude != null && f.latitude !== '' ? String(f.latitude) : '',
-          longitude: f.longitude != null && f.longitude !== '' ? String(f.longitude) : '',
-          location_description: f.location_description || '',
-        });
+        setForm(mapFossilApiToForm(f));
       } catch (e) {
         toast.error(getApiErrorMessage(e));
       } finally {
@@ -71,26 +47,29 @@ function ExplorerEditFossil() {
 
   const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
+  const handleUseMyLocation = async () => {
+    setGeoLoading(true);
+    try {
+      const { latitude, longitude } = await requestCurrentPosition();
+      setForm((prev) => ({
+        ...prev,
+        latitude: formatCoord(latitude),
+        longitude: formatCoord(longitude),
+      }));
+      toast.success('Coordenadas GPS aplicadas.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'No se pudo obtener la ubicación.');
+    } finally {
+      setGeoLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!fossil) return;
     setSaving(true);
     try {
-      const payload = {
-        name: form.name.trim(),
-        category: form.category,
-        description: form.description.trim(),
-        discoverer_name: form.discoverer_name.trim(),
-        discovery_date: form.discovery_date || null,
-        geological_context: form.geological_context.trim(),
-        original_state_description: form.original_state_description.trim(),
-        country_code: form.country_code.trim(),
-        province_code: form.province_code.trim(),
-        canton_code: form.canton_code.trim(),
-        latitude: form.latitude.trim(),
-        longitude: form.longitude.trim(),
-        location_description: form.location_description.trim(),
-      };
+      const payload = buildFossilUpdatePayload(form);
       const res = await fossilService.update(id, payload);
       if (res.success) {
         toast.success('Cambios guardados.');
@@ -176,6 +155,8 @@ function ExplorerEditFossil() {
           />
         </div>
 
+        <FossilGeoTaxonomyFields form={form} setForm={setForm} disabled={saving} idPrefix="e-" />
+
         <hr className="np-rule" style={{ margin: '22px 0' }} />
         <p className="workspace-page__kicker" style={{ marginBottom: 10 }}>
           Ubicación
@@ -215,6 +196,16 @@ function ExplorerEditFossil() {
             <label htmlFor="e-lng">Longitud</label>
             <input id="e-lng" inputMode="decimal" value={form.longitude} onChange={set('longitude')} />
           </div>
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <button
+            type="button"
+            className="workspace-btn workspace-btn--ghost"
+            disabled={saving || geoLoading}
+            onClick={handleUseMyLocation}
+          >
+            {geoLoading ? 'Obteniendo ubicación…' : 'Usar mi ubicación (GPS)'}
+          </button>
         </div>
         <div style={{ marginTop: 14 }}>
           <label htmlFor="e-loc">Descripción del lugar</label>

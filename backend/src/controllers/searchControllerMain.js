@@ -40,6 +40,10 @@ const advancedSearch = async (req, res) => {
     filters.push(`fgc.era_id = $${i++}`);
     values.push(req.query.era_id);
   }
+  if (req.query.period_id) {
+    filters.push(`fgc.period_id = $${i++}`);
+    values.push(req.query.period_id);
+  }
   if (req.query.species_id) {
     filters.push(`ftc.species_id = $${i++}`);
     values.push(req.query.species_id);

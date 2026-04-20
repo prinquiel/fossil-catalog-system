@@ -4,7 +4,7 @@ const getOverviewStats = async (req, res) => {
   const [fossils, users, studies, media] = await Promise.all([
     query('SELECT COUNT(*)::int AS count FROM fossils WHERE deleted_at IS NULL', []),
     query('SELECT COUNT(*)::int AS count FROM users WHERE deleted_at IS NULL', []),
-    query('SELECT COUNT(*)::int AS count FROM scientific_studies', []),
+    query("SELECT COUNT(*)::int AS count FROM scientific_studies WHERE publication_status = 'published'", []),
     query('SELECT COUNT(*)::int AS count FROM media', []),
   ]);
   return res.json({

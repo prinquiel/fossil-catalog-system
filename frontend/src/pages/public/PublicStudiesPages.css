@@ -1,0 +1,191 @@
+/* Páginas /catalog/estudios y /catalog/estudio/:id */
+.public-studies-page .catalog-hero,
+.public-study-detail-page .catalog-hero {
+  margin-bottom: 8px;
+}
+
+.public-studies-hero {
+  margin-bottom: 28px !important;
+}
+
+.public-studies-hero .catalog-subtitle {
+  max-width: 42rem;
+}
+
+/* Cuadrícula de tarjetas */
+.public-studies-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin: 0 auto 56px;
+  padding: 0 4px;
+  max-width: 1040px;
+}
+
+@media (min-width: 640px) {
+  .public-studies-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .public-studies-grid {
+    gap: 22px;
+  }
+}
+
+.public-studies-card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-height: 140px;
+  padding: 0;
+  border-radius: 18px;
+  text-decoration: none;
+  color: inherit;
+  background: linear-gradient(145deg, rgba(255, 252, 247, 0.98) 0%, rgba(248, 242, 232, 0.95) 100%);
+  border: 1px solid rgba(115, 83, 57, 0.14);
+  box-shadow:
+    0 4px 20px rgba(45, 36, 28, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  overflow: hidden;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.public-studies-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 16px 40px rgba(45, 36, 28, 0.12),
+    0 0 0 1px rgba(159, 24, 56, 0.12) inset;
+  border-color: rgba(159, 24, 56, 0.22);
+}
+
+.public-studies-card:focus-visible {
+  outline: 2px solid rgba(159, 24, 56, 0.55);
+  outline-offset: 3px;
+}
+
+.public-studies-card__accent {
+  width: 5px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #9f1438 0%, #c45a4f 45%, #b8956e 100%);
+  opacity: 0.92;
+}
+
+.public-studies-card__body {
+  flex: 1;
+  min-width: 0;
+  padding: 18px 14px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.public-studies-card__title {
+  margin: 0;
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-size: 1.18rem;
+  font-weight: 700;
+  line-height: 1.32;
+  color: #3a2f26;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.2s ease;
+}
+
+.public-studies-card:hover .public-studies-card__title {
+  color: #6b1f2e;
+}
+
+.public-studies-card__fossil-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+
+.public-studies-card__code {
+  font-family: var(--font-ui, 'Source Sans 3', system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5b4c3a;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(139, 21, 50, 0.07);
+  border: 1px solid rgba(139, 21, 50, 0.14);
+}
+
+.public-studies-card__fossil-name {
+  font-size: 0.88rem;
+  color: #5c4d40;
+  line-height: 1.35;
+}
+
+.public-studies-card__date {
+  font-size: 0.82rem;
+  color: #85735c;
+  font-variant-numeric: tabular-nums;
+  margin-top: auto;
+}
+
+.public-studies-card__arrow {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 12px 14px 12px 0;
+  font-size: 1.15rem;
+  color: rgba(107, 31, 46, 0.45);
+  transition:
+    transform 0.22s ease,
+    color 0.22s ease;
+}
+
+.public-studies-card:hover .public-studies-card__arrow {
+  transform: translateX(4px);
+  color: #8b1532;
+}
+
+.public-studies-empty {
+  margin: 32px auto 64px;
+  max-width: 480px;
+  padding: 28px 24px;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #5c4d40;
+  background: linear-gradient(165deg, rgba(255, 250, 242, 0.9), rgba(245, 238, 227, 0.85));
+  border: 1px dashed rgba(115, 83, 57, 0.28);
+  border-radius: 16px;
+}
+
+.public-study-detail__body {
+  max-width: 800px;
+  margin: 0 auto 56px;
+  padding: 0 4px;
+}
+
+.public-study-detail__body .public-study-content {
+  box-shadow: 0 8px 32px rgba(45, 36, 28, 0.08);
+  border: 1px solid rgba(115, 83, 57, 0.14);
+  border-radius: 16px;
+  padding: 20px 22px;
+  background: rgba(255, 252, 247, 0.95);
+}
+
+.public-study-detail__hero .catalog-hero-actions {
+  margin-top: 14px;
+}
+
+.public-study-detail__subtitle .fossil-code-copy {
+  vertical-align: middle;
+  margin-left: 4px;
+}

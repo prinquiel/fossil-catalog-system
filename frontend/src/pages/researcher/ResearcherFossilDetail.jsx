@@ -73,6 +73,28 @@ function ResearcherFossilDetail() {
               <dd>{f.geological_context || '—'}</dd>
             </div>
             <div>
+              <dt>Era geológica</dt>
+              <dd>{f.era_name || '—'}</dd>
+            </div>
+            <div>
+              <dt>Período geológico</dt>
+              <dd>{f.period_name || '—'}</dd>
+            </div>
+            <div>
+              <dt>Clasificación taxonómica</dt>
+              <dd>
+                <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+                  <li>Reino: {f.kingdom_name || '—'}</li>
+                  <li>Filo: {f.phylum_name || '—'}</li>
+                  <li>Clase: {f.class_name || '—'}</li>
+                  <li>Orden: {f.order_name || '—'}</li>
+                  <li>Familia: {f.family_name || '—'}</li>
+                  <li>Género: {f.genus_name || '—'}</li>
+                  <li>Especie: {f.species_name || '—'}</li>
+                </ul>
+              </dd>
+            </div>
+            <div>
               <dt>Coordenadas</dt>
               <dd>
                 {hasCoords

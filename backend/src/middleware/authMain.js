@@ -14,7 +14,7 @@ const protect = async (req, res, next) => {
         error: 'No autorizado - Token no proporcionado',
         code: 'NO_TOKEN',
         hint:
-          'Rutas protegidas requieren el header Authorization: Bearer <jwt>. Obten el jwt con POST /api/auth/login (primero necesitas un usuario admin ya existente: seed admin@unadeca.net + Admin123! tras migraciones y 02-seed-data.sql, o insert manual en BD). Luego POST /api/users sirve para crear MAS admins.',
+          'Rutas protegidas requieren el header Authorization: Bearer <jwt>. Obten el jwt con POST /api/auth/login. El primer administrador debe existir en la base (creacion manual, migracion o otro admin con POST /api/users).',
       });
     }
 
@@ -43,11 +43,41 @@ const protect = async (req, res, next) => {
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
-        error: 'No autorizado - Token invalido (firma o formato incorrecto; revisa JWT_SECRET y el header Authorization: Bearer ...)',
+        error:
+          'No autorizado - Token invalido (firma o formato incorrecto; revisa JWT_SECRET y el header Authorization: Bearer ...)',
         code: 'TOKEN_INVALID',
       });
     }
     return res.status(401).json({ success: false, error: 'No autorizado - Token invalido' });
+  }
+};
+
+/**
+ * Si hay Bearer JWT válido, rellena req.user; si no hay token o el token es inválido/expirado, req.user = null.
+ * No devuelve 401 (útil para lecturas públicas que pueden mostrar más datos a usuarios autenticados).
+ */
+const protectOptional = (req, res, next) => {
+  req.user = null;
+  try {
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) return next();
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let roles = decoded.roles;
+    if (!Array.isArray(roles) && decoded.role) {
+      roles = [decoded.role];
+    }
+    roles = canonicalizeAuthRoles(roles);
+    if (Array.isArray(roles) && roles.length > 0) {
+      req.user = { id: decoded.id, email: decoded.email, roles };
+    }
+    return next();
+  } catch {
+    req.user = null;
+    return next();
   }
 };
 
@@ -64,4 +94,4 @@ const authorize = (...allowedRoles) => (req, res, next) => {
   return next();
 };
 
-module.exports = { protect, authorize };
+module.exports = { protect, protectOptional, authorize };

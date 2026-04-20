@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SiteHeader from '../../components/layout/SiteHeader.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import FossilCodeCopy from '../../components/fossil/FossilCodeCopy.jsx';
 import { fossilService } from '../../services/fossilService.js';
+import { canViewFossilCode } from '../../utils/fossilCodeVisibility.js';
 import FossilPublicMap from '../../components/maps/FossilPublicMap.jsx';
 import { hasValidCoords, normalizeGeoPoint } from '../../utils/geoNormalize.js';
 import './PublicMap.css';
 
 function PublicMap() {
+  const { user } = useAuth();
+  const showFossilCode = canViewFossilCode(user);
   const [rows, setRows] = useState([]);
   const [mapRows, setMapRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +62,13 @@ function PublicMap() {
         <section className="public-map-layout">
           <article className="public-map-card">
             {mapRows.length > 0 ? (
-              <FossilPublicMap points={mapRows} selectedId={selectedId} onSelectId={setSelectedId} height={460} />
+              <FossilPublicMap
+                points={mapRows}
+                selectedId={selectedId}
+                onSelectId={setSelectedId}
+                height={460}
+                showFossilCode={showFossilCode}
+              />
             ) : (
               <p className="public-map-empty" style={{ margin: 0 }}>
                 Ningún registro publicado tiene coordenadas válidas para graficar.
@@ -74,7 +85,9 @@ function PublicMap() {
                   className={`public-map-item ${String(selectedId) === String(r.id) ? 'is-active' : ''}${hasValidCoords(r) ? '' : ' is-disabled'}`}
                   onClick={() => setSelectedId(r.id)}
                 >
-                  <span>{r.unique_code}</span>
+                  {showFossilCode && r.unique_code ? (
+                    <span className="public-map-item__code">{r.unique_code}</span>
+                  ) : null}
                   <strong>{r.name}</strong>
                   {!hasValidCoords(r) ? <em>Sin coordenadas cargadas</em> : null}
                 </button>
@@ -82,7 +95,11 @@ function PublicMap() {
             </div>
             {selected ? (
               <div className="public-map-selected">
-                <p>{selected.unique_code}</p>
+                {showFossilCode && selected.unique_code ? (
+                  <div className="public-map-selected__code">
+                    <FossilCodeCopy code={selected.unique_code} variant="map" />
+                  </div>
+                ) : null}
                 <h3>{selected.name}</h3>
                 <Link to="/catalog" className="public-map-link">
                   Ver detalle en catálogo
