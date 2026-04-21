@@ -452,7 +452,7 @@ function Catalog() {
             points={mapPoints}
             selectedId={selectedFossil?.id}
             onSelectId={setSelectedId}
-            height={290}
+            height="clamp(220px, 40dvh, 290px)"
             showFossilCode={showFossilCode}
           />
         ) : (

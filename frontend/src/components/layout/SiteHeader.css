@@ -277,10 +277,16 @@
 }
 
 @media (max-width: 720px) {
+  .site-header {
+    width: min(980px, calc(100% - 16px));
+    margin-bottom: 16px;
+  }
+
   .site-header__nav {
     grid-template-columns: 1fr auto;
     border-radius: 22px;
     justify-items: stretch;
+    padding: 10px 12px 12px;
   }
 
   .site-header__nav-left {
@@ -306,8 +312,15 @@
 
   .site-header__links {
     justify-content: flex-start;
+    justify-self: stretch;
     flex-wrap: wrap;
     overflow-x: visible;
+    gap: 6px;
+  }
+
+  .site-header__pill {
+    font-size: 0.8rem;
+    padding: 8px 12px;
   }
 
   .site-header__nav-right {
@@ -317,6 +330,13 @@
   .site-header__session {
     justify-content: space-between;
     width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .site-header__pill {
+    font-size: 0.76rem;
+    padding: 7px 10px;
   }
 }
 

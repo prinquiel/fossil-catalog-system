@@ -1,0 +1,119 @@
+.fossil-media-editor {
+  margin: 20px 0;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px dashed rgba(61, 52, 40, 0.28);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.fossil-media-editor__list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fossil-media-editor__item {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(253, 251, 247, 0.95);
+  border: 1px solid rgba(61, 52, 40, 0.1);
+}
+
+.fossil-media-editor__thumb {
+  width: 88px;
+  height: 66px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(61, 52, 40, 0.06);
+  flex-shrink: 0;
+}
+
+.fossil-media-editor__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fossil-media-editor__bad {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  padding: 8px;
+  display: block;
+}
+
+.fossil-media-editor__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fossil-media-editor__name {
+  font-size: 0.85rem;
+  word-break: break-all;
+  color: var(--clay-deep);
+}
+
+.fossil-media-editor__remove {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ruby-dark);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.fossil-media-editor__remove:hover {
+  color: var(--clay-deep);
+}
+
+.fossil-media-editor__add-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 21, 50, 0.45);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ruby-dark);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.fossil-media-editor__add-label input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.fossil-media-editor__add {
+  position: relative;
+}
+
+/* input asociado al label; oculto visualmente pero enfocable */
+.fossil-media-editor__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

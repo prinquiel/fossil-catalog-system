@@ -29,7 +29,7 @@ function FitBounds({ points }) {
  * points: Array<{id:number|string, name:string, unique_code?:string, latitude:number|string, longitude:number|string}>,
  * selectedId?: number|string|null,
  * onSelectId?: (id:number|string)=>void,
- * height?: number,
+ * height?: number|string,
  * showFossilCode?: boolean
  * }} props
  */

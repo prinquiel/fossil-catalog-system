@@ -77,7 +77,7 @@ function ResearcherMap() {
       ) : (
         <>
           <div className="workspace-card" style={{ padding: 0, overflow: 'hidden' }}>
-            <div style={{ height: 420, width: '100%' }}>
+            <div className="workspace-map-leaflet-host">
               {points.length > 0 ? (
                 <MapContainer center={center} zoom={DEFAULT_ZOOM} style={{ height: '100%', width: '100%' }}>
                   <TileLayer
@@ -115,7 +115,7 @@ function ResearcherMap() {
             </p>
             <div style={{ display: 'grid', gap: 8 }}>
               {rows.map((r) => (
-                <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <div key={r.id} className="workspace-fossil-list-row">
                   <Link className="workspace-link" to={`/researcher/fossil/${r.id}`}>
                     {r.unique_code} · {r.name}
                   </Link>

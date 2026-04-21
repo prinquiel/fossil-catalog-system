@@ -67,7 +67,7 @@
 
 .rw-catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 16px;
 }
 
@@ -269,6 +269,7 @@
 .researcher-search-input-wrap {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   border-radius: 12px;
   border: 1px solid rgba(61, 52, 40, 0.2);
@@ -299,4 +300,24 @@
   font-size: 0.78rem;
   padding: 6px 10px;
   cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .rw-catalog-hero {
+    padding: 18px 16px;
+  }
+
+  .rw-catalog-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .researcher-search-input-wrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .researcher-search-clear {
+    align-self: flex-end;
+  }
 }

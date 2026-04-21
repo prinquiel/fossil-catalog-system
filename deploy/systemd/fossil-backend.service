@@ -1,0 +1,15 @@
+[Unit]
+Description=Fossil Catalog Backend
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/fossil-catalog-system/backend
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

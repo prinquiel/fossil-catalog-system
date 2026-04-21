@@ -25,6 +25,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
@@ -53,6 +54,7 @@ body::before {
   position: relative;
   z-index: 1;
   min-height: 100vh;
+  max-width: 100%;
   overflow-x: clip;
 }
 
@@ -62,6 +64,10 @@ video,
 canvas,
 iframe {
   max-width: 100%;
+}
+
+video {
+  height: auto;
 }
 
 input,

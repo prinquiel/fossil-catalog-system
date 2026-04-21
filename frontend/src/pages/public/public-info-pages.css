@@ -1,6 +1,10 @@
 .public-page-shell {
   min-height: 100vh;
   padding: 26px 18px 54px;
+  padding-left: max(18px, env(safe-area-inset-left));
+  padding-right: max(18px, env(safe-area-inset-right));
+  padding-bottom: max(54px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
   background:
     radial-gradient(120% 90% at 10% 0%, rgba(210, 181, 141, 0.24), transparent 52%),
     radial-gradient(100% 70% at 100% 0%, rgba(140, 103, 73, 0.17), transparent 45%),
@@ -529,4 +533,28 @@
 .public-page-actions--contact-cta {
   margin-top: 20px;
   gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .public-page-shell {
+    padding: 18px 12px 40px;
+  }
+
+  .public-card {
+    padding: 14px;
+  }
+
+  .public-page-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .public-btn--contact-primary {
+    min-width: 0;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
 }

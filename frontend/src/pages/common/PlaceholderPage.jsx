@@ -12,23 +12,26 @@ function PlaceholderPage({
   showWorkspaceHints = true,
 }) {
   const text = description || defaultDescription;
+  const cardClass = ['placeholder-card', className].filter(Boolean).join(' ');
 
   return (
-    <article className={`placeholder-card ${className}`.trim()}>
-      <p className="placeholder-card__eyebrow">{eyebrow}</p>
-      <h1 className="placeholder-card__title">{title}</h1>
-      <p className="placeholder-card__text">{text}</p>
-      {showWorkspaceHints ? (
-        <div className="placeholder-card__actions">
-          <Link to="/catalog" className="placeholder-card__link">
-            Ir al catálogo
-          </Link>
-          <Link to="/" className="placeholder-card__link placeholder-card__link--secondary">
-            Página de inicio
-          </Link>
-        </div>
-      ) : null}
-    </article>
+    <div className="placeholder-page-shell">
+      <article className={cardClass}>
+        <p className="placeholder-card__eyebrow">{eyebrow}</p>
+        <h1 className="placeholder-card__title">{title}</h1>
+        <p className="placeholder-card__text">{text}</p>
+        {showWorkspaceHints ? (
+          <div className="placeholder-card__actions">
+            <Link to="/catalog" className="placeholder-card__link">
+              Ir al catálogo
+            </Link>
+            <Link to="/" className="placeholder-card__link placeholder-card__link--secondary">
+              Página de inicio
+            </Link>
+          </div>
+        ) : null}
+      </article>
+    </div>
   );
 }
 

@@ -238,3 +238,22 @@
   min-width: 24px;
   text-align: center;
 }
+
+@media (max-width: 560px) {
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stats-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .admin-stats-bar-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .admin-stats-bar-num {
+    text-align: left;
+  }
+}

@@ -192,3 +192,15 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 480px) {
+  .public-map-shell {
+    padding: 16px 12px 36px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  .public-map-list__items {
+    max-height: min(40dvh, 280px);
+  }
+}

@@ -25,6 +25,8 @@ function SiteHeader() {
     pathname.includes('/researcher/create-study');
   const misRegistrosAreaActive =
     pathname.startsWith('/explorer/my-fossils') || pathname.startsWith('/explorer/edit-fossil');
+  const publicStudiesNavActive =
+    pathname === '/catalog/estudios' || pathname.startsWith('/catalog/estudio/');
 
   useEffect(() => {
     setMenuOpen(false);
@@ -69,6 +71,13 @@ function SiteHeader() {
             Inicio
           </NavLink>
 
+          <NavLink
+            to="/catalog/estudios"
+            className={() => `site-header__pill${publicStudiesNavActive ? ' is-active' : ''}`}
+          >
+            Estudios
+          </NavLink>
+
           {!loading && isAuthenticated && isExplorer && (
             <NavLink
               to="/explorer/my-fossils"
@@ -79,17 +88,12 @@ function SiteHeader() {
           )}
 
           {!isAuthenticated && (
-            <>
-              <NavLink
-                to="/catalog"
-                className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
-              >
-                Catálogo
-              </NavLink>
-              <NavLink to="/map" className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}>
-                Mapa
-              </NavLink>
-            </>
+            <NavLink
+              to="/catalog"
+              className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
+            >
+              Catálogo
+            </NavLink>
           )}
 
           {!loading && isAuthenticated && isResearcher && (

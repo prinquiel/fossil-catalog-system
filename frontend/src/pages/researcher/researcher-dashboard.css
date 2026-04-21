@@ -152,3 +152,15 @@
   border-color: rgba(139, 21, 50, 0.3);
   box-shadow: 0 8px 18px rgba(45, 38, 30, 0.08);
 }
+
+@media (max-width: 520px) {
+  .researcher-dash-quickbar-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .researcher-dash-hero {
+    padding: 18px 16px;
+  }
+}
