@@ -222,6 +222,33 @@
   }
 }
 
+@media (max-width: 900px) {
+  .public-page-shell {
+    padding: 20px 12px 36px;
+  }
+
+  .public-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-grid-two {
+    grid-template-columns: 1fr;
+  }
+
+  .public-page-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .public-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
 @media (min-width: 860px) {
   .public-grid-two {
     grid-template-columns: 1fr 1fr;

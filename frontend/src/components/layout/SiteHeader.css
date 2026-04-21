@@ -7,10 +7,10 @@
   padding-top: 4px;
 }
 
-/* Tres columnas: marca | enlaces centrados | sesión (hueco 1fr mantiene el centro visual) */
+/* Marca solo el ancho necesario; el resto va al menú (evita 50/50 que rompe las píldoras en desktop) */
 .site-header__nav {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   column-gap: 14px;
   row-gap: 12px;
@@ -34,6 +34,31 @@
 .site-header__nav-left {
   justify-self: start;
   min-width: 0;
+}
+
+.site-header__menu {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  min-width: 0;
+}
+
+.site-header__menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(61, 52, 40, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--clay-deep);
+}
+
+.site-header__menu-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .site-header__nav-right {
@@ -105,17 +130,31 @@
 
 .site-header__links {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   justify-self: center;
   gap: 8px;
   min-width: 0;
-  overflow: visible;
+  /* Si en ventanas muy estrechas aún no cabe, scroll horizontal en lugar de apilar */
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.site-header__links::-webkit-scrollbar {
+  height: 4px;
+}
+
+.site-header__links::-webkit-scrollbar-thumb {
+  background: rgba(61, 52, 40, 0.2);
+  border-radius: 999px;
 }
 
 .site-header__pill {
   position: relative;
+  flex-shrink: 0;
   font-family: var(--font-body);
   text-decoration: none;
   border-radius: 999px;
@@ -239,19 +278,36 @@
 
 @media (max-width: 720px) {
   .site-header__nav {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
     border-radius: 22px;
     justify-items: stretch;
   }
 
   .site-header__nav-left {
-    justify-self: center;
-    text-align: center;
+    justify-self: start;
+  }
+
+  .site-header__menu-btn {
+    display: inline-flex;
+    justify-self: end;
+  }
+
+  .site-header__menu {
+    grid-column: 1 / -1;
+    display: none;
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+    padding-top: 4px;
+  }
+
+  .site-header__menu.is-open {
+    display: grid;
   }
 
   .site-header__links {
-    justify-content: center;
-    justify-self: stretch;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 
   .site-header__nav-right {
@@ -259,12 +315,39 @@
   }
 
   .site-header__session {
-    justify-content: center;
+    justify-content: space-between;
+    width: 100%;
   }
 }
 
 @media (max-width: 1100px) {
   .site-header__user {
     display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .site-header {
+    width: min(100%, calc(100% - 16px));
+    top: 6px;
+    margin-bottom: 16px;
+  }
+
+  .site-header__nav {
+    padding: 10px 12px;
+    row-gap: 8px;
+  }
+
+  .site-header__links {
+    gap: 6px;
+  }
+
+  .site-header__pill {
+    font-size: 0.8rem;
+    padding: 8px 12px;
+  }
+
+  .site-header__logout {
+    width: 100%;
   }
 }

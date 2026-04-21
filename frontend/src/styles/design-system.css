@@ -52,6 +52,40 @@ body::before {
 #root {
   position: relative;
   z-index: 1;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+/* Tablas largas no deben romper el viewport en mobile */
+table {
+  border-collapse: collapse;
+}
+
+@media (max-width: 900px) {
+  body {
+    font-size: 0.97rem;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 0.95rem;
+  }
 }
 
 h1,

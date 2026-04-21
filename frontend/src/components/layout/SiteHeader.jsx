@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { workspaceHomePath } from '../../utils/workspace.js';
@@ -14,6 +15,7 @@ function workspaceAreaActive(pathname, workspace) {
 function SiteHeader() {
   const location = useLocation();
   const pathname = location.pathname;
+  const [menuOpen, setMenuOpen] = useState(false);
   const { user, loading, isAuthenticated, isExplorer, isResearcher, logout } = useAuth();
   const workspace = workspaceHomePath(user);
   const workspaceActive = workspaceAreaActive(pathname, workspace);
@@ -23,6 +25,10 @@ function SiteHeader() {
     pathname.includes('/researcher/create-study');
   const misRegistrosAreaActive =
     pathname.startsWith('/explorer/my-fossils') || pathname.startsWith('/explorer/edit-fossil');
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   return (
     <header className="site-header" role="banner">
@@ -34,6 +40,26 @@ function SiteHeader() {
           </Link>
         </div>
 
+        <button
+          type="button"
+          className="site-header__menu-btn"
+          aria-expanded={menuOpen}
+          aria-controls="site-header-menu"
+          aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          {menuOpen ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          )}
+        </button>
+
+        <div id="site-header-menu" className={`site-header__menu${menuOpen ? ' is-open' : ''}`}>
         <div className="site-header__links">
           <NavLink
             to="/"
@@ -113,6 +139,7 @@ function SiteHeader() {
               </button>
             </div>
           ) : null}
+        </div>
         </div>
       </nav>
     </header>

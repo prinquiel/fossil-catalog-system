@@ -377,6 +377,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
+  min-width: 780px;
 }
 
 .admin-table th,
@@ -459,6 +460,31 @@
   margin: 0;
   line-height: 1.55;
   max-width: 52ch;
+}
+
+@media (max-width: 900px) {
+  .admin-page-header {
+    margin-bottom: 20px;
+  }
+
+  .admin-panel {
+    padding: 16px 14px 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-btn {
+    width: 100%;
+  }
+
+  .admin-search {
+    max-width: 100%;
+  }
 }
 
 /* Modal de confirmación (reemplazo de window.confirm en admin) */

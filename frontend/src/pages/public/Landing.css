@@ -1053,3 +1053,62 @@
     right: 8px;
   }
 }
+
+@media (max-width: 900px) {
+  .landing-shell {
+    padding: 24px 14px 44px;
+  }
+
+  .landing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .landing-explore__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .timeline-era-chip {
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 420px) {
+  .landing-shell {
+    padding: 16px 10px 28px;
+  }
+
+  .floating-nav {
+    top: 8px;
+    padding: 6px;
+  }
+
+  .nav-pill {
+    flex: 1 1 100%;
+    font-size: 0.78rem;
+    padding: 8px;
+  }
+
+  .landing-hero h1 {
+    font-size: 1.6rem;
+    padding: 6px 8px;
+  }
+
+  .hero-dek {
+    font-size: 0.88rem;
+  }
+
+  .landing-hero-tags {
+    gap: 6px;
+  }
+
+  .landing-hero-tags li {
+    font-size: 0.68rem;
+    padding: 5px 8px;
+  }
+
+  .landing-grid,
+  .landing-explore__grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
