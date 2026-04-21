@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { fossilService } from '../../services/fossilService';
@@ -92,6 +92,9 @@ function ExplorerCreateFossil() {
   const [imageFiles, setImageFiles] = useState(/** @type {File[]} */ ([]));
   const [form, setForm] = useState({ ...DEFAULT_FORM });
   const isBioCategory = form.category === 'FOS' || form.category === 'PAL';
+  /** Evita envíos duplicados: doble clic o Enter+clic antes de que React aplique `loading`. */
+  const submitInFlightRef = useRef(false);
+  const syncInFlightRef = useRef(false);
 
   useEffect(() => {
     const d = loadFossilCreateDraft();
@@ -213,6 +216,7 @@ function ExplorerCreateFossil() {
   };
 
   const flushOfflineQueue = async () => {
+    if (syncInFlightRef.current) return;
     if (!isOnline) {
       toast.error('Conéctese a internet para sincronizar la cola offline.');
       return;
@@ -223,30 +227,36 @@ function ExplorerCreateFossil() {
       toast('No hay envíos pendientes en cola.');
       return;
     }
+    syncInFlightRef.current = true;
     setSyncingQueue(true);
     let successCount = 0;
-    for (const item of queue) {
-      try {
-        const res = await fossilService.create(item.payload);
-        if (res?.success) {
-          removeOfflineQueuedFossil(item.id);
-          successCount += 1;
+    try {
+      for (const item of queue) {
+        try {
+          const res = await fossilService.create(item.payload);
+          if (res?.success) {
+            removeOfflineQueuedFossil(item.id);
+            successCount += 1;
+          }
+        } catch (error) {
+          toast.error(`Se detuvo la sincronización: ${getApiErrorMessage(error)}`);
+          break;
         }
-      } catch (error) {
-        toast.error(`Se detuvo la sincronización: ${getApiErrorMessage(error)}`);
-        break;
       }
+      const remaining = readOfflineFossilQueue().length;
+      setOfflineQueueCount(remaining);
+      if (successCount > 0) {
+        toast.success(`Se sincronizaron ${successCount} ficha(s) offline.`);
+      }
+    } finally {
+      syncInFlightRef.current = false;
+      setSyncingQueue(false);
     }
-    const remaining = readOfflineFossilQueue().length;
-    setOfflineQueueCount(remaining);
-    if (successCount > 0) {
-      toast.success(`Se sincronizaron ${successCount} ficha(s) offline.`);
-    }
-    setSyncingQueue(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitInFlightRef.current) return;
     if (!form.name.trim()) {
       toast.error('El nombre del hallazgo es obligatorio.');
       return;
@@ -263,6 +273,7 @@ function ExplorerCreateFossil() {
       toast.error(preCheck.message);
       return;
     }
+    submitInFlightRef.current = true;
     setLoading(true);
     try {
       const res = await fossilService.create(payload);
@@ -290,6 +301,7 @@ function ExplorerCreateFossil() {
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     } finally {
+      submitInFlightRef.current = false;
       setLoading(false);
     }
   };

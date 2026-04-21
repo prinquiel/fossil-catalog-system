@@ -16,6 +16,10 @@ const LOCATION_KEYS = [
   'location_description',
 ];
 
+/** Alineado con migración 014_locations_widen_division_codes.sql (VARCHAR(64)). */
+const LOCATION_PROVINCE_CANTON_MAX = 64;
+const LOCATION_COUNTRY_CODE_MAX = 3;
+
 function locationPayloadTouched(body) {
   if (!body || typeof body !== 'object') return false;
   return LOCATION_KEYS.some((k) => Object.prototype.hasOwnProperty.call(body, k));
@@ -35,6 +39,16 @@ function parseLocationPayload(body, { allowClear } = {}) {
   const province_code = trimOrNull(body.province_code);
   const canton_code = trimOrNull(body.canton_code);
   const location_description = trimOrNull(body.location_description);
+
+  if (country_code && country_code.length > LOCATION_COUNTRY_CODE_MAX) {
+    return { error: `country_code admite como máximo ${LOCATION_COUNTRY_CODE_MAX} caracteres (ISO 3166-1 alpha-3, ej. CRI).` };
+  }
+  if (province_code && province_code.length > LOCATION_PROVINCE_CANTON_MAX) {
+    return { error: `province_code admite como máximo ${LOCATION_PROVINCE_CANTON_MAX} caracteres.` };
+  }
+  if (canton_code && canton_code.length > LOCATION_PROVINCE_CANTON_MAX) {
+    return { error: `canton_code admite como máximo ${LOCATION_PROVINCE_CANTON_MAX} caracteres.` };
+  }
 
   const latRaw = body.latitude;
   const lngRaw = body.longitude;
