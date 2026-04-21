@@ -1,6 +1,9 @@
 import api from './api';
 
 export const contactService = {
+  create(payload) {
+    return api.post('/contact', payload).then((r) => r.data);
+  },
   list() {
     return api.get('/contact').then((r) => r.data);
   },

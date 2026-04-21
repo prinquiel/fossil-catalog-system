@@ -307,12 +307,12 @@ const updateStudy = async (req, res) => {
     if (row.researcher_id == null || Number(row.researcher_id) !== Number(req.user.id)) {
       return res.status(403).json({ success: false, error: 'No autorizado a editar este estudio' });
     }
-    if (row.publication_status === 'published') {
-      return res.status(403).json({ success: false, error: 'Solo un administrador puede editar un estudio ya publicado' });
-    }
   }
 
   const incoming = { ...req.body };
+  if (req.file) {
+    incoming.composition_image_path = `study-composition/${req.file.filename}`;
+  }
   if (incoming.references !== undefined && incoming.references_text === undefined) {
     incoming.references_text = incoming.references;
   }
@@ -342,6 +342,12 @@ const updateStudy = async (req, res) => {
     'publication_status',
   ];
   const entries = Object.entries(incoming).filter(([k, v]) => allowed.includes(k) && v !== undefined);
+  if (!admin) {
+    entries.push(['publication_status', 'pending']);
+    entries.push(['approved_by', null]);
+    entries.push(['approved_at', null]);
+    entries.push(['rejection_reason', null]);
+  }
   if (entries.length === 0) return res.status(400).json({ success: false, error: 'No hay campos validos para actualizar' });
   const setClause = entries.map(([k], i) => `${k} = $${i + 1}`).join(', ');
   const values = entries.map(([, v]) => v);
@@ -351,7 +357,13 @@ const updateStudy = async (req, res) => {
     values
   );
   if (updated.rows.length === 0) return res.status(404).json({ success: false, error: 'Estudio no encontrado' });
-  return res.json({ success: true, data: updated.rows[0] });
+  return res.json({
+    success: true,
+    message: admin
+      ? 'Estudio actualizado'
+      : 'Estudio actualizado y enviado nuevamente a revisión administrativa.',
+    data: updated.rows[0],
+  });
 };
 
 const publishStudy = async (req, res) => {

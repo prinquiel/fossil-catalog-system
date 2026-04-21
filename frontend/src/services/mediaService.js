@@ -5,6 +5,8 @@ export const MEDIA_MAX_FILES = 10;
 export const MEDIA_MAX_BYTES_PER_FILE = 10 * 1024 * 1024;
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+export const MEDIA_CATEGORIES = ['before', 'after', 'analysis', 'general', 'detail'];
+export const MEDIA_ANGLES = ['front', 'side', 'top', 'bottom', 'detail', 'other'];
 
 /**
  * @param {File[]} files
@@ -34,6 +36,11 @@ export const mediaService = {
 
   async deleteMedia(mediaId) {
     const response = await api.delete(`/media/${mediaId}`);
+    return response.data;
+  },
+
+  async updateMedia(mediaId, payload) {
+    const response = await api.patch(`/media/${mediaId}`, payload);
     return response.data;
   },
 

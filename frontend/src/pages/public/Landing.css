@@ -138,13 +138,21 @@
   font-size: clamp(2rem, 5vw, 3.4rem);
   line-height: 1.08;
   text-align: center;
-  max-width: 900px;
+  width: min(900px, 100%);
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 6px 12px;
+  background: rgba(255, 252, 247, 0.82);
+  overflow-wrap: anywhere;
   animation: landingTitleIn 700ms ease-out both;
 }
 
 .hero-dek {
   margin: 0 auto;
-  max-width: 760px;
+  width: min(760px, 100%);
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 10px;
   text-align: center;
   color: #6c5d4a;
   font-size: 0.98rem;
@@ -638,21 +646,29 @@
 }
 
 .timeline-scroll {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
+  --timeline-gap: 10px;
+  --timeline-window-start: 0;
+  --timeline-visible-cards: 4;
+  overflow: hidden;
   padding: 4px 2px 6px;
   margin: 14px 0 12px;
-  scroll-snap-type: x proximity;
-  scroll-behavior: smooth;
-  scroll-padding-inline: max(2px, calc((100% - 280px) / 2));
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  overscroll-behavior-x: contain;
 }
 
-.timeline-scroll::-webkit-scrollbar {
-  display: none;
+.timeline-track {
+  display: flex;
+  gap: var(--timeline-gap);
+  align-items: stretch;
+  transform: translateX(
+    calc(
+      -1 * var(--timeline-window-start) *
+        (
+          (100% - (var(--timeline-visible-cards) - 1) * var(--timeline-gap)) / var(--timeline-visible-cards) +
+            var(--timeline-gap)
+        )
+    )
+  );
+  transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
 }
 
 .timeline-progress {
@@ -663,7 +679,7 @@
   background: rgba(91, 76, 58, 0.14);
   padding: 0;
   margin: 2px 0 0;
-  cursor: pointer;
+  cursor: default;
   overflow: hidden;
 }
 
@@ -676,8 +692,11 @@
 }
 
 .timeline-era-chip {
-  scroll-snap-align: center;
-  flex: 0 0 280px;
+  min-width: 0;
+  flex: 0 0
+    calc(
+      (100% - (var(--timeline-visible-cards) - 1) * var(--timeline-gap)) / var(--timeline-visible-cards)
+    );
   border-radius: 14px;
   border: 1px solid rgba(91, 76, 58, 0.24);
   background:
@@ -1013,7 +1032,11 @@
   }
 
   .timeline-era-chip {
-    flex-basis: 88%;
+    min-width: 0;
+  }
+
+  .timeline-track {
+    transition-duration: 260ms;
   }
 
   .ruby-popup-backdrop {

@@ -269,6 +269,11 @@ const getFossils = async (req, res) => {
               ge.name AS era_name,
               gp.name AS period_name,
               tk.name AS kingdom_name,
+              tph.name AS phylum_name,
+              tcl.name AS class_name,
+              tord.name AS order_name,
+              tfa.name AS family_name,
+              tge.name AS genus_name,
               tsp.name AS species_name,
               COALESCE(m.media_count, 0)::int AS media_count
        FROM fossils f
@@ -280,6 +285,11 @@ const getFossils = async (req, res) => {
        LEFT JOIN geological_periods gp ON gp.id = fgc.period_id
        LEFT JOIN fossil_taxonomic_classification ftc ON ftc.fossil_id = f.id
        LEFT JOIN taxonomic_kingdoms tk ON tk.id = ftc.kingdom_id
+       LEFT JOIN taxonomic_phylums tph ON tph.id = ftc.phylum_id
+       LEFT JOIN taxonomic_classes tcl ON tcl.id = ftc.class_id
+       LEFT JOIN taxonomic_orders tord ON tord.id = ftc.order_id
+       LEFT JOIN taxonomic_families tfa ON tfa.id = ftc.family_id
+       LEFT JOIN taxonomic_genera tge ON tge.id = ftc.genus_id
        LEFT JOIN taxonomic_species tsp ON tsp.id = ftc.species_id
        LEFT JOIN LATERAL (
          SELECT COUNT(*)::int AS media_count
@@ -406,14 +416,20 @@ const updateFossil = async (req, res) => {
     const locTouched = locationPayloadTouched(body);
     const geoTouched = hasGeologyBody(body);
     const taxTouched = hasTaxonomyBody(body);
+    const needsReapproval = !isAdmin && (entries.length > 0 || locTouched || geoTouched || taxTouched);
     if (entries.length === 0 && !locTouched && !geoTouched && !taxTouched) {
       return res.status(400).json({ success: false, error: 'No hay campos validos para actualizar' });
     }
 
     let updatedRow = existing.rows[0];
-    if (entries.length > 0) {
-      const setClause = entries.map(([k], i) => `${k} = $${i + 1}`).join(', ');
-      const values = entries.map(([, v]) => v);
+    const updateEntries = [...entries];
+    if (needsReapproval) {
+      updateEntries.push(['status', 'pending']);
+      updateEntries.push(['approved_by', null]);
+    }
+    if (updateEntries.length > 0) {
+      const setClause = updateEntries.map(([k], i) => `${k} = $${i + 1}`).join(', ');
+      const values = updateEntries.map(([, v]) => v);
       values.push(id);
       const updated = await query(
         `UPDATE fossils SET ${setClause}, updated_at = CURRENT_TIMESTAMP
@@ -456,7 +472,13 @@ const updateFossil = async (req, res) => {
     }
 
     const full = await getFossilRowFullById(id);
-    return res.json({ success: true, message: 'Fosil actualizado', data: full || updatedRow });
+    return res.json({
+      success: true,
+      message: needsReapproval
+        ? 'Fosil actualizado y enviado nuevamente a revisión administrativa.'
+        : 'Fosil actualizado',
+      data: full || updatedRow,
+    });
   } catch (error) {
     console.error('Error en updateFossil:', error);
     return res.status(500).json({ success: false, error: 'Error al actualizar fosil' });

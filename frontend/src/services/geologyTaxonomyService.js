@@ -49,4 +49,8 @@ export const geologyTaxonomyService = {
     const { data } = await api.get(`/taxonomy/species/genus/${genusId}`);
     return data;
   },
+  async getAllSpecies() {
+    const { data } = await api.get('/taxonomy/species');
+    return data;
+  },
 };

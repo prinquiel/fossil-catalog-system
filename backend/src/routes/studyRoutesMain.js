@@ -19,11 +19,11 @@ router.get('/public/:id', c.getPublicStudyById);
 
 router.get('/admin/pending', protect, authorize('admin'), c.getPendingStudies);
 
-router.post('/', protect, studyMultipart, c.createStudy);
+router.post('/', protect, authorize('researcher', 'admin'), studyMultipart, c.createStudy);
 router.patch('/:id/publish', protect, authorize('admin'), c.publishStudy);
 router.patch('/:id/reject', protect, authorize('admin'), c.rejectStudy);
-router.put('/:id', protect, studyMultipart, c.updateStudy);
-router.delete('/:id', protect, c.deleteStudy);
+router.put('/:id', protect, authorize('researcher', 'admin'), studyMultipart, c.updateStudy);
+router.delete('/:id', protect, authorize('researcher', 'admin'), c.deleteStudy);
 
 router.get('/', protect, c.getStudies);
 router.get('/fossil/:fossilId', protect, c.getStudiesByFossil);

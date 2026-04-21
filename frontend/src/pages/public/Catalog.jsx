@@ -14,6 +14,7 @@ import { geologyTaxonomyService } from '../../services/geologyTaxonomyService';
 import { mediaService } from '../../services/mediaService';
 import { mediaFileUrlCandidates } from '../../utils/mediaUrl.js';
 import { hasValidCoords, normalizeGeoPoint } from '../../utils/geoNormalize.js';
+import { clientPaginate } from '../../utils/pagination.js';
 import './Catalog.css';
 
 const categoryLabels = {
@@ -22,6 +23,7 @@ const categoryLabels = {
   ROC: 'Roca',
   PAL: 'Paleontológico',
 };
+const PAGE_SIZE = 12;
 
 const formatDate = (value) => {
   if (!value) return 'Sin fecha';
@@ -41,8 +43,10 @@ function Catalog() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
+  const [locationQuery, setLocationQuery] = useState('');
   const [eraFilter, setEraFilter] = useState('all');
   const [periodFilter, setPeriodFilter] = useState('all');
+  const [page, setPage] = useState(1);
   const [eraOptions, setEraOptions] = useState([]);
   const [allPeriods, setAllPeriods] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -111,6 +115,7 @@ function Catalog() {
 
   const filteredFossils = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
+    const normalizedLocation = locationQuery.trim().toLowerCase();
 
     const base = allFossils.filter((item) => {
       const matchesQuery =
@@ -122,7 +127,14 @@ function Catalog() {
       const matchesCategory = category === 'all' || item.category === category;
       const matchesEra = eraFilter === 'all' || String(item.era_id) === eraFilter;
       const matchesPeriod = periodFilter === 'all' || String(item.period_id) === periodFilter;
-      return matchesQuery && matchesCategory && matchesEra && matchesPeriod;
+      const locationRaw = [item.country_code, item.province_code, item.canton_code, item.location_description]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      const matchesLocation =
+        normalizedLocation.length === 0 ||
+        locationRaw.includes(normalizedLocation);
+      return matchesQuery && matchesCategory && matchesEra && matchesPeriod && matchesLocation;
     });
 
     const sorted = [...base];
@@ -137,11 +149,21 @@ function Catalog() {
       return bDate - aDate;
     });
     return sorted;
-  }, [allFossils, category, query, sortBy, eraFilter, periodFilter, showFossilCode]);
+  }, [allFossils, category, query, sortBy, eraFilter, periodFilter, showFossilCode, locationQuery]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, category, sortBy, eraFilter, periodFilter, locationQuery]);
+
+  const paged = useMemo(
+    () => clientPaginate(filteredFossils, { page, pageSize: PAGE_SIZE }),
+    [filteredFossils, page]
+  );
+  const pagedFossils = paged.slice;
 
   useEffect(() => {
     let cancelled = false;
-    const list = filteredFossils;
+    const list = pagedFossils;
     if (list.length === 0) {
       setCoverByFossilId({});
       return undefined;
@@ -164,7 +186,7 @@ function Catalog() {
     return () => {
       cancelled = true;
     };
-  }, [filteredFossils]);
+  }, [pagedFossils]);
 
   const periodOptionsForToolbar = useMemo(() => {
     if (eraFilter === 'all') return allPeriods;
@@ -379,6 +401,15 @@ function Catalog() {
           </select>
         </label>
 
+        <label>
+          Ubicación
+          <input
+            value={locationQuery}
+            onChange={(e) => setLocationQuery(e.target.value)}
+            placeholder="Provincia, cantón o descripción"
+          />
+        </label>
+
         {query.trim() && (
           <button type="button" className="catalog-clear-btn" onClick={() => setQuery('')}>
             Limpiar búsqueda
@@ -447,7 +478,7 @@ function Catalog() {
               </article>
             )}
 
-            {filteredFossils.map((item) => {
+            {pagedFossils.map((item) => {
               const cover = coverByFossilId[item.id];
               const hasCover = Array.isArray(cover) && cover.length > 0;
               return (
@@ -503,6 +534,9 @@ function Catalog() {
                       ) : null}
                       <span>{categoryLabels[item.category] || item.category || '—'}</span>
                     </p>
+                    <p className="fossil-card-minimal">
+                      <Link to={`/fossil/${item.id}`}>Abrir ficha</Link>
+                    </p>
                   </div>
                 </article>
               );
@@ -510,6 +544,29 @@ function Catalog() {
           </div>
         </section>
       )}
+      {!isLoading && paged.totalPages > 1 ? (
+        <section className="catalog-pager" aria-label="Paginación">
+          <button
+            type="button"
+            className="catalog-btn ghost"
+            disabled={paged.page <= 1}
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+          >
+            Anterior
+          </button>
+          <p>
+            Página {paged.page} de {paged.totalPages}
+          </p>
+          <button
+            type="button"
+            className="catalog-btn ghost"
+            disabled={paged.page >= paged.totalPages}
+            onClick={() => setPage((prev) => Math.min(paged.totalPages, prev + 1))}
+          >
+            Siguiente
+          </button>
+        </section>
+      ) : null}
 
       {typeof document !== 'undefined' &&
         selectedFossil &&
@@ -633,6 +690,9 @@ function Catalog() {
                 ) : (
                   catalogStudiesMarkup
                 )}
+                <p className="catalog-detail-footnote">
+                  <Link to={`/fossil/${selectedFossil.id}`}>Abrir ficha</Link>
+                </p>
                 {selectedHasCoords ? (
                   <div className="catalog-detail-map">
                     <p className="catalog-detail-map__label">Mapa del hallazgo</p>

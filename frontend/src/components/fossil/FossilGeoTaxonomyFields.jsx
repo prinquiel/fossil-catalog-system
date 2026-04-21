@@ -3,9 +3,16 @@ import { geologyTaxonomyService } from '../../services/geologyTaxonomyService';
 
 /**
  * Selects en cascada: era → período; reino → … → especie.
- * @param {{ form: Record<string, string>, setForm: React.Dispatch<React.SetStateAction<any>> }} props
+ * @param {{ form: Record<string, string>, setForm: React.Dispatch<React.SetStateAction<any>>, disabled?: boolean, idPrefix?: string, showTaxonomy?: boolean, showSpecies?: boolean }} props
  */
-export default function FossilGeoTaxonomyFields({ form, setForm, disabled = false, idPrefix = '' }) {
+export default function FossilGeoTaxonomyFields({
+  form,
+  setForm,
+  disabled = false,
+  idPrefix = '',
+  showTaxonomy = true,
+  showSpecies = true,
+}) {
   const [eras, setEras] = useState([]);
   const [periods, setPeriods] = useState([]);
   const [kingdoms, setKingdoms] = useState([]);
@@ -21,13 +28,15 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
     geologyTaxonomyService.getEras().then((res) => {
       if (m && res.success && Array.isArray(res.data)) setEras(res.data);
     });
-    geologyTaxonomyService.getKingdoms().then((res) => {
-      if (m && res.success && Array.isArray(res.data)) setKingdoms(res.data);
-    });
+    if (showTaxonomy) {
+      geologyTaxonomyService.getKingdoms().then((res) => {
+        if (m && res.success && Array.isArray(res.data)) setKingdoms(res.data);
+      });
+    }
     return () => {
       m = false;
     };
-  }, []);
+  }, [showTaxonomy]);
 
   useEffect(() => {
     let m = true;
@@ -45,6 +54,10 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
 
   useEffect(() => {
     let m = true;
+    if (!showTaxonomy) {
+      setPhylums([]);
+      return;
+    }
     if (!form.kingdom_id) {
       setPhylums([]);
       return;
@@ -55,10 +68,14 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
     return () => {
       m = false;
     };
-  }, [form.kingdom_id]);
+  }, [form.kingdom_id, showTaxonomy]);
 
   useEffect(() => {
     let m = true;
+    if (!showTaxonomy) {
+      setClasses([]);
+      return;
+    }
     if (!form.phylum_id) {
       setClasses([]);
       return;
@@ -69,10 +86,14 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
     return () => {
       m = false;
     };
-  }, [form.phylum_id]);
+  }, [form.phylum_id, showTaxonomy]);
 
   useEffect(() => {
     let m = true;
+    if (!showTaxonomy) {
+      setOrders([]);
+      return;
+    }
     if (!form.class_id) {
       setOrders([]);
       return;
@@ -83,10 +104,14 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
     return () => {
       m = false;
     };
-  }, [form.class_id]);
+  }, [form.class_id, showTaxonomy]);
 
   useEffect(() => {
     let m = true;
+    if (!showTaxonomy) {
+      setFamilies([]);
+      return;
+    }
     if (!form.order_id) {
       setFamilies([]);
       return;
@@ -97,10 +122,14 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
     return () => {
       m = false;
     };
-  }, [form.order_id]);
+  }, [form.order_id, showTaxonomy]);
 
   useEffect(() => {
     let m = true;
+    if (!showTaxonomy) {
+      setGenera([]);
+      return;
+    }
     if (!form.family_id) {
       setGenera([]);
       return;
@@ -111,10 +140,14 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
     return () => {
       m = false;
     };
-  }, [form.family_id]);
+  }, [form.family_id, showTaxonomy]);
 
   useEffect(() => {
     let m = true;
+    if (!showTaxonomy || !showSpecies) {
+      setSpecies([]);
+      return;
+    }
     if (!form.genus_id) {
       setSpecies([]);
       return;
@@ -125,7 +158,7 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
     return () => {
       m = false;
     };
-  }, [form.genus_id]);
+  }, [form.genus_id, showSpecies, showTaxonomy]);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -241,9 +274,17 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
       <p className="workspace-page__kicker" style={{ marginBottom: 8 }}>
         Clasificación taxonómica
       </p>
-      <p className="workspace-muted" style={{ marginBottom: 12, fontSize: '0.9rem' }}>
-        Niveles jerárquicos (reino a especie). Seleccione en orden; el catálogo se filtra en cada paso.
-      </p>
+      {showTaxonomy ? (
+        <p className="workspace-muted" style={{ marginBottom: 12, fontSize: '0.9rem' }}>
+          Niveles jerárquicos (reino a especie). Seleccione en orden; el catálogo se filtra en cada paso.
+        </p>
+      ) : (
+        <p className="workspace-muted" style={{ marginBottom: 12, fontSize: '0.9rem' }}>
+          Esta categoría no usa taxonomía biológica (reino a especie). Podés dejar este bloque vacío.
+        </p>
+      )}
+      {showTaxonomy ? (
+        <>
       <div className="workspace-form__row">
         <div>
           <label htmlFor={`${idPrefix}kingdom`}>Reino</label>
@@ -316,20 +357,24 @@ export default function FossilGeoTaxonomyFields({ form, setForm, disabled = fals
           </select>
         </div>
       </div>
-      <div className="workspace-form__row" style={{ marginTop: 14 }}>
-        <div>
-          <label htmlFor={`${idPrefix}species`}>Especie</label>
-          <select id={`${idPrefix}species`} value={form.species_id} onChange={set('species_id')} disabled={disabled || !form.genus_id}>
-            <option value="">—</option>
-            {species.map((s) => (
-              <option key={s.id} value={String(s.id)}>
-                {s.name}
-                {s.common_name ? ` (${s.common_name})` : ''}
-              </option>
-            ))}
-          </select>
+      {showSpecies ? (
+        <div className="workspace-form__row" style={{ marginTop: 14 }}>
+          <div>
+            <label htmlFor={`${idPrefix}species`}>Especie / Grupo amplio</label>
+            <select id={`${idPrefix}species`} value={form.species_id} onChange={set('species_id')} disabled={disabled || !form.genus_id}>
+              <option value="">—</option>
+              {species.map((s) => (
+                <option key={s.id} value={String(s.id)}>
+                  {s.name}
+                  {s.common_name ? ` (${s.common_name})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
+      ) : null}
+        </>
+      ) : null}
     </>
   );
 }

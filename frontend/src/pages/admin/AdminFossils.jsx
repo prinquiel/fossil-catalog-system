@@ -45,8 +45,8 @@ function AdminFossils() {
         <p className="admin-page-eyebrow">Catálogo</p>
         <h1 className="admin-page-title">Fósiles</h1>
         <p className="admin-page-desc">
-          Listado completo del archivo (todos los estados). Los registros en revisión pueden aprobarse desde
-          «Fósiles pendientes».
+          Listado completo del archivo (todos los estados). Puede editar cualquier ficha sin alterar el autor
+          original del registro.
         </p>
       </header>
 
@@ -77,13 +77,20 @@ function AdminFossils() {
                   <td>{f.created_by}</td>
                   <td>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      <Link
+                        className="admin-btn admin-btn--ghost"
+                        to={`/admin/fossil/${f.id}/review`}
+                        style={{ padding: '6px 12px', fontSize: '0.82rem' }}
+                      >
+                        Editar
+                      </Link>
                       {f.status === 'pending' && (
                         <Link
                           className="admin-btn admin-btn--ghost"
                           to={`/admin/fossil/${f.id}/review`}
                           style={{ padding: '6px 12px', fontSize: '0.82rem' }}
                         >
-                          Revisar
+                          Revisar y publicar
                         </Link>
                       )}
                       <button

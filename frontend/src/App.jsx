@@ -10,6 +10,12 @@ import Catalog from './pages/public/Catalog';
 import PublicStudiesIndex from './pages/public/PublicStudiesIndex';
 import PublicStudyDetail from './pages/public/PublicStudyDetail';
 import PublicMap from './pages/public/PublicMap';
+import PublicFossilDetail from './pages/public/PublicFossilDetail';
+import PublicContact from './pages/public/PublicContact';
+import PublicAbout from './pages/public/PublicAbout';
+import PublicProfile from './pages/public/PublicProfile';
+import PublicNotifications from './pages/public/PublicNotifications';
+import PublicSettings from './pages/public/PublicSettings';
 import RoleLayout from './layouts/RoleLayout';
 import AdminLayout from './layouts/AdminLayout';
 import PlaceholderPage from './pages/common/PlaceholderPage';
@@ -21,11 +27,11 @@ import AdminEditUser from './pages/admin/AdminEditUser';
 import AdminFossils from './pages/admin/AdminFossils';
 import AdminPendingFossils from './pages/admin/AdminPendingFossils';
 import AdminPendingStudies from './pages/admin/AdminPendingStudies';
+import AdminStudies from './pages/admin/AdminStudies';
 import AdminStudyView from './pages/admin/AdminStudyView';
 import AdminFossilReview from './pages/admin/AdminFossilReview';
 import AdminMessages from './pages/admin/AdminMessages';
 import AdminMessageDetail from './pages/admin/AdminMessageDetail';
-import AdminAudit from './pages/admin/AdminAudit';
 import AdminStats from './pages/admin/AdminStats';
 import ExplorerDashboard from './pages/explorer/ExplorerDashboard';
 import ExplorerCreateFossil from './pages/explorer/ExplorerCreateFossil';
@@ -39,6 +45,7 @@ import ResearcherSearch from './pages/researcher/ResearcherSearch';
 import ResearcherCreateStudy from './pages/researcher/ResearcherCreateStudy';
 import ResearcherMyStudies from './pages/researcher/ResearcherMyStudies';
 import ResearcherStudyDetail from './pages/researcher/ResearcherStudyDetail';
+import ResearcherEditStudy from './pages/researcher/ResearcherEditStudy';
 
 const ResearcherMap = lazy(() => import('./pages/researcher/ResearcherMap'));
 import GlobalLoadingBar from './components/system/GlobalLoadingBar.jsx';
@@ -93,14 +100,14 @@ function App() {
               <Route path="/catalog" element={<Catalog />} />
               <Route path="/catalog/estudios" element={<PublicStudiesIndex />} />
               <Route path="/catalog/estudio/:id" element={<PublicStudyDetail />} />
-              <Route path="/fossil/:id" element={<PlaceholderPage title="Fossil Detail" />} />
+              <Route path="/fossil/:id" element={<PublicFossilDetail />} />
               <Route path="/map" element={<PublicMap />} />
-              <Route path="/about" element={<PlaceholderPage title="About" />} />
-              <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
+              <Route path="/about" element={<PublicAbout />} />
+              <Route path="/contact" element={<PublicContact />} />
 
-              <Route path="/profile" element={<PlaceholderPage title="Profile" />} />
-              <Route path="/notifications" element={<PlaceholderPage title="Notifications" />} />
-              <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+              <Route path="/profile" element={<PublicProfile />} />
+              <Route path="/notifications" element={<PublicNotifications />} />
+              <Route path="/settings" element={<PublicSettings />} />
               <Route path="/403" element={<PlaceholderPage title="403" description="No autorizado" />} />
               <Route path="/404" element={<PlaceholderPage title="404" description="Pagina no encontrada" />} />
               <Route
@@ -130,6 +137,7 @@ function App() {
               <Route path="search" element={<ResearcherSearch />} />
               <Route path="create-study/:fossilId" element={<ResearcherCreateStudy />} />
               <Route path="study/:id" element={<ResearcherStudyDetail />} />
+              <Route path="study/:id/edit" element={<ResearcherEditStudy />} />
               <Route path="my-studies" element={<ResearcherMyStudies />} />
               <Route
                 path="map"
@@ -159,6 +167,7 @@ function App() {
               <Route path="pending-registrations" element={<AdminPendingRegistrations />} />
               <Route path="pending-fossils" element={<AdminPendingFossils />} />
               <Route path="pending-studies" element={<AdminPendingStudies />} />
+              <Route path="studies" element={<AdminStudies />} />
               <Route path="study/:id" element={<AdminStudyView />} />
               <Route path="fossil/:id/review" element={<AdminFossilReview />} />
               <Route path="fossils" element={<AdminFossils />} />
@@ -167,7 +176,7 @@ function App() {
               <Route path="edit-user/:id" element={<AdminEditUser />} />
               <Route path="messages" element={<AdminMessages />} />
               <Route path="message/:id" element={<AdminMessageDetail />} />
-              <Route path="audit" element={<AdminAudit />} />
+              <Route path="audit" element={<Navigate to="/admin/studies" replace />} />
               <Route path="stats" element={<AdminStats />} />
             </Route>
 

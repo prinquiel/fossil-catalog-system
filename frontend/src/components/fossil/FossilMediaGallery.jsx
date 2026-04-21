@@ -50,7 +50,7 @@ export default function FossilMediaGallery({ fossilId, title = 'Imágenes del re
         const res = await mediaService.getByFossil(fossilId);
         if (!mounted) return;
         setItems(Array.isArray(res?.data) ? res.data : []);
-      } catch (e) {
+      } catch {
         if (mounted) setError('No se pudieron cargar las imágenes de este registro.');
       } finally {
         if (mounted) setLoading(false);
@@ -94,6 +94,10 @@ export default function FossilMediaGallery({ fossilId, title = 'Imágenes del re
           const src = candidates[0] || '';
           if (!src) return null;
           const failed = brokenIds.has(m.id);
+          const isVideo =
+            m.file_type === 'video' ||
+            /\.(mp4|webm|mov|m4v)$/i.test(m.file_path || '') ||
+            /\.(mp4|webm|mov|m4v)$/i.test(m.file_name || '');
           return (
             <figure key={m.id} className="fossil-media-gallery__figure">
               {failed ? (
@@ -114,32 +118,53 @@ export default function FossilMediaGallery({ fossilId, title = 'Imágenes del re
                 <button
                   type="button"
                   className="fossil-media-gallery__link"
-                  aria-label={`Abrir vista ampliada de ${m.file_name || `imagen ${m.id}`}`}
+                  aria-label={`Abrir vista ampliada de ${m.file_name || `archivo ${m.id}`}`}
                   onClick={() => setPreviewIndex(items.findIndex((x) => x.id === m.id))}
                 >
-                  <img
-                    src={src}
-                    alt={m.file_name || `Imagen ${m.id}`}
-                    loading="lazy"
-                    className="fossil-media-gallery__img"
-                    onError={(event) => {
-                      const current = event.currentTarget.getAttribute('src') || '';
-                      const idx = candidates.findIndex((u) => u === current);
-                      const nextUrl = idx >= 0 ? candidates[idx + 1] : candidates[1];
-                      if (nextUrl) {
-                        event.currentTarget.setAttribute('src', nextUrl);
-                        return;
-                      }
-                      setBrokenIds((prev) => {
-                        const next = new Set(prev);
-                        next.add(m.id);
-                        return next;
-                      });
-                    }}
-                  />
+                  {isVideo ? (
+                    <video
+                      src={src}
+                      className="fossil-media-gallery__img"
+                      muted
+                      playsInline
+                      preload="metadata"
+                      onError={() => {
+                        setBrokenIds((prev) => {
+                          const next = new Set(prev);
+                          next.add(m.id);
+                          return next;
+                        });
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={src}
+                      alt={m.file_name || `Imagen ${m.id}`}
+                      loading="lazy"
+                      className="fossil-media-gallery__img"
+                      onError={(event) => {
+                        const current = event.currentTarget.getAttribute('src') || '';
+                        const idx = candidates.findIndex((u) => u === current);
+                        const nextUrl = idx >= 0 ? candidates[idx + 1] : candidates[1];
+                        if (nextUrl) {
+                          event.currentTarget.setAttribute('src', nextUrl);
+                          return;
+                        }
+                        setBrokenIds((prev) => {
+                          const next = new Set(prev);
+                          next.add(m.id);
+                          return next;
+                        });
+                      }}
+                    />
+                  )}
                 </button>
               )}
-              {m.file_name ? <figcaption className="fossil-media-gallery__cap">{m.file_name}</figcaption> : null}
+              <figcaption className="fossil-media-gallery__cap">
+                {m.file_name || `Archivo ${m.id}`}
+                {m.media_category ? ` · ${m.media_category}` : ''}
+                {m.angle ? ` · ${m.angle}` : ''}
+              </figcaption>
             </figure>
           );
         })}
@@ -165,18 +190,28 @@ export default function FossilMediaGallery({ fossilId, title = 'Imágenes del re
                 >
                   ×
                 </button>
-                <img
-                  src={mediaFileUrlCandidates(items[previewIndex].file_path)[0]}
-                  alt={items[previewIndex].file_name || `Imagen ${items[previewIndex].id}`}
-                  className="fossil-media-gallery__lightbox-img"
-                  onError={(event) => {
-                    const candidates = mediaFileUrlCandidates(items[previewIndex].file_path);
-                    const current = event.currentTarget.getAttribute('src') || '';
-                    const idx = candidates.findIndex((u) => u === current);
-                    const nextUrl = idx >= 0 ? candidates[idx + 1] : candidates[1];
-                    if (nextUrl) event.currentTarget.setAttribute('src', nextUrl);
-                  }}
-                />
+                {items[previewIndex].file_type === 'video' ||
+                /\.(mp4|webm|mov|m4v)$/i.test(items[previewIndex].file_path || '') ? (
+                  <video
+                    src={mediaFileUrlCandidates(items[previewIndex].file_path)[0]}
+                    className="fossil-media-gallery__lightbox-img"
+                    controls
+                    autoPlay
+                  />
+                ) : (
+                  <img
+                    src={mediaFileUrlCandidates(items[previewIndex].file_path)[0]}
+                    alt={items[previewIndex].file_name || `Imagen ${items[previewIndex].id}`}
+                    className="fossil-media-gallery__lightbox-img"
+                    onError={(event) => {
+                      const candidates = mediaFileUrlCandidates(items[previewIndex].file_path);
+                      const current = event.currentTarget.getAttribute('src') || '';
+                      const idx = candidates.findIndex((u) => u === current);
+                      const nextUrl = idx >= 0 ? candidates[idx + 1] : candidates[1];
+                      if (nextUrl) event.currentTarget.setAttribute('src', nextUrl);
+                    }}
+                  />
+                )}
                 <div className="fossil-media-gallery__lightbox-meta">
                   <p>{items[previewIndex].file_name || 'Imagen sin nombre'}</p>
                   <a

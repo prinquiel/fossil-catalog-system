@@ -7,9 +7,12 @@ const {
   getGeologyByFossil,
   setGeologyForFossil,
 } = require('../controllers/geologyController');
+const { createEra, createPeriod } = require('../controllers/geologyControllerMain');
 
 router.get('/eras', getEras);
+router.post('/eras', protect, createEra);
 router.get('/periods', getPeriods);
+router.post('/periods', protect, createPeriod);
 router.get('/periods/era/:eraId', getPeriods);
 
 router.get('/fossil/:fossilId', getGeologyByFossil);

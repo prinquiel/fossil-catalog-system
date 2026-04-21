@@ -200,6 +200,9 @@ export default function ResearcherStudyDetail() {
           ) : null}
         </div>
         <div className="rsd-actions">
+          <Link to={`/researcher/study/${study.id}/edit`} className="workspace-btn">
+            Editar estudio
+          </Link>
           <Link to={`/researcher/fossil/${study.fossil_id}`} className="workspace-btn workspace-btn--ghost">
             Ver ficha del fósil
           </Link>

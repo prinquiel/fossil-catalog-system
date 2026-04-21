@@ -72,7 +72,9 @@ function ExplorerEditFossil() {
       const payload = buildFossilUpdatePayload(form);
       const res = await fossilService.update(id, payload);
       if (res.success) {
-        toast.success('Cambios guardados.');
+        toast.success(
+          res.message || 'Cambios guardados. El registro vuelve a revisión administrativa para ser publicado.'
+        );
         navigate('/explorer/my-fossils');
       }
     } catch (err) {

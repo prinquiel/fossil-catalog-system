@@ -10,6 +10,11 @@ import {
   loadFossilCreateDraft,
   saveFossilCreateDraft,
 } from '../../utils/fossilDraftStorage.js';
+import {
+  enqueueOfflineFossil,
+  readOfflineFossilQueue,
+  removeOfflineQueuedFossil,
+} from '../../utils/fossilOfflineQueue.js';
 import { FOSSIL_CATEGORIES } from '../../constants/fossilMeta.js';
 import FossilGeoTaxonomyFields from '../../components/fossil/FossilGeoTaxonomyFields.jsx';
 import '../workspace/workspace-pages.css';
@@ -79,12 +84,19 @@ function ExplorerCreateFossil() {
     /** @type {{ form: typeof DEFAULT_FORM, savedAt: string } | null} */ (null)
   );
   const [lastLocalSaveLabel, setLastLocalSaveLabel] = useState('');
+  const [offlineQueueCount, setOfflineQueueCount] = useState(0);
+  const [syncingQueue, setSyncingQueue] = useState(false);
   const [imageFiles, setImageFiles] = useState(/** @type {File[]} */ ([]));
   const [form, setForm] = useState({ ...DEFAULT_FORM });
+  const isBioCategory = form.category === 'FOS' || form.category === 'PAL';
 
   useEffect(() => {
     const d = loadFossilCreateDraft();
     if (d?.form) setRecoverableDraft({ form: { ...DEFAULT_FORM, ...d.form }, savedAt: d.savedAt });
+  }, []);
+
+  useEffect(() => {
+    setOfflineQueueCount(readOfflineFossilQueue().length);
   }, []);
 
   useEffect(() => {
@@ -97,6 +109,20 @@ function ExplorerCreateFossil() {
       window.removeEventListener('offline', off);
     };
   }, []);
+
+  useEffect(() => {
+    if (isBioCategory) return;
+    setForm((f) => ({
+      ...f,
+      kingdom_id: '',
+      phylum_id: '',
+      class_id: '',
+      order_id: '',
+      family_id: '',
+      genus_id: '',
+      species_id: '',
+    }));
+  }, [isBioCategory]);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -157,14 +183,76 @@ function ExplorerCreateFossil() {
     toast('Borrador local eliminado.');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const buildPayloadFromForm = () => {
+    const payload = {
+      name: form.name.trim(),
+      category: form.category,
+      description: form.description.trim() || undefined,
+      discoverer_name: form.discoverer_name.trim() || undefined,
+      discovery_date: form.discovery_date || undefined,
+      geological_context: form.geological_context.trim() || undefined,
+      original_state_description: form.original_state_description.trim() || undefined,
+    };
+    const hasGps = form.latitude.trim() && form.longitude.trim();
+    const hasCR = form.province_code.trim() && form.canton_code.trim();
+    if (form.country_code.trim()) payload.country_code = form.country_code.trim();
+    if (hasCR) {
+      payload.province_code = form.province_code.trim();
+      payload.canton_code = form.canton_code.trim();
+    }
+    if (hasGps) {
+      payload.latitude = Number(form.latitude);
+      payload.longitude = Number(form.longitude);
+    }
+    if (form.location_description.trim()) payload.location_description = form.location_description.trim();
+    appendClassificationToPayload(payload, form);
+    return payload;
+  };
+
+  const flushOfflineQueue = async () => {
     if (!isOnline) {
-      toast.error('Sin conexión. Guardá un borrador local con el botón inferior y enviá cuando vuelva internet.');
+      toast.error('Conéctese a internet para sincronizar la cola offline.');
       return;
     }
+    const queue = readOfflineFossilQueue();
+    if (queue.length === 0) {
+      setOfflineQueueCount(0);
+      toast('No hay envíos pendientes en cola.');
+      return;
+    }
+    setSyncingQueue(true);
+    let successCount = 0;
+    for (const item of queue) {
+      try {
+        const res = await fossilService.create(item.payload);
+        if (res?.success) {
+          removeOfflineQueuedFossil(item.id);
+          successCount += 1;
+        }
+      } catch (error) {
+        toast.error(`Se detuvo la sincronización: ${getApiErrorMessage(error)}`);
+        break;
+      }
+    }
+    const remaining = readOfflineFossilQueue().length;
+    setOfflineQueueCount(remaining);
+    if (successCount > 0) {
+      toast.success(`Se sincronizaron ${successCount} ficha(s) offline.`);
+    }
+    setSyncingQueue(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!form.name.trim()) {
       toast.error('El nombre del hallazgo es obligatorio.');
+      return;
+    }
+    const payload = buildPayloadFromForm();
+    if (!isOnline) {
+      enqueueOfflineFossil(payload);
+      setOfflineQueueCount(readOfflineFossilQueue().length);
+      toast.success('Sin conexión: la ficha se guardó en cola offline para sincronizar luego.');
       return;
     }
     const preCheck = validateImageFiles(imageFiles);
@@ -174,28 +262,6 @@ function ExplorerCreateFossil() {
     }
     setLoading(true);
     try {
-      const payload = {
-        name: form.name.trim(),
-        category: form.category,
-        description: form.description.trim() || undefined,
-        discoverer_name: form.discoverer_name.trim() || undefined,
-        discovery_date: form.discovery_date || undefined,
-        geological_context: form.geological_context.trim() || undefined,
-        original_state_description: form.original_state_description.trim() || undefined,
-      };
-      const hasGps = form.latitude.trim() && form.longitude.trim();
-      const hasCR = form.province_code.trim() && form.canton_code.trim();
-      if (form.country_code.trim()) payload.country_code = form.country_code.trim();
-      if (hasCR) {
-        payload.province_code = form.province_code.trim();
-        payload.canton_code = form.canton_code.trim();
-      }
-      if (hasGps) {
-        payload.latitude = Number(form.latitude);
-        payload.longitude = Number(form.longitude);
-      }
-      if (form.location_description.trim()) payload.location_description = form.location_description.trim();
-      appendClassificationToPayload(payload, form);
       const res = await fossilService.create(payload);
       if (res.success && res.data?.id) {
         const id = res.data.id;
@@ -238,8 +304,18 @@ function ExplorerCreateFossil() {
       {!isOnline ? (
         <div className="workspace-alert" role="status" style={{ marginBottom: 16 }}>
           <strong>Sin conexión a internet.</strong> Podés seguir completando la ficha y usar{' '}
-          <strong>Guardar borrador en este dispositivo</strong> abajo; cuando vuelva la red, abrí esta página,
-          recuperá el borrador si hace falta y pulsá <strong>Enviar ficha</strong>.
+          <strong>Guardar borrador en este dispositivo</strong> o <strong>Enviar a cola offline</strong>; cuando vuelva la red,
+          abrí esta página y sincronizá.
+        </div>
+      ) : null}
+      {offlineQueueCount > 0 ? (
+        <div className="workspace-card" style={{ marginBottom: 16, padding: '14px 18px' }}>
+          <p style={{ margin: '0 0 10px' }}>
+            Hay <strong>{offlineQueueCount}</strong> ficha(s) en cola offline pendientes de sincronización.
+          </p>
+          <button type="button" className="workspace-btn" disabled={!isOnline || syncingQueue} onClick={flushOfflineQueue}>
+            {syncingQueue ? 'Sincronizando…' : 'Sincronizar cola offline'}
+          </button>
         </div>
       ) : null}
 
@@ -283,6 +359,11 @@ function ExplorerCreateFossil() {
                 </option>
               ))}
             </select>
+            <p className="workspace-muted" style={{ margin: '8px 0 0', fontSize: '0.84rem' }}>
+              {isBioCategory
+                ? 'Fósil/Paleontológico: habilita clasificación biológica (reino a especie/grupo).'
+                : 'Roca/Mineral: no requiere clasificación biológica.'}
+            </p>
           </div>
         </div>
 
@@ -363,7 +444,13 @@ function ExplorerCreateFossil() {
           />
         </div>
 
-        <FossilGeoTaxonomyFields form={form} setForm={setForm} disabled={loading} />
+        <FossilGeoTaxonomyFields
+          form={form}
+          setForm={setForm}
+          disabled={loading}
+          showTaxonomy={isBioCategory}
+          showSpecies={isBioCategory}
+        />
 
         <hr className="np-rule" style={{ margin: '22px 0' }} />
         <p className="workspace-muted" style={{ marginBottom: 12 }}>
@@ -441,12 +528,28 @@ function ExplorerCreateFossil() {
         </div>
 
         <div className="workspace-actions">
-          <button type="submit" className="workspace-btn" disabled={loading || !isOnline}>
-            {loading ? 'Guardando…' : 'Enviar ficha'}
+          <button type="submit" className="workspace-btn" disabled={loading}>
+            {loading ? 'Guardando…' : isOnline ? 'Enviar ficha' : 'Guardar en cola offline'}
+          </button>
+          <button
+            type="button"
+            className="workspace-btn workspace-btn--ghost"
+            disabled={loading}
+            onClick={() => {
+              if (!form.name.trim()) {
+                toast.error('Para cola offline, ingrese al menos el nombre del hallazgo.');
+                return;
+              }
+              enqueueOfflineFossil(buildPayloadFromForm());
+              setOfflineQueueCount(readOfflineFossilQueue().length);
+              toast.success('Ficha añadida a cola offline.');
+            }}
+          >
+            Enviar a cola offline
           </button>
           {!isOnline ? (
             <span className="workspace-muted" style={{ fontSize: '0.88rem' }}>
-              Enviar requiere conexión.
+              Enviar inmediato requiere conexión.
             </span>
           ) : null}
         </div>

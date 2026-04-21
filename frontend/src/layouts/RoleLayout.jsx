@@ -153,24 +153,34 @@ function RoleLayout({ variant, navTitle, tagline, links }) {
           <Link to={links[0]?.to || '/'} className="role-brand">
             Fossil Catalog
           </Link>
-          <button
-            type="button"
-            className="role-menu-btn"
-            aria-expanded={menuOpen}
-            aria-controls="role-sidebar-panel"
-            aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            {menuOpen ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 7h16M4 12h16M4 17h16" />
-              </svg>
-            )}
-          </button>
+          <div className="role-topbar__end">
+            {variant === 'researcher' ? (
+              <NavLink
+                to="/researcher/my-studies"
+                className={({ isActive }) => `role-topbar-studies${isActive ? ' is-active' : ''}`}
+              >
+                Mis estudios
+              </NavLink>
+            ) : null}
+            <button
+              type="button"
+              className="role-menu-btn"
+              aria-expanded={menuOpen}
+              aria-controls="role-sidebar-panel"
+              aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              {menuOpen ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              )}
+            </button>
+          </div>
         </header>
 
         <div className="role-body">

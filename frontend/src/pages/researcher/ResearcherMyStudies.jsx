@@ -56,7 +56,8 @@ function ResearcherMyStudies() {
       <h1 className="workspace-page__title">Mis estudios</h1>
       <p className="workspace-page__lead">
         Estudios donde usted figura como investigador principal. El título abre la <strong>ficha del estudio</strong>; el
-        enlace del fósil abre el <strong>ejemplar</strong> del catálogo.
+        enlace del fósil abre el <strong>ejemplar</strong> del catálogo. Al editar un estudio, vuelve a estado
+        <strong> en revisión</strong> hasta aprobación administrativa.
       </p>
 
       {loading ? (
@@ -75,6 +76,7 @@ function ResearcherMyStudies() {
                   <th>Fósil (ejemplar)</th>
                   <th>Estado</th>
                   <th>Fecha</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -92,6 +94,11 @@ function ResearcherMyStudies() {
                     </td>
                     <td>{PUBLICATION_LABEL[s.publication_status] || s.publication_status || '—'}</td>
                     <td>{s.study_date ? String(s.study_date).slice(0, 10) : '—'}</td>
+                    <td>
+                      <Link className="workspace-link" to={`/researcher/study/${s.id}/edit`}>
+                        Editar
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

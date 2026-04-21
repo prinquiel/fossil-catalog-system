@@ -14,17 +14,25 @@ function workspaceAreaActive(pathname, workspace) {
 function SiteHeader() {
   const location = useLocation();
   const pathname = location.pathname;
-  const { user, loading, isAuthenticated, logout } = useAuth();
+  const { user, loading, isAuthenticated, isExplorer, isResearcher, logout } = useAuth();
   const workspace = workspaceHomePath(user);
   const workspaceActive = workspaceAreaActive(pathname, workspace);
+  const studiesAreaActive =
+    pathname.startsWith('/researcher/my-studies') ||
+    pathname.startsWith('/researcher/study/') ||
+    pathname.includes('/researcher/create-study');
+  const misRegistrosAreaActive =
+    pathname.startsWith('/explorer/my-fossils') || pathname.startsWith('/explorer/edit-fossil');
 
   return (
     <header className="site-header" role="banner">
       <nav className="site-header__nav" aria-label="Navegación principal">
-        <Link to="/" className="site-header__brand">
-          <span className="site-header__brand-title">Fossil Catalog</span>
-          <span className="site-header__brand-tag">edición digital</span>
-        </Link>
+        <div className="site-header__nav-left">
+          <Link to="/" className="site-header__brand">
+            <span className="site-header__brand-title">Fossil Catalog</span>
+            <span className="site-header__brand-tag">edición digital</span>
+          </Link>
+        </div>
 
         <div className="site-header__links">
           <NavLink
@@ -34,64 +42,77 @@ function SiteHeader() {
           >
             Inicio
           </NavLink>
-          <NavLink
-            to="/catalog"
-            end
-            className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
-          >
-            Catálogo
-          </NavLink>
-          <NavLink
-            to="/catalog/estudios"
-            className={() => {
-              const p = pathname;
-              const onStudies = p === '/catalog/estudios' || /^\/catalog\/estudio\/[^/]+$/.test(p);
-              return `site-header__pill${onStudies ? ' is-active' : ''}`;
-            }}
-          >
-            Estudios
-          </NavLink>
-          <NavLink
-            to="/map"
-            className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
-          >
-            Mapa
-          </NavLink>
 
-          {!loading && !isAuthenticated && (
+          {!loading && isAuthenticated && isExplorer && (
+            <NavLink
+              to="/explorer/my-fossils"
+              className={() => `site-header__pill${misRegistrosAreaActive ? ' is-active' : ''}`}
+            >
+              Mis Registros
+            </NavLink>
+          )}
+
+          {!isAuthenticated && (
             <>
               <NavLink
-                to="/register"
+                to="/catalog"
                 className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
               >
-                Registrarse
+                Catálogo
               </NavLink>
-              <NavLink
-                to="/login"
-                className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
-              >
-                Iniciar sesión
+              <NavLink to="/map" className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}>
+                Mapa
               </NavLink>
             </>
           )}
 
+          {!loading && isAuthenticated && isResearcher && (
+            <NavLink
+              to="/researcher/my-studies"
+              className={`site-header__pill site-header__pill--studies${studiesAreaActive ? ' is-active' : ''}`}
+            >
+              Mis estudios
+            </NavLink>
+          )}
+
           {!loading && isAuthenticated && workspace && (
-            <>
-              <Link
-                to={workspace}
-                className={`site-header__pill site-header__pill--accent${workspaceActive ? ' is-active' : ''}`}
-                aria-current={workspaceActive ? 'page' : undefined}
-              >
-                Mi espacio de trabajo
-              </Link>
+            <Link
+              to={workspace}
+              className={`site-header__pill site-header__pill--accent${workspaceActive ? ' is-active' : ''}`}
+              aria-current={workspaceActive ? 'page' : undefined}
+            >
+              Mi espacio
+            </Link>
+          )}
+
+          <NavLink
+            to="/contact"
+            className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
+          >
+            Contacto
+          </NavLink>
+
+          {!loading && !isAuthenticated && (
+            <NavLink
+              to="/login"
+              className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
+            >
+              Iniciar sesión
+            </NavLink>
+          )}
+        </div>
+
+        <div className="site-header__nav-right">
+          {!loading && isAuthenticated ? (
+            <div className="site-header__session">
               <span className="site-header__user" title={user?.email || user?.username}>
                 {user?.email || user?.username}
               </span>
               <button type="button" className="site-header__logout" onClick={() => logout()}>
                 Cerrar sesión
               </button>
-            </>
-          )}
+            </div>
+          ) : null}
         </div>
       </nav>
     </header>

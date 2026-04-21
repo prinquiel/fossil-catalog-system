@@ -9,12 +9,12 @@ const NAV = [
   { to: '/admin/dashboard', label: 'Panel', end: false },
   { to: '/admin/pending-registrations', label: 'Registros pendientes', end: false },
   { to: '/admin/pending-fossils', label: 'Fósiles pendientes', end: false },
-  { to: '/admin/pending-studies', label: 'Estudios pendientes', end: false },
   { to: '/admin/fossils', label: 'Fósiles', end: false },
-  { to: '/admin/users', label: 'Usuarios', end: false },
+  { to: '/admin/pending-studies', label: 'Estudios pendientes', end: false },
+  { to: '/admin/studies', label: 'Estudios', end: false },
   { to: '/admin/create-user', label: 'Crear usuario', end: false },
+  { to: '/admin/users', label: 'Usuarios', end: false },
   { to: '/admin/messages', label: 'Mensajes', end: false },
-  { to: '/admin/audit', label: 'Auditoría', end: false },
   { to: '/admin/stats', label: 'Estadísticas', end: false },
 ];
 
@@ -67,14 +67,6 @@ function IconMail() {
   );
 }
 
-function IconAudit() {
-  return (
-    <svg className="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 6h16M4 12h10M4 18h7M14 18l4-4 2 2" />
-    </svg>
-  );
-}
-
 function IconChart() {
   return (
     <svg className="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -98,10 +90,10 @@ const ICONS = {
   '/admin/pending-fossils': IconLeaf,
   '/admin/pending-studies': IconStudies,
   '/admin/fossils': IconLeaf,
+  '/admin/studies': IconStudies,
   '/admin/users': IconUsers,
   '/admin/create-user': IconPlusUser,
   '/admin/messages': IconMail,
-  '/admin/audit': IconAudit,
   '/admin/stats': IconChart,
 };
 

@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { mediaService, validateImageFiles, MEDIA_MAX_FILES } from '../../services/mediaService';
+import {
+  mediaService,
+  validateImageFiles,
+  MEDIA_MAX_FILES,
+  MEDIA_CATEGORIES,
+  MEDIA_ANGLES,
+} from '../../services/mediaService';
 import { mediaFileUrl } from '../../utils/mediaUrl.js';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import './FossilMediaEditor.css';
@@ -44,6 +50,18 @@ export default function FossilMediaEditor({ fossilId }) {
     }
   };
 
+  const saveMeta = async (mediaId, patch) => {
+    try {
+      await mediaService.updateMedia(mediaId, patch);
+      setItems((prev) =>
+        prev.map((item) => (item.id === mediaId ? { ...item, ...patch } : item))
+      );
+      toast.success('Metadatos actualizados.');
+    } catch (e) {
+      toast.error(getApiErrorMessage(e));
+    }
+  };
+
   const onAddFiles = async (e) => {
     const picked = Array.from(e.target.files || []);
     e.target.value = '';
@@ -69,11 +87,11 @@ export default function FossilMediaEditor({ fossilId }) {
   return (
     <div className="fossil-media-editor">
       <p className="workspace-page__kicker" style={{ marginBottom: 8 }}>
-        Fotografías del hallazgo
+        Multimedia del hallazgo
       </p>
       <p className="workspace-muted" style={{ marginBottom: 14, fontSize: '0.9rem' }}>
-        Podés revisar las fotos actuales, eliminarlas o agregar más (JPG, PNG o WEBP; hasta {MEDIA_MAX_FILES} archivos por
-        envío).
+        Podés revisar el material actual, eliminar archivos, añadir más imágenes y definir metadatos de{' '}
+        <strong>categoría</strong> (antes/después/análisis/detalle) y <strong>ángulo</strong>.
       </p>
 
       {loading ? (
@@ -82,17 +100,58 @@ export default function FossilMediaEditor({ fossilId }) {
         <ul className="fossil-media-editor__list">
           {items.map((m) => {
             const src = mediaFileUrl(m.file_path);
+            const isVideo =
+              m.file_type === 'video' ||
+              /\.(mp4|webm|mov|m4v)$/i.test(m.file_path || '') ||
+              /\.(mp4|webm|mov|m4v)$/i.test(m.file_name || '');
             return (
               <li key={m.id} className="fossil-media-editor__item">
                 <div className="fossil-media-editor__thumb">
                   {src ? (
-                    <img src={src} alt="" loading="lazy" />
+                    isVideo ? (
+                      <video src={src} muted playsInline preload="metadata" />
+                    ) : (
+                      <img src={src} alt="" loading="lazy" />
+                    )
                   ) : (
                     <span className="fossil-media-editor__bad">Sin ruta</span>
                   )}
                 </div>
                 <div className="fossil-media-editor__meta">
                   <span className="fossil-media-editor__name">{m.file_name || 'archivo'}</span>
+                  <div className="fossil-media-editor__chips">
+                    <span>{m.file_type || 'image'}</span>
+                    {m.media_category ? <span>{m.media_category}</span> : null}
+                    {m.angle ? <span>{m.angle}</span> : null}
+                  </div>
+                  <div className="fossil-media-editor__row">
+                    <label htmlFor={`media-category-${m.id}`}>Categoría</label>
+                    <select
+                      id={`media-category-${m.id}`}
+                      value={m.media_category || 'general'}
+                      onChange={(event) => saveMeta(m.id, { media_category: event.target.value })}
+                    >
+                      {MEDIA_CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="fossil-media-editor__row">
+                    <label htmlFor={`media-angle-${m.id}`}>Ángulo</label>
+                    <select
+                      id={`media-angle-${m.id}`}
+                      value={m.angle || 'other'}
+                      onChange={(event) => saveMeta(m.id, { angle: event.target.value })}
+                    >
+                      {MEDIA_ANGLES.map((angle) => (
+                        <option key={angle} value={angle}>
+                          {angle}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <button type="button" className="fossil-media-editor__remove" onClick={() => remove(m.id)}>
                     Eliminar
                   </button>

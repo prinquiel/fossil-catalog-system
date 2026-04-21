@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SiteHeader from '../../components/layout/SiteHeader.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import './Landing.css';
 
 const faqItems = [
@@ -74,14 +75,14 @@ const eraStories = [
     text: 'Tras la extinción masiva del límite Cretácico-Paleógeno, mamíferos y aves modernas diversificaron los ecosistemas actuales. Los sedimentos cuaternarios enterraron restos de megafauna y ambientes recientes —útiles para correlacionar cambio climático con el registro fósil.',
   },
 ];
-
 function Landing() {
+  const { isAuthenticated } = useAuth();
   const [selectedEra, setSelectedEra] = useState(eraStories[0].id);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [windowStart, setWindowStart] = useState(0);
+  const [visibleCardCount, setVisibleCardCount] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches ? 2 : 4
+  );
   const [faqOpenId, setFaqOpenId] = useState(null);
-  const chipsRef = useRef(null);
-  const scrollFrameRef = useRef(0);
-  const scrollEndTimerRef = useRef(0);
 
   const activeEra = useMemo(
     () => eraStories.find((era) => era.id === selectedEra) || eraStories[0],
@@ -93,124 +94,48 @@ function Landing() {
     [selectedEra]
   );
 
-  const getCenteredProgress = (container) => {
-    const cards = Array.from(container.querySelectorAll('[data-era]'));
-    if (cards.length < 2) {
-      const max = Math.max(0, container.scrollWidth - container.clientWidth);
-      if (max <= 0) return 0;
-      return Math.min(1, Math.max(0, container.scrollLeft / max));
-    }
-    const firstCenter = cards[0].offsetLeft + cards[0].clientWidth / 2;
-    const lastCenter = cards[cards.length - 1].offsetLeft + cards[cards.length - 1].clientWidth / 2;
-    const centerRange = Math.max(1, lastCenter - firstCenter);
-    const containerCenter = container.scrollLeft + container.clientWidth / 2;
-    return Math.min(1, Math.max(0, (containerCenter - firstCenter) / centerRange));
-  };
+  const scrollProgress = useMemo(() => {
+    if (eraStories.length <= 1) return 0;
+    return activeIndex / (eraStories.length - 1);
+  }, [activeIndex]);
 
-  const updateScrollProgress = () => {
-    const container = chipsRef.current;
-    if (!container) return;
-    const nextProgress = getCenteredProgress(container);
-    setScrollProgress((prev) => (Math.abs(prev - nextProgress) < 0.001 ? prev : nextProgress));
-  };
-
-  const scrollToEra = (eraId, behavior = 'smooth') => {
-    const container = chipsRef.current;
-    if (!container) return;
-    const node = container.querySelector(`[data-era="${eraId}"]`);
-    if (!node) return;
-    const targetLeft = node.offsetLeft - (container.clientWidth - node.clientWidth) / 2;
-    const max = Math.max(0, container.scrollWidth - container.clientWidth);
-    const clampedTarget = Math.min(max, Math.max(0, targetLeft));
-    container.scrollTo({ left: clampedTarget, behavior });
-  };
-
-  const selectEra = (eraId, options = {}) => {
-    if (eraId === selectedEra && options.scroll === false) return;
+  const selectEra = (eraId) => {
+    if (eraId === selectedEra) return;
     setSelectedEra(eraId);
-    if (options.scroll !== false) scrollToEra(eraId, options.behavior || 'smooth');
   };
 
   const prevEra = () => {
     const nextId = eraStories[Math.max(0, activeIndex - 1)].id;
-    selectEra(nextId, { scroll: true });
+    selectEra(nextId);
   };
   const nextEra = () => {
     const nextId = eraStories[Math.min(eraStories.length - 1, activeIndex + 1)].id;
-    selectEra(nextId, { scroll: true });
-  };
-
-  const onTimelineWheel = (event) => {
-    const container = chipsRef.current;
-    if (!container) return;
-    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-      event.preventDefault();
-      const maxDelta = 56;
-      const safeDelta = Math.sign(event.deltaY) * Math.min(Math.abs(event.deltaY), maxDelta);
-      container.scrollBy({ left: safeDelta, behavior: 'auto' });
-    }
-  };
-
-  const onTimelineScroll = () => {
-    if (!chipsRef.current) return;
-    if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-    scrollFrameRef.current = requestAnimationFrame(() => {
-      updateScrollProgress();
-    });
-    if (scrollEndTimerRef.current) clearTimeout(scrollEndTimerRef.current);
-    scrollEndTimerRef.current = setTimeout(() => {
-      const container = chipsRef.current;
-      if (!container) return;
-      const cards = Array.from(container.querySelectorAll('[data-era]'));
-      if (!cards.length) return;
-      const containerCenter = container.scrollLeft + container.clientWidth / 2;
-      let closestEra = null;
-      let minDistance = Number.POSITIVE_INFINITY;
-      for (const card of cards) {
-        const left = card.offsetLeft;
-        const center = left + card.clientWidth / 2;
-        const distance = Math.abs(center - containerCenter);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestEra = card.getAttribute('data-era');
-        }
-      }
-      if (closestEra) {
-        setSelectedEra((current) => (current === closestEra ? current : closestEra));
-      }
-    }, 140);
-  };
-
-  const onScrollBarClick = (event) => {
-    const container = chipsRef.current;
-    if (!container) return;
-    const track = event.currentTarget;
-    const rect = track.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
-    const cards = Array.from(container.querySelectorAll('[data-era]'));
-    if (cards.length >= 2) {
-      const firstCenter = cards[0].offsetLeft + cards[0].clientWidth / 2;
-      const lastCenter = cards[cards.length - 1].offsetLeft + cards[cards.length - 1].clientWidth / 2;
-      const targetCenter = firstCenter + ratio * (lastCenter - firstCenter);
-      const max = Math.max(0, container.scrollWidth - container.clientWidth);
-      const targetLeft = Math.min(max, Math.max(0, targetCenter - container.clientWidth / 2));
-      container.scrollTo({ left: targetLeft, behavior: 'smooth' });
-      return;
-    }
-    const max = Math.max(0, container.scrollWidth - container.clientWidth);
-    container.scrollTo({ left: ratio * max, behavior: 'smooth' });
+    selectEra(nextId);
   };
 
   useEffect(() => {
-    updateScrollProgress();
-    const onResize = () => updateScrollProgress();
-    window.addEventListener('resize', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-      if (scrollEndTimerRef.current) clearTimeout(scrollEndTimerRef.current);
-    };
+    if (typeof window === 'undefined') return undefined;
+    const mq = window.matchMedia('(max-width: 768px)');
+    const apply = () => setVisibleCardCount(mq.matches ? 2 : 4);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
   }, []);
+
+  useEffect(() => {
+    const maxStart = Math.max(0, eraStories.length - visibleCardCount);
+    if (windowStart > maxStart) {
+      setWindowStart(maxStart);
+      return;
+    }
+    if (activeIndex < windowStart) {
+      setWindowStart(activeIndex);
+      return;
+    }
+    if (activeIndex >= windowStart + visibleCardCount) {
+      setWindowStart(Math.min(activeIndex - visibleCardCount + 1, maxStart));
+    }
+  }, [activeIndex, windowStart, visibleCardCount]);
 
   return (
     <main className="landing-shell">
@@ -272,7 +197,7 @@ function Landing() {
                 <rect x="18" y="19" width="10" height="10" rx="2" />
               </svg>
             </span>
-            <span className="landing-explore-card__title">Catálogo de hallazgos</span>
+            <span className="landing-explore-card__title">Catálogo Publico</span>
             <span className="landing-explore-card__desc">Fichas publicadas, filtros y galería por ejemplar.</span>
             <span className="landing-explore-card__cta">Abrir catálogo →</span>
           </Link>
@@ -283,8 +208,8 @@ function Landing() {
                 <path d="M22 6v6h6M11 17h10M11 21h8" />
               </svg>
             </span>
-            <span className="landing-explore-card__title">Estudios científicos</span>
-            <span className="landing-explore-card__desc">Trabajos aprobados ligados a cada fósil publicado.</span>
+            <span className="landing-explore-card__title">Estudios - Aportes</span>
+            <span className="landing-explore-card__desc">Estudios y aportes científicos aprobados de cada fósil publicado.</span>
             <span className="landing-explore-card__cta">Ver estudios →</span>
           </Link>
           <Link to="/map" className="landing-explore-card">
@@ -299,17 +224,31 @@ function Landing() {
             <span className="landing-explore-card__desc">Distribución de hallazgos con coordenadas públicas.</span>
             <span className="landing-explore-card__cta">Abrir mapa →</span>
           </Link>
-          <Link to="/register" className="landing-explore-card landing-explore-card--accent">
-            <span className="landing-explore-card__icon" aria-hidden="true">
-              <svg viewBox="0 0 32 32" width="36" height="36" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M16 9v14M9 16h14" />
-                <circle cx="16" cy="16" r="11" />
-              </svg>
-            </span>
-            <span className="landing-explore-card__title">Crear cuenta</span>
-            <span className="landing-explore-card__desc">Solicita acceso como explorador, investigador o ambos.</span>
-            <span className="landing-explore-card__cta">Registrarse →</span>
-          </Link>
+          {!isAuthenticated ? (
+            <Link to="/register" className="landing-explore-card landing-explore-card--accent">
+              <span className="landing-explore-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32" width="36" height="36" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M16 9v14M9 16h14" />
+                  <circle cx="16" cy="16" r="11" />
+                </svg>
+              </span>
+              <span className="landing-explore-card__title">Crear cuenta</span>
+              <span className="landing-explore-card__desc">Solicita acceso como explorador, investigador o ambos.</span>
+              <span className="landing-explore-card__cta">Registrarse →</span>
+            </Link>
+          ) : (
+            <Link to="/profile" className="landing-explore-card landing-explore-card--accent">
+              <span className="landing-explore-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32" width="36" height="36" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <circle cx="16" cy="11" r="4" />
+                  <path d="M7 27c0-5 4-8 9-8s9 3 9 8" />
+                </svg>
+              </span>
+              <span className="landing-explore-card__title">Mi perfil</span>
+              <span className="landing-explore-card__desc">Revisá tu sesión y entra a tu espacio de trabajo por rol.</span>
+              <span className="landing-explore-card__cta">Abrir perfil →</span>
+            </Link>
+          )}
         </div>
       </section>
 
@@ -356,6 +295,68 @@ function Landing() {
         </article>
       </section>
 
+      <section className="timeline-panel landing-reveal">
+        <div className="timeline-head">
+          <h2>Línea del tiempo</h2>
+          <div className="timeline-nav">
+            <button type="button" onClick={prevEra} disabled={activeIndex <= 0} aria-label="Era anterior">
+              ←
+            </button>
+            <button
+              type="button"
+              onClick={nextEra}
+              disabled={activeIndex >= eraStories.length - 1}
+              aria-label="Era siguiente"
+            >
+              →
+            </button>
+          </div>
+        </div>
+        <p className="timeline-intro">
+          Recorre el registro rocoso: elegí una era para leer un resumen pensado como nota de gabinete, no como
+          lección enciclopédica. Podés avanzar con las flechas o seleccionando cada tarjeta.
+        </p>
+        <div
+          className="timeline-scroll"
+          role="region"
+          aria-label="Eras geológicas"
+          style={{
+            '--timeline-window-start': windowStart,
+            '--timeline-visible-cards': visibleCardCount,
+          }}
+        >
+          <div className="timeline-track" role="tablist" aria-label="Tarjetas de eras">
+            {eraStories.map((era) => (
+              <button
+                key={era.id}
+                type="button"
+                data-era={era.id}
+                className={era.id === selectedEra ? 'timeline-era-chip is-active' : 'timeline-era-chip'}
+                onClick={() => selectEra(era.id)}
+              >
+                <span className="timeline-era-chip__eyebrow">Era</span>
+                <span className="timeline-era-chip__title">{era.title}</span>
+                <span className="timeline-era-chip__years">{era.years}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <button
+          type="button"
+          disabled
+          className="timeline-progress"
+          aria-label="Barra de desplazamiento de eras"
+        >
+          <span style={{ width: `${scrollProgress * 100}%` }} />
+        </button>
+        <div className="timeline-content">
+          <article className="timeline-detail-card" aria-live="polite">
+            <p className="timeline-years">{activeEra.years}</p>
+            <p className="timeline-description">{activeEra.text}</p>
+          </article>
+        </div>
+      </section>
+
       <section className="landing-faq landing-reveal" aria-labelledby="landing-faq-title">
         <div className="landing-section-head">
           <h2 id="landing-faq-title">Preguntas frecuentes</h2>
@@ -391,65 +392,6 @@ function Landing() {
               </div>
             );
           })}
-        </div>
-      </section>
-
-      <section className="timeline-panel landing-reveal">
-        <div className="timeline-head">
-          <h2>Línea del tiempo</h2>
-          <div className="timeline-nav">
-            <button type="button" onClick={prevEra} disabled={activeIndex <= 0} aria-label="Era anterior">
-              ←
-            </button>
-            <button
-              type="button"
-              onClick={nextEra}
-              disabled={activeIndex >= eraStories.length - 1}
-              aria-label="Era siguiente"
-            >
-              →
-            </button>
-          </div>
-        </div>
-        <p className="timeline-intro">
-          Recorre el registro rocoso: elegí una era para leer un resumen pensado como nota de gabinete, no como
-          lección enciclopédica. Deslizá horizontalmente o usá la barra inferior.
-        </p>
-        <div
-          ref={chipsRef}
-          className="timeline-scroll"
-          role="tablist"
-          aria-label="Eras geológicas"
-          onWheel={onTimelineWheel}
-          onScroll={onTimelineScroll}
-        >
-          {eraStories.map((era) => (
-            <button
-              key={era.id}
-              type="button"
-              data-era={era.id}
-              className={era.id === selectedEra ? 'timeline-era-chip is-active' : 'timeline-era-chip'}
-              onClick={() => selectEra(era.id, { scroll: true })}
-            >
-              <span className="timeline-era-chip__eyebrow">Era</span>
-              <span className="timeline-era-chip__title">{era.title}</span>
-              <span className="timeline-era-chip__years">{era.years}</span>
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          className="timeline-progress"
-          aria-label="Barra de desplazamiento de eras"
-          onClick={onScrollBarClick}
-        >
-          <span style={{ width: `${scrollProgress * 100}%` }} />
-        </button>
-        <div className="timeline-content">
-          <article className="timeline-detail-card" aria-live="polite">
-            <p className="timeline-years">{activeEra.years}</p>
-            <p className="timeline-description">{activeEra.text}</p>
-          </article>
         </div>
       </section>
     </main>
