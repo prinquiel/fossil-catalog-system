@@ -461,3 +461,22 @@ a.auth-nav-active {
   border-color: rgba(159, 24, 56, 0.35);
   background: #fff;
 }
+
+@media (max-width: 480px) {
+  .auth-shell {
+    padding: 16px 12px 40px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  .auth-nav {
+    width: 100%;
+    max-width: none;
+    justify-content: center;
+  }
+
+  .auth-main,
+  .auth-main--register {
+    max-width: 100%;
+  }
+}

@@ -348,6 +348,31 @@
   }
 }
 
+@media (max-width: 559px) {
+  .admin-search {
+    max-width: none;
+    width: 100%;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 10px 10px;
+    font-size: 0.82rem;
+  }
+
+  .admin-modal-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .admin-modal {
+    max-width: none;
+    border-radius: 16px 16px 0 0;
+    max-height: min(92dvh, 640px);
+    overflow-y: auto;
+  }
+}
+
 .admin-search {
   font-family: var(--font-ui, 'Source Sans 3', sans-serif);
   flex: 1;

@@ -189,25 +189,3 @@
   vertical-align: middle;
   margin-left: 4px;
 }
-
-@media (max-width: 480px) {
-  .public-studies-grid {
-    padding: 0;
-    margin-bottom: 40px;
-    gap: 14px;
-  }
-
-  .public-studies-empty {
-    margin: 24px 0 48px;
-    padding: 22px 16px;
-  }
-
-  .public-study-detail__body {
-    padding: 0;
-    margin-bottom: 40px;
-  }
-
-  .public-study-detail__body .public-study-content {
-    padding: 16px 14px;
-  }
-}

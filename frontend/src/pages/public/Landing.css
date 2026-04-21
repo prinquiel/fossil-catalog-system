@@ -2,10 +2,11 @@
   min-height: 100vh;
   background: radial-gradient(circle at top right, #e7dccb 0%, var(--bone) 35%, #f9f5ee 100%);
   color: var(--clay-deep);
-  padding: 30px 20px 60px;
+  padding: 30px max(20px, env(safe-area-inset-right)) 60px max(20px, env(safe-area-inset-left));
   box-sizing: border-box;
   position: relative;
   font-family: var(--font-body);
+  overflow-x: clip;
 }
 
 .landing-shell::before {
@@ -135,15 +136,16 @@
 
 .landing-hero h1 {
   margin: 0 auto 8px;
-  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-size: clamp(1.55rem, 5.5vw + 0.6rem, 3.4rem);
   line-height: 1.08;
   text-align: center;
   width: min(900px, 100%);
   max-width: 100%;
   box-sizing: border-box;
-  padding: 6px 12px;
+  padding: 6px max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left));
   background: rgba(255, 252, 247, 0.82);
   overflow-wrap: anywhere;
+  word-break: break-word;
   animation: landingTitleIn 700ms ease-out both;
 }
 
@@ -165,7 +167,7 @@
   position: absolute;
   left: 50%;
   top: -8px;
-  width: min(940px, 116%);
+  width: min(940px, 100%);
   transform: translateX(-50%);
   pointer-events: none;
   opacity: 0.9;
@@ -418,7 +420,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 14px max(16px, env(safe-area-inset-right)) 14px max(16px, env(safe-area-inset-left));
   border: 0;
   background: transparent;
   font: inherit;
@@ -430,6 +432,11 @@
   transition:
     background 200ms ease,
     color 200ms ease;
+}
+
+.landing-faq__trigger > span:first-of-type {
+  flex: 1;
+  min-width: 0;
 }
 
 .landing-faq__trigger:hover {
@@ -458,7 +465,7 @@
 }
 
 .landing-faq__panel {
-  padding: 0 16px 14px;
+  padding: 0 max(16px, env(safe-area-inset-right)) 14px max(16px, env(safe-area-inset-left));
   border-top: 1px solid rgba(91, 76, 58, 0.08);
 }
 
@@ -474,7 +481,7 @@
   margin: 46px auto 0;
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   counter-reset: feature-card;
 }
 
@@ -613,6 +620,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .timeline-nav {
@@ -939,7 +947,8 @@
 
 @media (max-width: 768px) {
   .landing-shell {
-    padding: 22px 14px 40px;
+    padding: 22px max(14px, env(safe-area-inset-right)) 40px max(14px, env(safe-area-inset-left));
+    box-sizing: border-box;
   }
 
   .floating-nav {
@@ -956,15 +965,26 @@
 
   .landing-hero {
     margin-bottom: 18px;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .landing-explore__grid {
     grid-template-columns: 1fr;
   }
 
+  .landing-explore-card {
+    padding: 16px 14px 15px;
+  }
+
+  .landing-explore {
+    margin-top: 36px;
+  }
+
   .edition-line {
     font-size: 0.62rem;
     letter-spacing: 0.1em;
+    padding: 0 4px;
   }
 
   .timeline-panel {
@@ -974,6 +994,32 @@
 
   .timeline-panel h2 {
     font-size: 1.1rem;
+    flex: 1 1 auto;
+    min-width: min(100%, 280px);
+  }
+
+  .timeline-head {
+    gap: 10px;
+  }
+
+  .timeline-nav {
+    margin-left: auto;
+  }
+
+  .timeline-intro {
+    font-size: 0.92rem;
+  }
+
+  .landing-section-head {
+    padding: 0 4px;
+  }
+
+  .landing-section-head h2 {
+    font-size: clamp(1.05rem, 3.2vw, 1.3rem);
+  }
+
+  .landing-section-lead {
+    font-size: 0.92rem;
   }
 
 }
@@ -989,9 +1035,20 @@
     text-align: center;
   }
 
+  .landing-shell {
+    padding: 18px max(12px, env(safe-area-inset-right)) 36px max(12px, env(safe-area-inset-left));
+  }
+
   .landing-hero h1 {
-    font-size: 1.8rem;
-    line-height: 1.16;
+    font-size: clamp(1.45rem, 7vw + 0.35rem, 2rem);
+    line-height: 1.14;
+    letter-spacing: 0.03em;
+    padding: 5px max(10px, env(safe-area-inset-right)) 5px max(10px, env(safe-area-inset-left));
+  }
+
+  .landing-hero-visual {
+    opacity: 0.72;
+    top: -4px;
   }
 
   .edition-line {
@@ -1002,14 +1059,50 @@
 
   .hero-dek {
     font-size: 0.92rem;
+    padding: 0 6px;
+    line-height: 1.52;
+  }
+
+  .landing-hero-tags {
+    gap: 6px 8px;
+    padding: 0 4px;
+  }
+
+  .landing-hero-tags li {
+    font-size: 0.72rem;
+    padding: 5px 10px;
   }
 
   .landing-explore {
     margin-top: 32px;
   }
 
+  .landing-explore-card__title {
+    font-size: 1rem;
+    line-height: 1.25;
+  }
+
+  .landing-explore-card__desc {
+    font-size: 0.85rem;
+  }
+
+  .landing-explore-card__icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
   .landing-faq {
     margin-top: 36px;
+    padding: 0 2px;
+  }
+
+  .landing-faq__trigger {
+    font-size: 0.88rem;
+    padding: 12px max(12px, env(safe-area-inset-right)) 12px max(12px, env(safe-area-inset-left));
+  }
+
+  .landing-faq__panel {
+    padding: 0 max(12px, env(safe-area-inset-right)) 12px max(12px, env(safe-area-inset-left));
   }
 
   .landing-grid {
@@ -1022,17 +1115,64 @@
     padding: 15px;
   }
 
+  .feature-card h2 {
+    font-size: 1.08rem;
+  }
+
+  .feature-card h3 {
+    font-size: 0.98rem;
+  }
+
+  .timeline-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .timeline-nav {
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+
+  .timeline-nav button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .timeline-intro {
+    font-size: 0.9rem;
+  }
+
+  .timeline-era-chip {
+    min-width: 0;
+    padding: 9px 10px;
+  }
+
+  .timeline-era-chip__title {
+    font-size: 0.95rem;
+  }
+
+  .timeline-era-chip__years {
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+
   .timeline-content {
     margin-top: 30px;
   }
 
   .timeline-detail-card {
     border-radius: 14px;
-    padding: 14px 12px;
+    padding: 14px max(12px, env(safe-area-inset-right)) 14px max(12px, env(safe-area-inset-left));
+    text-align: left;
   }
 
-  .timeline-era-chip {
-    min-width: 0;
+  .timeline-description {
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .timeline-years {
+    text-align: center;
   }
 
   .timeline-track {
@@ -1040,16 +1180,70 @@
   }
 
   .ruby-popup-backdrop {
-    padding: 12px;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    align-items: flex-end;
   }
 
   .ruby-popup {
-    border-radius: 14px;
-    padding: 18px 14px 14px;
+    border-radius: 16px 16px 0 0;
+    padding: 18px max(14px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-left));
+    width: 100%;
+    max-width: 520px;
+    max-height: min(88dvh, 560px);
+    overflow-y: auto;
   }
 
   .popup-close {
     top: 8px;
-    right: 8px;
+    right: max(8px, env(safe-area-inset-right));
+  }
+}
+
+@media (max-width: 400px) {
+  .landing-shell {
+    padding: 14px max(10px, env(safe-area-inset-right)) 28px max(10px, env(safe-area-inset-left));
+  }
+
+  .landing-hero h1 {
+    font-size: clamp(1.28rem, 8vw, 1.65rem);
+    letter-spacing: 0.025em;
+  }
+
+  .hero-dek {
+    font-size: 0.86rem;
+  }
+
+  .landing-section-head h2 {
+    font-size: clamp(0.98rem, 4.2vw, 1.15rem);
+  }
+
+  .landing-explore-card {
+    padding: 14px 12px 13px;
+    border-radius: 14px;
+  }
+
+  .landing-explore-card__cta {
+    font-size: 0.78rem;
+  }
+
+  .landing-faq__trigger {
+    font-size: 0.82rem;
+    gap: 8px;
+  }
+
+  .landing-faq__chev {
+    width: 26px;
+    height: 26px;
+    font-size: 1rem;
+  }
+
+  .timeline-scroll {
+    margin: 10px 0 10px;
+  }
+
+  .timeline-panel h2 {
+    font-size: 1rem;
   }
 }

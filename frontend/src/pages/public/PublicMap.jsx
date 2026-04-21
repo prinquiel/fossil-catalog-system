@@ -66,7 +66,7 @@ function PublicMap() {
                 points={mapRows}
                 selectedId={selectedId}
                 onSelectId={setSelectedId}
-                height={460}
+                height="clamp(260px, 52dvh, 460px)"
                 showFossilCode={showFossilCode}
               />
             ) : (

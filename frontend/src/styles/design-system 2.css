@@ -25,7 +25,6 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: clip;
 }
 
 body {
@@ -53,14 +52,6 @@ body::before {
 #root {
   position: relative;
   z-index: 1;
-  max-width: 100%;
-  overflow-x: clip;
-}
-
-img,
-video {
-  max-width: 100%;
-  height: auto;
 }
 
 h1,

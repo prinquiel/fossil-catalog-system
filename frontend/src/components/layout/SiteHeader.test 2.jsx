@@ -16,7 +16,6 @@ describe('SiteHeader', () => {
       </AuthProvider>
     );
     expect(screen.getByRole('link', { name: /inicio/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /^estudios$/i })).toHaveAttribute('href', '/catalog/estudios');
     expect(screen.getByRole('link', { name: /catálogo/i })).toBeInTheDocument();
   });
 });

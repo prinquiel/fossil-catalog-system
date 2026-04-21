@@ -82,3 +82,10 @@
   margin: 0;
   line-height: 1.5;
 }
+
+@media (max-width: 520px) {
+  .rsd-contact-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
