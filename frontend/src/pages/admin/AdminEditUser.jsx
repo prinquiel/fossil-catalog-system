@@ -6,18 +6,13 @@ import { adminService } from '../../services/adminService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import './adminPages.css';
 import AdminConfirmDialog from '../../components/admin/AdminConfirmDialog.jsx';
-
-const ROLE_OPTS = [
-  { value: 'explorer', label: 'Explorador' },
-  { value: 'researcher', label: 'Investigador' },
-  { value: 'admin', label: 'Administrador' },
-];
-
-function rolesEqual(a, b) {
-  const x = [...(a || [])].sort().join(',');
-  const y = [...(b || [])].sort().join(',');
-  return x === y;
-}
+import AdminRoleFlagsFields from '../../components/admin/AdminRoleFlagsFields.jsx';
+import {
+  rolesToFlags,
+  flagsToRoles,
+  validateRoleFlags,
+  DEFAULT_ROLE_FLAGS,
+} from '../../utils/adminRoleProfile.js';
 
 function AdminEditUser() {
   const { id } = useParams();
@@ -28,7 +23,7 @@ function AdminEditUser() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [initialRoles, setInitialRoles] = useState([]);
+  const [initialRoleFlags, setInitialRoleFlags] = useState(() => ({ ...DEFAULT_ROLE_FLAGS }));
   const [form, setForm] = useState({
     username: '',
     email: '',
@@ -39,14 +34,10 @@ function AdminEditUser() {
     phone: '',
     workplace: '',
   });
-  const [roles, setRoles] = useState(['explorer']);
+  const [roleFlags, setRoleFlags] = useState(() => ({ ...DEFAULT_ROLE_FLAGS }));
   const [deletedAt, setDeletedAt] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
-
-  const toggleRole = (value) => {
-    setRoles((prev) => (prev.includes(value) ? prev.filter((r) => r !== value) : [...prev, value]));
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -73,8 +64,9 @@ function AdminEditUser() {
           workplace: u.workplace || '',
         });
         const r = Array.isArray(u.roles) ? u.roles : [];
-        setRoles(r.length ? r : ['explorer']);
-        setInitialRoles(r.length ? [...r] : ['explorer']);
+        const rf = rolesToFlags(r.length ? r : ['explorer']);
+        setRoleFlags(rf);
+        setInitialRoleFlags({ ...rf });
       } catch (e) {
         toast.error(getApiErrorMessage(e));
         navigate('/admin/users');
@@ -87,7 +79,11 @@ function AdminEditUser() {
     };
   }, [id, navigate]);
 
-  const rolesDirty = useMemo(() => !rolesEqual(roles, initialRoles), [roles, initialRoles]);
+  const rolesDirty = useMemo(() => {
+    const a = flagsToRoles(roleFlags).join(',');
+    const b = flagsToRoles(initialRoleFlags).join(',');
+    return a !== b;
+  }, [roleFlags, initialRoleFlags]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,10 +91,12 @@ function AdminEditUser() {
       toast.error('Usuario y correo son obligatorios.');
       return;
     }
-    if (roles.length === 0) {
-      toast.error('Seleccione al menos un rol.');
+    const validated = validateRoleFlags(roleFlags);
+    if (!validated.ok) {
+      toast.error(validated.error);
       return;
     }
+    const { roles } = validated;
     setSaving(true);
     try {
       const payload = {
@@ -122,7 +120,7 @@ function AdminEditUser() {
           toast.error(r2.error || 'Perfil guardado; error al actualizar roles');
           return;
         }
-        setInitialRoles([...roles]);
+        setInitialRoleFlags({ ...roleFlags });
       }
       toast.success('Cambios guardados.');
       navigate('/admin/users');
@@ -191,7 +189,8 @@ function AdminEditUser() {
         <p className="admin-page-eyebrow">Edición</p>
         <h1 className="admin-page-title">Editar usuario</h1>
         <p className="admin-page-desc">
-          Actualice datos de la cuenta y roles. La eliminación es lógica (baja); puede restaurar usuarios dados de
+          Actualice datos de la cuenta y el <strong>perfil</strong> (casillas explorador / investigador, o solo
+          administrador cuando no marque los otros). La eliminación es lógica (baja); puede restaurar usuarios dados de
           baja desde el listado o aquí.
         </p>
       </header>
@@ -243,25 +242,7 @@ function AdminEditUser() {
               required
             />
           </label>
-          <div className="admin-page-desc" style={{ margin: 0 }}>
-            <span style={{ fontWeight: 700, display: 'block', marginBottom: 8 }}>Roles</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {ROLE_OPTS.map((r) => (
-                <label
-                  key={r.value}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={roles.includes(r.value)}
-                    onChange={() => toggleRole(r.value)}
-                    disabled={!!deletedAt}
-                  />
-                  {r.label}
-                </label>
-              ))}
-            </div>
-          </div>
+          <AdminRoleFlagsFields flags={roleFlags} setFlags={setRoleFlags} disabled={!!deletedAt} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <label className="admin-page-desc" style={{ display: 'grid', gap: 6, margin: 0 }}>
               <span style={{ fontWeight: 700 }}>Nombre</span>

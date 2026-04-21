@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
 import { studyService } from '../../services/studyService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { clientPaginate } from '../../utils/pagination.js';
+import { WorkspaceBackNav } from '../../components/workspace/WorkspaceBackNav.jsx';
 import '../workspace/workspace-pages.css';
 
 const PAGE_SIZE = 8;
@@ -17,6 +19,7 @@ const PUBLICATION_LABEL = {
 
 function ResearcherMyStudies() {
   const { user } = useAuth();
+  const { res } = useWorkspaceNav();
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -52,6 +55,7 @@ function ResearcherMyStudies() {
 
   return (
     <div className="workspace-page">
+      <WorkspaceBackNav />
       <p className="workspace-page__kicker">Producción científica</p>
       <h1 className="workspace-page__title">Mis estudios</h1>
       <p className="workspace-page__lead">
@@ -83,19 +87,19 @@ function ResearcherMyStudies() {
                 {slice.map((s) => (
                   <tr key={s.id}>
                     <td>
-                      <Link className="workspace-link" to={`/researcher/study/${s.id}`}>
+                      <Link className="workspace-link" to={res(`/study/${s.id}`)}>
                         {s.title || 'Sin título'}
                       </Link>
                     </td>
                     <td>
-                      <Link className="workspace-link" to={`/researcher/fossil/${s.fossil_id}`}>
+                      <Link className="workspace-link" to={res(`/fossil/${s.fossil_id}`)}>
                         Ver ejemplar #{s.fossil_id}
                       </Link>
                     </td>
                     <td>{PUBLICATION_LABEL[s.publication_status] || s.publication_status || '—'}</td>
                     <td>{s.study_date ? String(s.study_date).slice(0, 10) : '—'}</td>
                     <td>
-                      <Link className="workspace-link" to={`/researcher/study/${s.id}/edit`}>
+                      <Link className="workspace-link" to={res(`/study/${s.id}/edit`)}>
                         Editar
                       </Link>
                     </td>

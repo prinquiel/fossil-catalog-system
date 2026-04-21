@@ -6,6 +6,7 @@ const {
   replaceUserRoles,
   replaceUserRolesForUser,
   parseRolesFromBody,
+  normalizeAdminManagedRoles,
   mapUserWithRoles,
   primaryRole,
 } = require('../utils/roles');
@@ -91,12 +92,22 @@ const getAllUsers = async (req, res) => {
 const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
+    const targetId = parseInt(id, 10);
+    if (Number.isNaN(targetId)) {
+      return res.status(400).json({ success: false, error: 'ID inválido' });
+    }
+
+    const isAdmin = req.user.roles?.includes('admin');
+    const isSelf = Number(req.user.id) === targetId;
+    if (!isAdmin && !isSelf) {
+      return res.status(403).json({ success: false, error: 'No autorizado' });
+    }
 
     const result = await pool.query(
       `SELECT ${userListSelect.replace(/\n/g, ' ')}
        FROM users u
        WHERE u.id = $1`,
-      [id]
+      [targetId]
     );
 
     if (result.rows.length === 0) {
@@ -121,8 +132,15 @@ const createUser = async (req, res) => {
 
     let roleList;
     try {
-      roleList = parseRolesFromBody(req.body);
-    } catch {
+      roleList = normalizeAdminManagedRoles(parseRolesFromBody(req.body));
+    } catch (e) {
+      if (e.code === 'INVALID_ADMIN_ROLES') {
+        return res.status(400).json({
+          success: false,
+          error:
+            'Perfil no válido. Use solo: explorador, investigador, explorador e investigador, o administrador (este último no se combina con otros).',
+        });
+      }
       return res.status(400).json({
         success: false,
         error: 'Campos requeridos: role (string) o roles (array). Valores: explorer, researcher, admin',
@@ -201,24 +219,43 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
+    const targetId = parseInt(id, 10);
+    if (Number.isNaN(targetId)) {
+      return res.status(400).json({ success: false, error: 'ID inválido' });
+    }
+
+    const isAdmin = req.user.roles?.includes('admin');
+    const isSelf = Number(req.user.id) === targetId;
+    if (!isAdmin && !isSelf) {
+      return res.status(403).json({
+        success: false,
+        error: 'Solo puede editar su propio perfil, salvo que sea administrador',
+      });
+    }
+
+    let {
       username, email, first_name, last_name,
       country, profession, phone, workplace,
     } = req.body;
 
+    if (!isAdmin) {
+      username = undefined;
+      email = undefined;
+    }
+
     const checkResult = await pool.query(
-      'SELECT * FROM users WHERE id = $1',
-      [id]
+      'SELECT id FROM users WHERE id = $1 AND deleted_at IS NULL',
+      [targetId]
     );
 
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
     }
 
-    if (email || username) {
+    if (isAdmin && (email != null || username != null)) {
       const duplicateCheck = await pool.query(
-        'SELECT * FROM users WHERE (email = $1 OR username = $2) AND id != $3',
-        [email || '', username || '', id]
+        'SELECT id FROM users WHERE (email = $1 OR username = $2) AND id != $3',
+        [email ?? '', username ?? '', targetId]
       );
 
       if (duplicateCheck.rows.length > 0) {
@@ -228,6 +265,8 @@ const updateUser = async (req, res) => {
         });
       }
     }
+
+    const n = (v) => (v === undefined ? null : v);
 
     const result = await pool.query(
       `UPDATE users
@@ -242,10 +281,20 @@ const updateUser = async (req, res) => {
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $9
        RETURNING id, username, email, first_name, last_name, country, profession, phone, workplace`,
-      [username, email, first_name, last_name, country, profession, phone, workplace, id]
+      [
+        n(username),
+        n(email),
+        n(first_name),
+        n(last_name),
+        n(country),
+        n(profession),
+        n(phone),
+        n(workplace),
+        targetId,
+      ]
     );
 
-    const roles = await getRolesForUser(id);
+    const roles = await getRolesForUser(targetId);
     res.json({
       success: true,
       message: 'Usuario actualizado',
@@ -337,8 +386,15 @@ const updateUserRoles = async (req, res) => {
     const { id } = req.params;
     let roleList;
     try {
-      roleList = parseRolesFromBody(req.body);
-    } catch {
+      roleList = normalizeAdminManagedRoles(parseRolesFromBody(req.body));
+    } catch (e) {
+      if (e.code === 'INVALID_ADMIN_ROLES') {
+        return res.status(400).json({
+          success: false,
+          error:
+            'Perfil no válido. Use solo: explorador, investigador, explorador e investigador, o administrador (este último no se combina con otros).',
+        });
+      }
       return res.status(400).json({
         success: false,
         error: 'Envía roles (array) o role (string). Valores: explorer, researcher, admin',

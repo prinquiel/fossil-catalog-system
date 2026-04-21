@@ -2,16 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
 import { fossilService } from '../../services/fossilService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { clientPaginate } from '../../utils/pagination.js';
 import { FOSSIL_CATEGORIES, FOSSIL_STATUS_LABELS } from '../../constants/fossilMeta.js';
+import { WorkspaceBackNav } from '../../components/workspace/WorkspaceBackNav.jsx';
 import '../workspace/workspace-pages.css';
 
 const PAGE_SIZE = 8;
 
 function ExplorerMyFossils() {
   const { user } = useAuth();
+  const { exp } = useWorkspaceNav();
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -50,6 +53,7 @@ function ExplorerMyFossils() {
 
   return (
     <div className="workspace-page">
+      <WorkspaceBackNav />
       <p className="workspace-page__kicker">Mis fichas</p>
       <h1 className="workspace-page__title">Hallazgos registrados</h1>
       <p className="workspace-page__lead">
@@ -63,7 +67,7 @@ function ExplorerMyFossils() {
       ) : mine.length === 0 ? (
         <div className="workspace-card">
           <p className="workspace-muted">Aún no tiene registros propios.</p>
-          <Link to="/explorer/create-fossil" className="workspace-link">
+          <Link to={exp('/create-fossil')} className="workspace-link">
             Registrar el primer hallazgo
           </Link>
         </div>
@@ -88,7 +92,7 @@ function ExplorerMyFossils() {
                     <td>{catLabel(f.category)}</td>
                     <td>{FOSSIL_STATUS_LABELS[f.status] || f.status}</td>
                     <td>
-                      <Link className="workspace-link" to={`/explorer/edit-fossil/${f.id}`}>
+                      <Link className="workspace-link" to={exp(`/edit-fossil/${f.id}`)}>
                         Editar
                       </Link>
                     </td>

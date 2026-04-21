@@ -1,4 +1,5 @@
 import api from './api';
+import { authSession } from '../utils/authSession.js';
 
 /** Coincide con backend: multer upload.array('images', 10) y límite por archivo */
 export const MEDIA_MAX_FILES = 10;
@@ -60,7 +61,7 @@ export const mediaService = {
       formData.append('images', file);
     }
 
-    const token = localStorage.getItem('token');
+    const token = authSession.getToken();
     const base = (api.defaults.baseURL || '').replace(/\/$/, '');
     const url = `${base}/media/upload`;
 

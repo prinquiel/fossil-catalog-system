@@ -1,14 +1,14 @@
 import api from './api';
+import { authSession } from '../utils/authSession.js';
 
 export const authService = {
   async register(userData) {
     const response = await api.post('/auth/register', userData);
     if (response.data.success && response.data.data?.token) {
-      localStorage.setItem('token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      authSession.setToken(response.data.data.token);
+      authSession.setUserRaw(JSON.stringify(response.data.data.user));
     } else if (response.data.success) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      authSession.clear();
     }
     return response.data;
   },
@@ -16,8 +16,8 @@ export const authService = {
   async login(credentials) {
     const response = await api.post('/auth/login', credentials);
     if (response.data.success && response.data.data.token) {
-      localStorage.setItem('token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      authSession.setToken(response.data.data.token);
+      authSession.setUserRaw(JSON.stringify(response.data.data.user));
     }
     return response.data;
   },
@@ -28,8 +28,7 @@ export const authService = {
   },
 
   clearSession() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    authSession.clear();
   },
 
   /** @deprecated Prefer AuthContext.logout() para evitar recarga completa */
@@ -39,12 +38,12 @@ export const authService = {
   },
 
   getCurrentUser() {
-    const userStr = localStorage.getItem('user');
+    const userStr = authSession.getUserRaw();
     return userStr ? JSON.parse(userStr) : null;
   },
 
   getToken() {
-    return localStorage.getItem('token');
+    return authSession.getToken();
   },
 
   isAuthenticated() {

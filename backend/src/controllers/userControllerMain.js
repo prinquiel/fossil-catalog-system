@@ -5,6 +5,7 @@ const {
   replaceUserRoles,
   replaceUserRolesForUser,
   parseRolesFromBody,
+  normalizeAdminManagedRoles,
   mapUserWithRoles,
 } = require('../utils/roles');
 
@@ -35,8 +36,15 @@ const getUserById = async (req, res) => {
 const createUser = async (req, res) => {
   let roleList;
   try {
-    roleList = parseRolesFromBody(req.body);
-  } catch {
+    roleList = normalizeAdminManagedRoles(parseRolesFromBody(req.body));
+  } catch (e) {
+    if (e.code === 'INVALID_ADMIN_ROLES') {
+      return res.status(400).json({
+        success: false,
+        error:
+          'Perfil no válido. Use solo: explorador, investigador, explorador e investigador, o administrador (este último no se combina con otros).',
+      });
+    }
     return res.status(400).json({ success: false, error: 'username, email, password y role(s) son requeridos' });
   }
   const { username, email, password, first_name, last_name, country, profession, phone, workplace } = req.body;

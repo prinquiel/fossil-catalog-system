@@ -4,15 +4,32 @@ import toast from 'react-hot-toast';
 import { studyService } from '../../services/studyService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { parseStudyContact, serializeStudyContact } from '../../utils/studyContact.js';
+import { parseStudySiteLocation, serializeStudySiteLocation } from '../../utils/studySiteLocation.js';
+import { getDefaultStudyContactFromUser } from '../../utils/studyProfileDefaults.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
+import { WorkspaceBackNav } from '../../components/workspace/WorkspaceBackNav.jsx';
+import { StudyLocationFields } from '../../components/study/StudyLocationFields.jsx';
+import { StudyContactFields } from '../../components/study/StudyContactFields.jsx';
 import '../workspace/workspace-pages.css';
 import './ResearcherStudyContactFields.css';
 
 function ResearcherEditStudy() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
+  const { res: researcherPath } = useWorkspaceNav();
+  const listPath = isAdmin ? '/admin/studies' : researcherPath('/my-studies');
+  const detailPath = isAdmin ? `/admin/study/${id}` : researcherPath(`/study/${id}`);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [compositionFile, setCompositionFile] = useState(/** @type {File | null} */ (null));
+
+  const [siteMode, setSiteMode] = useState(/** @type {'text' | 'coords'} */ ('text'));
+  const [siteText, setSiteText] = useState('');
+  const [siteLat, setSiteLat] = useState('');
+  const [siteLng, setSiteLng] = useState('');
+
   const [form, setForm] = useState({
     title: '',
     context_objectives: '',
@@ -22,7 +39,6 @@ function ResearcherEditStudy() {
     composition: '',
     conditions: '',
     visual_evidence_notes: '',
-    study_site_notes: '',
     contact_email: '',
     contact_name: '',
     contact_phone: '',
@@ -38,36 +54,72 @@ function ResearcherEditStudy() {
     let mounted = true;
     (async () => {
       try {
-        const res = await studyService.getById(id);
+        const studyRes = await studyService.getById(id);
         if (!mounted) return;
-        if (!(res?.success && res.data)) {
+        if (!(studyRes?.success && studyRes.data)) {
           toast.error('No se pudo cargar el estudio.');
-          navigate('/researcher/my-studies', { replace: true });
+          navigate(listPath, { replace: true });
           return;
         }
-        const s = res.data;
+        const s = studyRes.data;
         const contact = parseStudyContact(s.institution_contact);
-        setForm({
-          title: s.title || '',
-          context_objectives: s.context_objectives || '',
-          introduction: s.introduction || '',
-          analysis_type: s.analysis_type || '',
-          results: s.results || '',
-          composition: s.composition || '',
-          conditions: s.conditions || '',
-          visual_evidence_notes: s.visual_evidence_notes || '',
-          study_site_notes: s.study_site_notes || '',
-          contact_email: contact.kind === 'json' ? contact.email || '' : '',
-          contact_name: contact.kind === 'json' ? contact.name || '' : '',
-          contact_phone: contact.kind === 'json' ? contact.phone || '' : '',
-          contact_institution: contact.kind === 'json' ? contact.institution || '' : '',
-          references_text: s.references_text || '',
-          references_links: s.references_links || '',
-          study_date: s.study_date ? String(s.study_date).slice(0, 10) : '',
-        });
+
+        const loc = parseStudySiteLocation(s.study_site_notes);
+        if (loc.kind === 'text') {
+          setSiteMode('text');
+          setSiteText(loc.text);
+        } else if (loc.kind === 'coords') {
+          setSiteMode('coords');
+          setSiteLat(String(loc.lat));
+          setSiteLng(String(loc.lng));
+        } else if (loc.kind === 'legacy') {
+          setSiteMode('text');
+          setSiteText(loc.raw.slice(0, 280));
+        } else {
+          setSiteMode('text');
+          setSiteText('');
+        }
+
+        if (contact.kind === 'structured') {
+          setForm({
+            title: s.title || '',
+            context_objectives: s.context_objectives || '',
+            introduction: s.introduction || '',
+            analysis_type: s.analysis_type || '',
+            results: s.results || '',
+            composition: s.composition || '',
+            conditions: s.conditions || '',
+            visual_evidence_notes: s.visual_evidence_notes || '',
+            contact_email: contact.email || '',
+            contact_name: contact.name || '',
+            contact_phone: contact.phone || '',
+            contact_institution: contact.institution || '',
+            references_text: s.references_text || '',
+            references_links: s.references_links || '',
+            study_date: s.study_date ? String(s.study_date).slice(0, 10) : '',
+          });
+        } else {
+          setForm({
+            title: s.title || '',
+            context_objectives: s.context_objectives || '',
+            introduction: s.introduction || '',
+            analysis_type: s.analysis_type || '',
+            results: s.results || '',
+            composition: s.composition || '',
+            conditions: s.conditions || '',
+            visual_evidence_notes: s.visual_evidence_notes || '',
+            contact_email: '',
+            contact_name: '',
+            contact_phone: '',
+            contact_institution: '',
+            references_text: s.references_text || '',
+            references_links: s.references_links || '',
+            study_date: s.study_date ? String(s.study_date).slice(0, 10) : '',
+          });
+        }
       } catch (e) {
         toast.error(getApiErrorMessage(e));
-        navigate('/researcher/my-studies', { replace: true });
+        navigate(listPath, { replace: true });
       } finally {
         if (mounted) setLoading(false);
       }
@@ -75,13 +127,42 @@ function ResearcherEditStudy() {
     return () => {
       mounted = false;
     };
-  }, [id, navigate]);
+  }, [id, navigate, listPath]);
+
+  useEffect(() => {
+    if (!user) return;
+    const d = getDefaultStudyContactFromUser(user);
+    setForm((f) => ({
+      ...f,
+      contact_email: f.contact_email || d.email,
+      contact_name: f.contact_name || d.name,
+      contact_phone: f.contact_phone || d.phone,
+      contact_institution: f.contact_institution || d.institution,
+    }));
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const studySiteNotes = serializeStudySiteLocation({
+      mode: siteMode,
+      text: siteText,
+      lat: siteLat,
+      lng: siteLng,
+    });
+    if (!studySiteNotes) {
+      toast.error(
+        siteMode === 'coords'
+          ? 'Ingrese latitud y longitud válidas (WGS84, ej. 9.93 y -84.09).'
+          : 'Ingrese una dirección breve o cambie a coordenadas y complete latitud y longitud.'
+      );
+      return;
+    }
+
     setSaving(true);
     try {
       const fd = new FormData();
+      fd.append('study_site_notes', studySiteNotes);
       const {
         contact_email,
         contact_name,
@@ -101,10 +182,14 @@ function ResearcherEditStudy() {
       if (contactPayload) fd.append('institution_contact', contactPayload);
       if (compositionFile) fd.append('composition_image', compositionFile);
 
-      const res = await studyService.update(id, fd);
-      if (res.success) {
-        toast.success('Estudio actualizado. Pasó nuevamente a revisión de administración.');
-        navigate(`/researcher/study/${id}`);
+      const updateRes = await studyService.update(id, fd);
+      if (updateRes.success) {
+        toast.success(
+          isAdmin
+            ? 'Estudio actualizado.'
+            : 'Estudio actualizado. Pasó nuevamente a revisión de administración.'
+        );
+        navigate(detailPath);
       }
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -116,6 +201,7 @@ function ResearcherEditStudy() {
   if (loading) {
     return (
       <div className="workspace-page">
+        <WorkspaceBackNav />
         <p className="workspace-muted">Cargando estudio…</p>
       </div>
     );
@@ -123,48 +209,58 @@ function ResearcherEditStudy() {
 
   return (
     <div className="workspace-page">
+      <WorkspaceBackNav />
       <p className="workspace-page__kicker">Edición</p>
       <h1 className="workspace-page__title">Editar estudio científico</h1>
       <p className="workspace-page__lead">
-        Al guardar cambios, el estudio vuelve a estado <strong>pendiente</strong> hasta nueva aprobación de un
-        administrador.
+        {isAdmin ? (
+          <>
+            Vista de edición con permisos de administración: puede corregir el contenido; el estado de publicación no
+            cambia automáticamente (use aprobar / rechazar desde la gestión de estudios si corresponde).
+          </>
+        ) : (
+          <>
+            Al guardar cambios, el estudio vuelve a estado <strong>pendiente</strong> hasta nueva aprobación de un
+            administrador.
+          </>
+        )}
       </p>
 
       <form className="workspace-card workspace-form" onSubmit={handleSubmit}>
         <div>
-          <label htmlFor="st-title">Título del estudio</label>
-          <input id="st-title" value={form.title} onChange={set('title')} />
+          <label htmlFor="st-edit-title">Título del estudio</label>
+          <input id="st-edit-title" value={form.title} onChange={set('title')} />
         </div>
         <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-ctx">Contexto y objetivo del estudio</label>
-          <textarea id="st-ctx" value={form.context_objectives} onChange={set('context_objectives')} rows={4} />
+          <label htmlFor="st-edit-ctx">Contexto y objetivo del estudio</label>
+          <textarea id="st-edit-ctx" value={form.context_objectives} onChange={set('context_objectives')} rows={4} />
         </div>
         <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-intro">Introducción</label>
-          <textarea id="st-intro" value={form.introduction} onChange={set('introduction')} rows={4} />
+          <label htmlFor="st-edit-intro">Introducción</label>
+          <textarea id="st-edit-intro" value={form.introduction} onChange={set('introduction')} rows={4} />
         </div>
         <div className="workspace-form__row" style={{ marginTop: 14 }}>
           <div>
-            <label htmlFor="st-type">Tipo de análisis</label>
-            <input id="st-type" value={form.analysis_type} onChange={set('analysis_type')} />
+            <label htmlFor="st-edit-type">Tipo de análisis</label>
+            <input id="st-edit-type" value={form.analysis_type} onChange={set('analysis_type')} />
           </div>
           <div>
-            <label htmlFor="st-date">Fecha del estudio</label>
-            <input id="st-date" type="date" value={form.study_date} onChange={set('study_date')} />
+            <label htmlFor="st-edit-date">Fecha del estudio</label>
+            <input id="st-edit-date" type="date" value={form.study_date} onChange={set('study_date')} />
           </div>
         </div>
         <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-res">Resultados</label>
-          <textarea id="st-res" value={form.results} onChange={set('results')} rows={4} />
+          <label htmlFor="st-edit-res">Resultados</label>
+          <textarea id="st-edit-res" value={form.results} onChange={set('results')} rows={4} />
         </div>
         <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-comp">Composición del fósil o muestra (texto)</label>
-          <textarea id="st-comp" value={form.composition} onChange={set('composition')} rows={3} />
+          <label htmlFor="st-edit-comp">Composición del fósil o muestra (texto)</label>
+          <textarea id="st-edit-comp" value={form.composition} onChange={set('composition')} rows={3} />
         </div>
         <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-comp-img">Reemplazar imagen de composición (opcional)</label>
+          <label htmlFor="st-edit-comp-img">Reemplazar imagen de composición (opcional)</label>
           <input
-            id="st-comp-img"
+            id="st-edit-comp-img"
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={(e) => setCompositionFile(e.target.files?.[0] || null)}
@@ -176,77 +272,51 @@ function ResearcherEditStudy() {
           ) : null}
         </div>
         <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-cond">Condiciones del hallazgo</label>
-          <textarea id="st-cond" value={form.conditions} onChange={set('conditions')} rows={3} />
+          <label htmlFor="st-edit-cond">Condiciones del hallazgo</label>
+          <textarea id="st-edit-cond" value={form.conditions} onChange={set('conditions')} rows={3} />
         </div>
         <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-vis">Evidencia visual (antes / después / análisis) — notas</label>
-          <textarea id="st-vis" value={form.visual_evidence_notes} onChange={set('visual_evidence_notes')} rows={3} />
+          <label htmlFor="st-edit-vis">Evidencia visual (antes / después / análisis) — notas</label>
+          <textarea id="st-edit-vis" value={form.visual_evidence_notes} onChange={set('visual_evidence_notes')} rows={3} />
+        </div>
+
+        <StudyLocationFields
+          mode={siteMode}
+          onModeChange={setSiteMode}
+          siteText={siteText}
+          onSiteTextChange={setSiteText}
+          siteLat={siteLat}
+          onSiteLatChange={setSiteLat}
+          siteLng={siteLng}
+          onSiteLngChange={setSiteLng}
+          idPrefix="edit"
+        />
+
+        <StudyContactFields
+          email={form.contact_email}
+          name={form.contact_name}
+          phone={form.contact_phone}
+          institution={form.contact_institution}
+          onEmailChange={(v) => setForm((f) => ({ ...f, contact_email: v }))}
+          onNameChange={(v) => setForm((f) => ({ ...f, contact_name: v }))}
+          onPhoneChange={(v) => setForm((f) => ({ ...f, contact_phone: v }))}
+          onInstitutionChange={(v) => setForm((f) => ({ ...f, contact_institution: v }))}
+          idPrefix="edit"
+        />
+
+        <div style={{ marginTop: 14 }}>
+          <label htmlFor="st-edit-ref">Referencias bibliográficas (texto)</label>
+          <textarea id="st-edit-ref" value={form.references_text} onChange={set('references_text')} rows={3} />
         </div>
         <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-site">Ubicación geográfica del estudio / hallazgo (notas)</label>
-          <textarea id="st-site" value={form.study_site_notes} onChange={set('study_site_notes')} rows={3} />
-        </div>
-        <div className="study-contact">
-          <p className="study-contact__title">Contacto</p>
-          <p className="study-contact__blank">
-            <span className="study-contact__label">Correo electrónico:</span>
-            <input
-              id="st-contact-email"
-              className="study-contact__input"
-              type="email"
-              autoComplete="email"
-              value={form.contact_email}
-              onChange={set('contact_email')}
-            />
-          </p>
-          <p className="study-contact__blank">
-            <span className="study-contact__label">Nombre:</span>
-            <input
-              id="st-contact-name"
-              className="study-contact__input"
-              type="text"
-              autoComplete="name"
-              value={form.contact_name}
-              onChange={set('contact_name')}
-            />
-          </p>
-          <p className="study-contact__blank">
-            <span className="study-contact__label">Número celular:</span>
-            <input
-              id="st-contact-phone"
-              className="study-contact__input"
-              type="tel"
-              autoComplete="tel"
-              inputMode="tel"
-              value={form.contact_phone}
-              onChange={set('contact_phone')}
-            />
-          </p>
-          <p className="study-contact__blank">
-            <span className="study-contact__label">Institución de trabajo:</span>
-            <input
-              id="st-contact-institution"
-              className="study-contact__input"
-              type="text"
-              value={form.contact_institution}
-              onChange={set('contact_institution')}
-            />
-          </p>
-        </div>
-        <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-ref">Referencias bibliográficas (texto)</label>
-          <textarea id="st-ref" value={form.references_text} onChange={set('references_text')} rows={3} />
-        </div>
-        <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-links">Referencias o documentos (enlaces, uno por línea)</label>
-          <textarea id="st-links" value={form.references_links} onChange={set('references_links')} rows={4} />
+          <label htmlFor="st-edit-links">Referencias o documentos (enlaces, uno por línea)</label>
+          <textarea id="st-edit-links" value={form.references_links} onChange={set('references_links')} rows={4} />
         </div>
         <div className="workspace-actions">
           <button type="submit" className="workspace-btn" disabled={saving}>
             {saving ? 'Guardando…' : 'Guardar cambios'}
           </button>
-          <Link to={`/researcher/study/${id}`} className="workspace-btn workspace-btn--ghost">
+          <Link to={detailPath} className="workspace-btn workspace-btn--ghost">
             Cancelar
           </Link>
         </div>

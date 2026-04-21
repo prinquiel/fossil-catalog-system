@@ -4,6 +4,9 @@ import toast from 'react-hot-toast';
 import { studyService } from '../../services/studyService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { parseStudyContact } from '../../utils/studyContact.js';
+import { formatStudySiteLocationDisplay } from '../../utils/studySiteLocation.js';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
+import { WorkspaceBackNav } from '../../components/workspace/WorkspaceBackNav.jsx';
 import '../workspace/workspace-pages.css';
 import './researcher-study-detail.css';
 
@@ -85,6 +88,7 @@ function StudyContactDisplay({ raw }) {
 }
 
 export default function ResearcherStudyDetail() {
+  const { res } = useWorkspaceNav();
   const { id } = useParams();
   const [study, setStudy] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -112,6 +116,7 @@ export default function ResearcherStudyDetail() {
   if (loading) {
     return (
       <div className="workspace-page">
+        <WorkspaceBackNav />
         <p className="workspace-muted">Cargando estudio…</p>
       </div>
     );
@@ -120,8 +125,9 @@ export default function ResearcherStudyDetail() {
   if (!study) {
     return (
       <div className="workspace-page">
+        <WorkspaceBackNav />
         <div className="workspace-alert">No se encontró el estudio.</div>
-        <Link to="/researcher/my-studies" className="workspace-link">
+        <Link to={res('/my-studies')} className="workspace-link">
           Volver a mis estudios
         </Link>
       </div>
@@ -134,6 +140,7 @@ export default function ResearcherStudyDetail() {
 
   return (
     <div className="workspace-page rsd-page">
+      <WorkspaceBackNav />
       <p className="workspace-page__kicker">Estudio científico</p>
       {pubInfo ? (
         <div className="workspace-alert" style={{ marginBottom: 16 }} role="status">
@@ -148,7 +155,7 @@ export default function ResearcherStudyDetail() {
       <h1 className="workspace-page__title">{study.title || 'Sin título'}</h1>
       <p className="workspace-page__lead">
         Ficha vinculada al ejemplar{' '}
-        <Link className="workspace-link" to={`/researcher/fossil/${study.fossil_id}`}>
+        <Link className="workspace-link" to={res(`/fossil/${study.fossil_id}`)}>
           ver registro #{study.fossil_id}
         </Link>
         {dateStr ? ` · Fecha del estudio: ${dateStr}` : ''}
@@ -175,7 +182,9 @@ export default function ResearcherStudyDetail() {
           ) : null}
           <Field label="Condiciones del hallazgo">{study.conditions}</Field>
           <Field label="Evidencia visual (notas)">{study.visual_evidence_notes}</Field>
-          <Field label="Ubicación geográfica del estudio / hallazgo">{study.study_site_notes}</Field>
+          <Field label="Ubicación del estudio / trabajo de campo">
+            {formatStudySiteLocationDisplay(study.study_site_notes)}
+          </Field>
           <StudyContactDisplay raw={study.institution_contact} />
           <Field label="Referencias bibliográficas">{study.references_text}</Field>
           {study.references_links ? (
@@ -200,13 +209,13 @@ export default function ResearcherStudyDetail() {
           ) : null}
         </div>
         <div className="rsd-actions">
-          <Link to={`/researcher/study/${study.id}/edit`} className="workspace-btn">
+          <Link to={res(`/study/${study.id}/edit`)} className="workspace-btn">
             Editar estudio
           </Link>
-          <Link to={`/researcher/fossil/${study.fossil_id}`} className="workspace-btn workspace-btn--ghost">
+          <Link to={res(`/fossil/${study.fossil_id}`)} className="workspace-btn workspace-btn--ghost">
             Ver ficha del fósil
           </Link>
-          <Link to="/researcher/my-studies" className="workspace-btn workspace-btn--ghost">
+          <Link to={res('/my-studies')} className="workspace-btn workspace-btn--ghost">
             Volver a mis estudios
           </Link>
         </div>

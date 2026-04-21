@@ -77,6 +77,45 @@ function parseRolesFromBody(body) {
 }
 
 /**
+ * Admin: solo cuatro combinaciones válidas (explorador, investigador, ambos, o admin solo).
+ * @param {string[]} roleList resultado de parseRolesFromBody
+ * @returns {string[]}
+ */
+function normalizeAdminManagedRoles(roleList) {
+  const uniq = [...new Set(roleList)].filter((r) => VALID_ROLES.includes(r)).sort();
+  if (uniq.length === 0) {
+    const err = new Error('roles_vacios');
+    err.code = 'INVALID_ADMIN_ROLES';
+    throw err;
+  }
+  const hasAdmin = uniq.includes('admin');
+  if (hasAdmin) {
+    if (uniq.length !== 1) {
+      const err = new Error('admin_exclusive');
+      err.code = 'INVALID_ADMIN_ROLES';
+      throw err;
+    }
+    return ['admin'];
+  }
+  const ex = uniq.includes('explorer');
+  const re = uniq.includes('researcher');
+  if (ex && re) {
+    if (uniq.length !== 2) {
+      const err = new Error('invalid_combo');
+      err.code = 'INVALID_ADMIN_ROLES';
+      throw err;
+    }
+    return ['explorer', 'researcher'];
+  }
+  if (uniq.length === 1 && (ex || re)) {
+    return uniq;
+  }
+  const err = new Error('invalid_combo');
+  err.code = 'INVALID_ADMIN_ROLES';
+  throw err;
+}
+
+/**
  * Registro público: solo explorer y researcher; acepta `roles` o `role`.
  */
 function parseRegistrationRoles(body) {
@@ -118,6 +157,7 @@ module.exports = {
   replaceUserRoles,
   replaceUserRolesForUser,
   parseRolesFromBody,
+  normalizeAdminManagedRoles,
   parseRegistrationRoles,
   mapUserWithRoles,
   isExplorerOnlyScope,

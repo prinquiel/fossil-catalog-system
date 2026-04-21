@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { WorkspaceNavProvider } from '../context/WorkspaceNavContext.jsx';
 import { useFocusTrap } from '../hooks/useFocusTrap.js';
 import './RoleLayout.css';
 
@@ -103,7 +104,7 @@ const pickIcon = (to) => {
  * @param {{ variant: 'explorer' | 'researcher'; navTitle: string; tagline?: string; links: { to: string; label: string }[] }} props
  */
 function RoleLayout({ variant, navTitle, tagline, links }) {
-  const { user, loading, isAuthenticated, isExplorer, isResearcher, logout } = useAuth();
+  const { user, loading, isAuthenticated, isExplorer, isResearcher, isAdmin, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const trapRef = useFocusTrap(menuOpen);
@@ -140,6 +141,19 @@ function RoleLayout({ variant, navTitle, tagline, links }) {
     return <Navigate to="/403" replace />;
   }
 
+  const isDualNonAdmin = isExplorer && isResearcher && !isAdmin;
+  if (isDualNonAdmin) {
+    const p = location.pathname;
+    if (p.startsWith('/explorer')) {
+      const next = p.replace(/^\/explorer/, '/workspace/explorer');
+      return <Navigate to={next || '/workspace/explorer/dashboard'} replace />;
+    }
+    if (p.startsWith('/researcher')) {
+      const next = p.replace(/^\/researcher/, '/workspace/researcher');
+      return <Navigate to={next || '/workspace/researcher/dashboard'} replace />;
+    }
+  }
+
   const subtitle =
     tagline ||
     (variant === 'explorer'
@@ -147,6 +161,7 @@ function RoleLayout({ variant, navTitle, tagline, links }) {
       : 'Archivo publicado y estudios');
 
   return (
+    <WorkspaceNavProvider explorerBase="/explorer" researcherBase="/researcher">
     <div className="role-shell">
       <div className="role-shell__inner">
         <header className="role-topbar">
@@ -238,6 +253,7 @@ function RoleLayout({ variant, navTitle, tagline, links }) {
         </div>
       </div>
     </div>
+    </WorkspaceNavProvider>
   );
 }
 

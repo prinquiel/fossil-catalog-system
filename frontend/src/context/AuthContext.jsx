@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { authSession } from '../utils/authSession.js';
 
 const AuthContext = createContext(null);
 
@@ -19,7 +20,7 @@ export const AuthProvider = ({ children }) => {
       const me = await authService.getMe();
       if (me.success && me.data) {
         setUser(me.data);
-        localStorage.setItem('user', JSON.stringify(me.data));
+        authSession.setUserRaw(JSON.stringify(me.data));
         return me.data;
       }
     } catch {
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }) => {
         const me = await authService.getMe();
         if (!cancelled && me.success && me.data) {
           setUser(me.data);
-          localStorage.setItem('user', JSON.stringify(me.data));
+          authSession.setUserRaw(JSON.stringify(me.data));
         }
       } catch {
         if (!cancelled) {

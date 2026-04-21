@@ -41,8 +41,12 @@ export default function FossilGeoTaxonomyFields({
   useEffect(() => {
     let m = true;
     if (!form.era_id) {
-      setPeriods([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setPeriods([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     geologyTaxonomyService.getPeriodsByEra(form.era_id).then((res) => {
       if (m && res.success && Array.isArray(res.data)) setPeriods(res.data);
@@ -55,12 +59,20 @@ export default function FossilGeoTaxonomyFields({
   useEffect(() => {
     let m = true;
     if (!showTaxonomy) {
-      setPhylums([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setPhylums([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     if (!form.kingdom_id) {
-      setPhylums([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setPhylums([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     geologyTaxonomyService.getPhylumsByKingdom(form.kingdom_id).then((res) => {
       if (m && res.success && Array.isArray(res.data)) setPhylums(res.data);
@@ -73,12 +85,20 @@ export default function FossilGeoTaxonomyFields({
   useEffect(() => {
     let m = true;
     if (!showTaxonomy) {
-      setClasses([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setClasses([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     if (!form.phylum_id) {
-      setClasses([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setClasses([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     geologyTaxonomyService.getClassesByPhylum(form.phylum_id).then((res) => {
       if (m && res.success && Array.isArray(res.data)) setClasses(res.data);
@@ -91,12 +111,20 @@ export default function FossilGeoTaxonomyFields({
   useEffect(() => {
     let m = true;
     if (!showTaxonomy) {
-      setOrders([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setOrders([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     if (!form.class_id) {
-      setOrders([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setOrders([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     geologyTaxonomyService.getOrdersByClass(form.class_id).then((res) => {
       if (m && res.success && Array.isArray(res.data)) setOrders(res.data);
@@ -109,12 +137,20 @@ export default function FossilGeoTaxonomyFields({
   useEffect(() => {
     let m = true;
     if (!showTaxonomy) {
-      setFamilies([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setFamilies([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     if (!form.order_id) {
-      setFamilies([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setFamilies([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     geologyTaxonomyService.getFamiliesByOrder(form.order_id).then((res) => {
       if (m && res.success && Array.isArray(res.data)) setFamilies(res.data);
@@ -127,12 +163,20 @@ export default function FossilGeoTaxonomyFields({
   useEffect(() => {
     let m = true;
     if (!showTaxonomy) {
-      setGenera([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setGenera([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     if (!form.family_id) {
-      setGenera([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setGenera([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     geologyTaxonomyService.getGeneraByFamily(form.family_id).then((res) => {
       if (m && res.success && Array.isArray(res.data)) setGenera(res.data);
@@ -145,12 +189,20 @@ export default function FossilGeoTaxonomyFields({
   useEffect(() => {
     let m = true;
     if (!showTaxonomy || !showSpecies) {
-      setSpecies([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setSpecies([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     if (!form.genus_id) {
-      setSpecies([]);
-      return;
+      queueMicrotask(() => {
+        if (m) setSpecies([]);
+      });
+      return () => {
+        m = false;
+      };
     }
     geologyTaxonomyService.getSpeciesByGenus(form.genus_id).then((res) => {
       if (m && res.success && Array.isArray(res.data)) setSpecies(res.data);

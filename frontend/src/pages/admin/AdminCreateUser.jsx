@@ -3,13 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { adminService } from '../../services/adminService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
+import { DEFAULT_ROLE_FLAGS, validateRoleFlags } from '../../utils/adminRoleProfile.js';
+import AdminRoleFlagsFields from '../../components/admin/AdminRoleFlagsFields.jsx';
 import '../admin/adminPages.css';
-
-const ROLE_OPTS = [
-  { value: 'explorer', label: 'Explorador' },
-  { value: 'researcher', label: 'Investigador' },
-  { value: 'admin', label: 'Administrador' },
-];
 
 function AdminCreateUser() {
   const navigate = useNavigate();
@@ -25,11 +21,7 @@ function AdminCreateUser() {
     phone: '',
     workplace: '',
   });
-  const [roles, setRoles] = useState(['explorer']);
-
-  const toggleRole = (value) => {
-    setRoles((prev) => (prev.includes(value) ? prev.filter((r) => r !== value) : [...prev, value]));
-  };
+  const [roleFlags, setRoleFlags] = useState(() => ({ ...DEFAULT_ROLE_FLAGS }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,10 +29,12 @@ function AdminCreateUser() {
       toast.error('Usuario, correo y contraseña son obligatorios.');
       return;
     }
-    if (roles.length === 0) {
-      toast.error('Seleccione al menos un rol.');
+    const validated = validateRoleFlags(roleFlags);
+    if (!validated.ok) {
+      toast.error(validated.error);
       return;
     }
+    const { roles } = validated;
     setLoading(true);
     try {
       const payload = {
@@ -76,8 +70,9 @@ function AdminCreateUser() {
         <p className="admin-page-eyebrow">Alta directa</p>
         <h1 className="admin-page-title">Crear usuario</h1>
         <p className="admin-page-desc">
-          Crea una cuenta ya aprobada con los roles institucionales que correspondan. El usuario podrá iniciar
-          sesión de inmediato con la contraseña indicada.
+          Crea una cuenta ya aprobada. Puede combinar explorador e investigador con las casillas; el administrador es
+          exclusivo (desmarque explorador e investigador para asignarlo). El usuario podrá iniciar sesión de inmediato
+          con la contraseña indicada.
         </p>
       </header>
 
@@ -110,24 +105,9 @@ function AdminCreateUser() {
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
             />
           </label>
-          <div className="admin-page-desc" style={{ margin: 0 }}>
-            <span style={{ fontWeight: 700, display: 'block', marginBottom: 8 }}>Roles</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {ROLE_OPTS.map((r) => (
-                <label
-                  key={r.value}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={roles.includes(r.value)}
-                    onChange={() => toggleRole(r.value)}
-                  />
-                  {r.label}
-                </label>
-              ))}
-            </div>
-          </div>
+
+          <AdminRoleFlagsFields flags={roleFlags} setFlags={setRoleFlags} disabled={false} />
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <label className="admin-page-desc" style={{ display: 'grid', gap: 6, margin: 0 }}>
               <span style={{ fontWeight: 700 }}>Nombre</span>

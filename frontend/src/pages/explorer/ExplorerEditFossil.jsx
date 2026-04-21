@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
 import { fossilService } from '../../services/fossilService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { formatCoord, requestCurrentPosition } from '../../utils/geolocation.js';
@@ -9,12 +10,14 @@ import { FOSSIL_CATEGORIES } from '../../constants/fossilMeta.js';
 import FossilMediaEditor from '../../components/fossil/FossilMediaEditor.jsx';
 import FossilGeoTaxonomyFields from '../../components/fossil/FossilGeoTaxonomyFields.jsx';
 import { mapFossilApiToForm, buildFossilUpdatePayload } from '../../utils/fossilEditForm.js';
+import { WorkspaceBackNav } from '../../components/workspace/WorkspaceBackNav.jsx';
 import '../workspace/workspace-pages.css';
 
 function ExplorerEditFossil() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { exp } = useWorkspaceNav();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
@@ -75,7 +78,7 @@ function ExplorerEditFossil() {
         toast.success(
           res.message || 'Cambios guardados. El registro vuelve a revisión administrativa para ser publicado.'
         );
-        navigate('/explorer/my-fossils');
+        navigate(exp('/my-fossils'));
       }
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -87,6 +90,7 @@ function ExplorerEditFossil() {
   if (loading) {
     return (
       <div className="workspace-page">
+        <WorkspaceBackNav />
         <p className="workspace-muted">Cargando ficha…</p>
       </div>
     );
@@ -95,10 +99,11 @@ function ExplorerEditFossil() {
   if (!fossil) {
     return (
       <div className="workspace-page">
+        <WorkspaceBackNav />
         <div className="workspace-alert">
           No puede editar este registro: no existe o no figura usted como autor del hallazgo.
         </div>
-        <Link to="/explorer/my-fossils" className="workspace-link">
+        <Link to={exp('/my-fossils')} className="workspace-link">
           Volver al listado
         </Link>
       </div>
@@ -107,6 +112,7 @@ function ExplorerEditFossil() {
 
   return (
     <div className="workspace-page">
+      <WorkspaceBackNav />
       <p className="workspace-page__kicker">Edición</p>
       <h1 className="workspace-page__title">Editar hallazgo</h1>
       <p className="workspace-page__lead">
@@ -225,7 +231,7 @@ function ExplorerEditFossil() {
           <button type="submit" className="workspace-btn" disabled={saving}>
             {saving ? 'Guardando…' : 'Guardar cambios'}
           </button>
-          <Link to="/explorer/my-fossils" className="workspace-btn workspace-btn--ghost">
+          <Link to={exp('/my-fossils')} className="workspace-btn workspace-btn--ghost">
             Cancelar
           </Link>
         </div>

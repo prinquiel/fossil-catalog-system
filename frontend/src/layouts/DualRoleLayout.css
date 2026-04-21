@@ -1,0 +1,6 @@
+/* Sidebar dual: título en mayúsculas según identidad institucional */
+.dual-sidebar__tag {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+}

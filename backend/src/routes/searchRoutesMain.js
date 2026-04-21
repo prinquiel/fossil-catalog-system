@@ -1,8 +1,10 @@
 const express = require('express');
-const router = express.Router();
+const { protectOptional } = require('../middleware/authMain');
 const { search, advancedSearch } = require('../controllers/searchControllerMain');
 
-router.get('/', search);
-router.get('/advanced', advancedSearch);
+const router = express.Router();
+
+router.get('/', protectOptional, search);
+router.get('/advanced', protectOptional, advancedSearch);
 
 module.exports = router;

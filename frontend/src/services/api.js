@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { apiRequestEnd, apiRequestStart } from './apiActivity';
+import { authSession } from '../utils/authSession.js';
 
 // El backend monta las rutas bajo /api (p. ej. /api/fossils). Sin el sufijo /api las peticiones fallan (404).
 const resolveApiBaseUrl = () => {
@@ -28,7 +29,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     apiRequestStart();
-    const token = localStorage.getItem('token');
+    const token = authSession.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -54,8 +55,7 @@ api.interceptors.response.use(
     const isAuthAttempt = reqUrl.includes('/auth/login') || reqUrl.includes('/auth/register');
     const isAuthMe = reqUrl.includes('/auth/me');
     if (error.response?.status === 401 && !isAuthAttempt) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      authSession.clear();
       if (!isAuthMe && !window.location.pathname.startsWith('/login')) {
         window.location.assign(`/login?expired=1&from=${encodeURIComponent(window.location.pathname)}`);
       }

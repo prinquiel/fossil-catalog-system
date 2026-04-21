@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { studyService } from '../../services/studyService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
+import { studyResearcherAccountLabel } from '../../utils/studyResearcherDisplay.js';
 import './adminPages.css';
 
 function AdminPendingStudies() {
@@ -98,7 +99,7 @@ function AdminPendingStudies() {
                       {s.fossil_name || `Fósil #${s.fossil_id}`}
                     </span>
                   </td>
-                  <td>{s.researcher_username || '—'}</td>
+                  <td>{studyResearcherAccountLabel(s)}</td>
                   <td>{s.created_at ? String(s.created_at).slice(0, 10) : '—'}</td>
                   <td>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>

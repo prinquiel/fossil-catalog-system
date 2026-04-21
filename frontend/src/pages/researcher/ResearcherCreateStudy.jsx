@@ -1,17 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { studyService } from '../../services/studyService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { serializeStudyContact } from '../../utils/studyContact.js';
+import { serializeStudySiteLocation } from '../../utils/studySiteLocation.js';
+import { getDefaultStudyContactFromUser } from '../../utils/studyProfileDefaults.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
+import { WorkspaceBackNav } from '../../components/workspace/WorkspaceBackNav.jsx';
+import { StudyLocationFields } from '../../components/study/StudyLocationFields.jsx';
+import { StudyContactFields } from '../../components/study/StudyContactFields.jsx';
 import '../workspace/workspace-pages.css';
 import './ResearcherStudyContactFields.css';
 
 function ResearcherCreateStudy() {
   const { fossilId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { res: researcherPath } = useWorkspaceNav();
   const [loading, setLoading] = useState(false);
   const [compositionFile, setCompositionFile] = useState(/** @type {File | null} */ (null));
+
+  const [siteMode, setSiteMode] = useState(/** @type {'text' | 'coords'} */ ('text'));
+  const [siteText, setSiteText] = useState('');
+  const [siteLat, setSiteLat] = useState('');
+  const [siteLng, setSiteLng] = useState('');
+
   const [form, setForm] = useState({
     title: '',
     context_objectives: '',
@@ -21,7 +36,6 @@ function ResearcherCreateStudy() {
     composition: '',
     conditions: '',
     visual_evidence_notes: '',
-    study_site_notes: '',
     contact_email: '',
     contact_name: '',
     contact_phone: '',
@@ -33,12 +47,41 @@ function ResearcherCreateStudy() {
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  useEffect(() => {
+    if (!user) return;
+    const d = getDefaultStudyContactFromUser(user);
+    setForm((f) => ({
+      ...f,
+      contact_email: f.contact_email || d.email,
+      contact_name: f.contact_name || d.name,
+      contact_phone: f.contact_phone || d.phone,
+      contact_institution: f.contact_institution || d.institution,
+    }));
+  }, [user]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const studySiteNotes = serializeStudySiteLocation({
+      mode: siteMode,
+      text: siteText,
+      lat: siteLat,
+      lng: siteLng,
+    });
+    if (!studySiteNotes) {
+      toast.error(
+        siteMode === 'coords'
+          ? 'Ingrese latitud y longitud válidas (WGS84, ej. 9.93 y -84.09).'
+          : 'Ingrese una dirección breve o cambie a coordenadas y complete latitud y longitud.'
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const fd = new FormData();
       fd.append('fossil_id', String(fossilId));
+      fd.append('study_site_notes', studySiteNotes);
       const {
         contact_email,
         contact_name,
@@ -58,10 +101,10 @@ function ResearcherCreateStudy() {
       if (contactPayload) fd.append('institution_contact', contactPayload);
       if (compositionFile) fd.append('composition_image', compositionFile);
 
-      const res = await studyService.create(fd);
-      if (res.success && res.data?.id) {
+      const createRes = await studyService.create(fd);
+      if (createRes.success && createRes.data?.id) {
         toast.success('Estudio enviado. Quedará pendiente de aprobación para aparecer en el catálogo público.');
-        navigate('/researcher/my-studies');
+        navigate(researcherPath('/my-studies'));
       }
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -72,12 +115,13 @@ function ResearcherCreateStudy() {
 
   return (
     <div className="workspace-page">
+      <WorkspaceBackNav />
       <p className="workspace-page__kicker">Nuevo estudio</p>
       <h1 className="workspace-page__title">Información científica adicional</h1>
       <p className="workspace-page__lead">
         Documento vinculado al ejemplar #{fossilId}. Tras enviarlo, un administrador lo revisará antes de publicarlo en
-        el catálogo. Incluya contexto del estudio, análisis, composición, evidencia visual, ubicación del estudio,
-        datos de contacto y referencias o enlaces.
+        el catálogo. Incluya contexto del estudio, análisis, composición, evidencia visual, ubicación del trabajo de
+        campo, datos de contacto y referencias o enlaces.
       </p>
 
       <form className="workspace-card workspace-form" onSubmit={handleSubmit}>
@@ -133,61 +177,31 @@ function ResearcherCreateStudy() {
           <label htmlFor="st-vis">Evidencia visual (antes / después / análisis) — notas</label>
           <textarea id="st-vis" value={form.visual_evidence_notes} onChange={set('visual_evidence_notes')} rows={3} />
         </div>
-        <div style={{ marginTop: 14 }}>
-          <label htmlFor="st-site">Ubicación geográfica del estudio / hallazgo (notas)</label>
-          <textarea id="st-site" value={form.study_site_notes} onChange={set('study_site_notes')} rows={3} />
-        </div>
-        <div className="study-contact">
-          <p className="study-contact__title">Contacto</p>
-          <p className="study-contact__blank">
-            <span className="study-contact__label">Correo electrónico:</span>
-            <input
-              id="st-contact-email"
-              className="study-contact__input"
-              type="email"
-              autoComplete="email"
-              value={form.contact_email}
-              onChange={set('contact_email')}
-              placeholder="correo@institución.ac.cr"
-            />
-          </p>
-          <p className="study-contact__blank">
-            <span className="study-contact__label">Nombre:</span>
-            <input
-              id="st-contact-name"
-              className="study-contact__input"
-              type="text"
-              autoComplete="name"
-              value={form.contact_name}
-              onChange={set('contact_name')}
-              placeholder="Nombre completo"
-            />
-          </p>
-          <p className="study-contact__blank">
-            <span className="study-contact__label">Número celular:</span>
-            <input
-              id="st-contact-phone"
-              className="study-contact__input"
-              type="tel"
-              autoComplete="tel"
-              inputMode="tel"
-              value={form.contact_phone}
-              onChange={set('contact_phone')}
-              placeholder="+506 …"
-            />
-          </p>
-          <p className="study-contact__blank">
-            <span className="study-contact__label">Institución de trabajo:</span>
-            <input
-              id="st-contact-institution"
-              className="study-contact__input"
-              type="text"
-              value={form.contact_institution}
-              onChange={set('contact_institution')}
-              placeholder="Universidad u organización"
-            />
-          </p>
-        </div>
+
+        <StudyLocationFields
+          mode={siteMode}
+          onModeChange={setSiteMode}
+          siteText={siteText}
+          onSiteTextChange={setSiteText}
+          siteLat={siteLat}
+          onSiteLatChange={setSiteLat}
+          siteLng={siteLng}
+          onSiteLngChange={setSiteLng}
+          idPrefix="create"
+        />
+
+        <StudyContactFields
+          email={form.contact_email}
+          name={form.contact_name}
+          phone={form.contact_phone}
+          institution={form.contact_institution}
+          onEmailChange={(v) => setForm((f) => ({ ...f, contact_email: v }))}
+          onNameChange={(v) => setForm((f) => ({ ...f, contact_name: v }))}
+          onPhoneChange={(v) => setForm((f) => ({ ...f, contact_phone: v }))}
+          onInstitutionChange={(v) => setForm((f) => ({ ...f, contact_institution: v }))}
+          idPrefix="create"
+        />
+
         <div style={{ marginTop: 14 }}>
           <label htmlFor="st-ref">Referencias bibliográficas (texto)</label>
           <textarea id="st-ref" value={form.references_text} onChange={set('references_text')} rows={3} />
@@ -206,7 +220,7 @@ function ResearcherCreateStudy() {
           <button type="submit" className="workspace-btn" disabled={loading}>
             {loading ? 'Guardando…' : 'Guardar estudio'}
           </button>
-          <Link to={`/researcher/fossil/${fossilId}`} className="workspace-btn workspace-btn--ghost">
+          <Link to={researcherPath(`/fossil/${fossilId}`)} className="workspace-btn workspace-btn--ghost">
             Cancelar
           </Link>
         </div>

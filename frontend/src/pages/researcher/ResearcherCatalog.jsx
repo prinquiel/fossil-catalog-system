@@ -5,6 +5,7 @@ import { fossilService } from '../../services/fossilService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { clientPaginate } from '../../utils/pagination.js';
 import { FOSSIL_CATEGORIES } from '../../constants/fossilMeta.js';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
 import { mediaService } from '../../services/mediaService';
 import { mediaFileUrlCandidates } from '../../utils/mediaUrl.js';
 import '../workspace/workspace-pages.css';
@@ -13,6 +14,7 @@ import './researcher-pages.css';
 const PAGE_SIZE = 10;
 
 function ResearcherCatalog() {
+  const { res } = useWorkspaceNav();
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -91,7 +93,7 @@ function ResearcherCatalog() {
         <>
           <div className="rw-catalog-grid">
             {slice.map((f) => (
-              <Link key={f.id} to={`/researcher/fossil/${f.id}`} className="rw-catalog-card">
+              <Link key={f.id} to={res(`/fossil/${f.id}`)} className="rw-catalog-card">
                 {Array.isArray(coverByFossilId[f.id]) && coverByFossilId[f.id].length > 0 ? (
                   <div className="rw-catalog-card__thumb-wrap">
                     <img

@@ -4,10 +4,24 @@ import toast from 'react-hot-toast';
 import { searchService } from '../../services/searchService';
 import { geologyTaxonomyService } from '../../services/geologyTaxonomyService.js';
 import { getApiErrorMessage } from '../../utils/apiError.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
+import { FOSSIL_CATEGORIES, FOSSIL_STATUS_LABELS } from '../../constants/fossilMeta.js';
 import '../workspace/workspace-pages.css';
 import './researcher-pages.css';
 
+function SearchIcon() {
+  return (
+    <svg className="rw-search-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.35-4.35" />
+    </svg>
+  );
+}
+
 function ResearcherSearch() {
+  const { isAdmin } = useAuth();
+  const { res } = useWorkspaceNav();
   const [q, setQ] = useState('');
   const [debounced, setDebounced] = useState('');
   const [category, setCategory] = useState('');
@@ -26,6 +40,10 @@ function ResearcherSearch() {
     const t = setTimeout(() => setDebounced(q.trim()), 350);
     return () => clearTimeout(t);
   }, [q]);
+
+  useEffect(() => {
+    if (!isAdmin && status === 'rejected') setStatus('');
+  }, [isAdmin, status]);
 
   useEffect(() => {
     let mounted = true;
@@ -48,6 +66,7 @@ function ResearcherSearch() {
     if (!eraId) return periodOptions;
     return periodOptions.filter((p) => String(p.era_id) === String(eraId));
   }, [eraId, periodOptions]);
+
   const hasAnyInput = Boolean(
     debounced.length >= 2 || category || status || provinceCode.trim() || eraId || periodId || speciesId
   );
@@ -71,11 +90,11 @@ function ResearcherSearch() {
 
     setLoading(true);
     try {
-      const res =
+      const resSearch =
         hasAdvanced || debounced.length < 2
           ? await searchService.advancedFossils(advancedParams)
           : await searchService.searchFossils(debounced);
-      setRows(Array.isArray(res?.data) ? res.data : []);
+      setRows(Array.isArray(resSearch?.data) ? resSearch.data : []);
     } catch (e) {
       toast.error(getApiErrorMessage(e));
       setRows([]);
@@ -88,149 +107,195 @@ function ResearcherSearch() {
     run();
   }, [run]);
 
+  const categoryLabel = useMemo(() => {
+    const m = Object.fromEntries(FOSSIL_CATEGORIES.map((c) => [c.value, c.label]));
+    return (code) => m[code] || code || '—';
+  }, []);
+
+  const statusLabel = (s) => FOSSIL_STATUS_LABELS[s] || s || '—';
+
   return (
-    <div className="workspace-page rw-animate-in">
-      <p className="workspace-page__kicker">Consulta avanzada</p>
-      <h1 className="workspace-page__title">Búsqueda en catálogo</h1>
-      <p className="workspace-page__lead">
-        Puede combinar búsqueda textual con filtros por ubicación, clasificación geológica y taxonómica.
-      </p>
+    <div className="workspace-page workspace-page--search rw-search-page rw-animate-in">
+      <header className="rw-search-hero">
+        <p className="rw-search-hero__eyebrow">Consultas</p>
+        <h1 className="rw-search-hero__title">Búsqueda en catálogo</h1>
+      </header>
 
-      <div className="workspace-card workspace-form researcher-search-card">
-        <label htmlFor="search-q">Término de búsqueda</label>
-        <div className="researcher-search-input-wrap">
-          <span className="researcher-search-icon" aria-hidden="true">
-            ⌕
-          </span>
-          <input
-            id="search-q"
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Nombre, descripción o código"
-          />
-          {q ? (
-            <button type="button" className="researcher-search-clear" onClick={() => setQ('')}>
-              Limpiar
-            </button>
-          ) : null}
-        </div>
-
-        <div className="workspace-form__row" style={{ marginTop: 14 }}>
-          <div>
-            <label htmlFor="srch-cat">Categoría</label>
-            <select id="srch-cat" value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">Todas</option>
-              <option value="FOS">Fósil</option>
-              <option value="MIN">Mineral</option>
-              <option value="ROC">Roca</option>
-              <option value="PAL">Paleontológico</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="srch-status">Estado</label>
-            <select id="srch-status" value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="">Todos</option>
-              <option value="pending">Pendiente</option>
-              <option value="published">Publicado</option>
-              <option value="rejected">Rechazado</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="workspace-form__row" style={{ marginTop: 14 }}>
-          <div>
-            <label htmlFor="srch-era">Era geológica</label>
-            <select
-              id="srch-era"
-              value={eraId}
-              onChange={(e) => {
-                setEraId(e.target.value);
-                setPeriodId('');
-              }}
-            >
-              <option value="">Todas</option>
-              {eraOptions.map((er) => (
-                <option key={er.id} value={String(er.id)}>
-                  {er.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="srch-period">Período</label>
-            <select id="srch-period" value={periodId} onChange={(e) => setPeriodId(e.target.value)}>
-              <option value="">Todos</option>
-              {filteredPeriods.map((p) => (
-                <option key={p.id} value={String(p.id)}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="workspace-form__row" style={{ marginTop: 14 }}>
-          <div>
-            <label htmlFor="srch-province">Provincia (código)</label>
+      <section className="rw-search-shell" aria-label="Criterios de búsqueda">
+        <div className="rw-search-primary">
+          <label className="rw-search-field-label" htmlFor="search-q">
+            Término de búsqueda
+          </label>
+          <div className="rw-search-input-shell">
+            <SearchIcon />
             <input
-              id="srch-province"
-              value={provinceCode}
-              onChange={(e) => setProvinceCode(e.target.value)}
-              placeholder="Ej. ALA / SJO / 1"
+              id="search-q"
+              className="rw-search-input"
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Nombre, descripción o código único"
+              autoComplete="off"
             />
-          </div>
-          <div>
-            <label htmlFor="srch-species">Especie</label>
-            <select id="srch-species" value={speciesId} onChange={(e) => setSpeciesId(e.target.value)}>
-              <option value="">Todas</option>
-              {speciesOptions.map((sp) => (
-                <option key={sp.id} value={String(sp.id)}>
-                  {sp.name}
-                  {sp.common_name ? ` (${sp.common_name})` : ''}
-                </option>
-              ))}
-            </select>
+            {q ? (
+              <button type="button" className="rw-search-clear" onClick={() => setQ('')}>
+                Limpiar
+              </button>
+            ) : null}
           </div>
         </div>
-      </div>
 
-      {loading && <p className="workspace-muted">Buscando…</p>}
+        <div className="rw-search-results rw-search-results--in-shell" aria-live="polite">
+          {loading && (
+            <p className="rw-search-results__state">
+              <span className="rw-search-results__pulse" aria-hidden />
+              Buscando en el catálogo…
+            </p>
+          )}
 
-      {!loading && hasAnyInput && rows.length === 0 && (
-        <p className="workspace-muted">Sin resultados con los filtros actuales.</p>
-      )}
+          {!loading && hasAnyInput && rows.length === 0 && (
+            <p className="rw-search-results__state rw-search-results__state--muted">
+              No hay fichas que coincidan con estos criterios. Pruebe a relajar filtros o acortar el texto.
+            </p>
+          )}
 
-      {rows.length > 0 && (
-        <div className="workspace-table-wrap" style={{ marginTop: 16 }}>
-          <table className="workspace-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Categoría</th>
-                <th>Estado</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.unique_code}</td>
-                  <td>{r.name}</td>
-                  <td>{r.category || '—'}</td>
-                  <td>{r.status}</td>
-                  <td>
-                    <Link className="workspace-link" to={`/researcher/fossil/${r.id}`}>
-                      Ver
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {!loading && !hasAnyInput && (
+            <p className="rw-search-results__state rw-search-results__state--muted">
+              Escriba en el buscador o elija al menos un filtro para ver resultados.
+            </p>
+          )}
+
+          {rows.length > 0 && (
+            <div className="rw-search-table-wrap">
+              <table className="rw-search-table workspace-table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Estado</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr key={r.id}>
+                      <td>
+                        <span className="rw-search-table__code">{r.unique_code}</span>
+                      </td>
+                      <td>{r.name}</td>
+                      <td>{categoryLabel(r.category)}</td>
+                      <td>{statusLabel(r.status)}</td>
+                      <td>
+                        <Link className="workspace-link rw-search-table__link" to={res(`/fossil/${r.id}`)}>
+                          Ver ficha
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="rw-search-divider" role="presentation" />
+
+        <div className="rw-search-filters">
+          <h2 className="rw-search-filters__heading">Refinar resultados</h2>
+          <p className="rw-search-filters__sub">Opcional — puede usar solo filtros, solo texto, o ambos.</p>
+
+          <div className="rw-search-filter-groups">
+            <fieldset className="rw-search-group">
+              <legend className="rw-search-group__legend">Pieza y estado</legend>
+              <div className="rw-search-group__grid">
+                <div>
+                  <label htmlFor="srch-cat">Categoría</label>
+                  <select id="srch-cat" value={category} onChange={(e) => setCategory(e.target.value)}>
+                    <option value="">Todas</option>
+                    {FOSSIL_CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="srch-status">Estado editorial</label>
+                  <select id="srch-status" value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <option value="">Todos</option>
+                    <option value="pending">En revisión</option>
+                    <option value="published">Publicado</option>
+                    {isAdmin ? <option value="rejected">Rechazado (solo administración)</option> : null}
+                  </select>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset className="rw-search-group">
+              <legend className="rw-search-group__legend">Marcador temporal</legend>
+              <div className="rw-search-group__grid">
+                <div>
+                  <label htmlFor="srch-era">Era geológica</label>
+                  <select
+                    id="srch-era"
+                    value={eraId}
+                    onChange={(e) => {
+                      setEraId(e.target.value);
+                      setPeriodId('');
+                    }}
+                  >
+                    <option value="">Todas</option>
+                    {eraOptions.map((er) => (
+                      <option key={er.id} value={String(er.id)}>
+                        {er.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="srch-period">Período</label>
+                  <select id="srch-period" value={periodId} onChange={(e) => setPeriodId(e.target.value)}>
+                    <option value="">Todos</option>
+                    {filteredPeriods.map((p) => (
+                      <option key={p.id} value={String(p.id)}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset className="rw-search-group">
+              <legend className="rw-search-group__legend">Ubicación y taxón</legend>
+              <div className="rw-search-group__grid">
+                <div>
+                  <label htmlFor="srch-province">Provincia (código)</label>
+                  <input
+                    id="srch-province"
+                    value={provinceCode}
+                    onChange={(e) => setProvinceCode(e.target.value)}
+                    placeholder="Ej. ALA, SJO, 1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="srch-species">Especie</label>
+                  <select id="srch-species" value={speciesId} onChange={(e) => setSpeciesId(e.target.value)}>
+                    <option value="">Todas</option>
+                    {speciesOptions.map((sp) => (
+                      <option key={sp.id} value={String(sp.id)}>
+                        {sp.name}
+                        {sp.common_name ? ` (${sp.common_name})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

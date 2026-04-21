@@ -124,17 +124,19 @@ function Landing() {
 
   useEffect(() => {
     const maxStart = Math.max(0, eraStories.length - visibleCardCount);
-    if (windowStart > maxStart) {
-      setWindowStart(maxStart);
-      return;
-    }
-    if (activeIndex < windowStart) {
-      setWindowStart(activeIndex);
-      return;
-    }
-    if (activeIndex >= windowStart + visibleCardCount) {
-      setWindowStart(Math.min(activeIndex - visibleCardCount + 1, maxStart));
-    }
+    queueMicrotask(() => {
+      if (windowStart > maxStart) {
+        setWindowStart(maxStart);
+        return;
+      }
+      if (activeIndex < windowStart) {
+        setWindowStart(activeIndex);
+        return;
+      }
+      if (activeIndex >= windowStart + visibleCardCount) {
+        setWindowStart(Math.min(activeIndex - visibleCardCount + 1, maxStart));
+      }
+    });
   }, [activeIndex, windowStart, visibleCardCount]);
 
   return (

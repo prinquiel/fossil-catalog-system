@@ -10,8 +10,12 @@ describe('workspaceHomePath', () => {
     expect(workspaceHomePath({ roles: ['explorer', 'admin'] })).toBe('/admin/dashboard');
   });
 
-  it('uses researcher before explorer', () => {
-    expect(workspaceHomePath({ roles: ['explorer', 'researcher'] })).toBe('/researcher/dashboard');
+  it('uses unified workspace when both explorer and researcher', () => {
+    expect(workspaceHomePath({ roles: ['explorer', 'researcher'] })).toBe('/workspace/inicio');
+  });
+
+  it('uses researcher-only dashboard', () => {
+    expect(workspaceHomePath({ roles: ['researcher'] })).toBe('/researcher/dashboard');
   });
 
   it('falls back to explorer', () => {

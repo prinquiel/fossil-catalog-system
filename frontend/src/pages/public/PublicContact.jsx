@@ -6,7 +6,7 @@ import { getApiErrorMessage } from '../../utils/apiError.js';
 import './public-info-pages.css';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const INSTITUTIONAL_EMAIL = 'fosiles@unadeca.net';
+const INSTITUTIONAL_EMAIL = 'super@admin.com';
 
 export default function PublicContact() {
   const [loading, setLoading] = useState(false);

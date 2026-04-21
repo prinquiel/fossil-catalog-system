@@ -118,10 +118,12 @@ const getPendingStudies = async (req, res) => {
       `SELECT s.*,
               f.name AS fossil_name,
               f.unique_code AS fossil_unique_code,
-              u.username AS researcher_username
+              (SELECT uu.username FROM users uu
+               WHERE uu.id = s.researcher_id AND uu.deleted_at IS NULL LIMIT 1) AS study_researcher_login,
+              (SELECT uu.email FROM users uu
+               WHERE uu.id = s.researcher_id AND uu.deleted_at IS NULL LIMIT 1) AS study_researcher_email
        FROM scientific_studies s
        JOIN fossils f ON f.id = s.fossil_id AND f.deleted_at IS NULL
-       LEFT JOIN users u ON u.id = s.researcher_id AND u.deleted_at IS NULL
        WHERE s.publication_status = 'pending'
        ORDER BY s.created_at ASC`,
       []
@@ -143,13 +145,22 @@ const getStudies = async (req, res) => {
   try {
     if (isAdmin(req.user)) {
       const st = req.query.status;
-      let sql = 'SELECT * FROM scientific_studies WHERE 1=1';
+      let sql = `SELECT s.*,
+                        f.name AS fossil_name,
+                        f.unique_code AS fossil_unique_code,
+                        (SELECT uu.username FROM users uu
+                         WHERE uu.id = s.researcher_id AND uu.deleted_at IS NULL LIMIT 1) AS study_researcher_login,
+                        (SELECT uu.email FROM users uu
+                         WHERE uu.id = s.researcher_id AND uu.deleted_at IS NULL LIMIT 1) AS study_researcher_email
+                 FROM scientific_studies s
+                 LEFT JOIN fossils f ON f.id = s.fossil_id AND f.deleted_at IS NULL
+                 WHERE 1=1`;
       const params = [];
       if (st && ['pending', 'published', 'rejected'].includes(String(st))) {
-        sql += ` AND publication_status = $1`;
+        sql += ` AND s.publication_status = $1`;
         params.push(st);
       }
-      sql += ' ORDER BY created_at DESC';
+      sql += ' ORDER BY s.created_at DESC';
       const result = await query(sql, params);
       return res.json({ success: true, data: result.rows });
     }

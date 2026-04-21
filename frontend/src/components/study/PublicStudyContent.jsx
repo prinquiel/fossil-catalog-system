@@ -1,14 +1,8 @@
 import { parseStudyContact } from '../../utils/studyContact.js';
+import { formatStudySiteLocationDisplay } from '../../utils/studySiteLocation.js';
+import { studyAssetUrl } from '../../utils/studyAssetUrl.js';
 import '../../pages/workspace/workspace-pages.css';
 import '../../pages/researcher/researcher-study-detail.css';
-
-export function studyAssetUrl(filePath) {
-  if (!filePath) return '';
-  let root = import.meta.env.VITE_API_URL?.trim() || '';
-  root = root.replace(/\/$/, '').replace(/\/api$/, '');
-  if (!root) root = 'http://localhost:5001';
-  return `${root}/uploads/${filePath}`;
-}
 
 function Field({ label, children }) {
   if (children == null || children === '') return null;
@@ -94,7 +88,9 @@ export default function PublicStudyContent({ study }) {
         ) : null}
         <Field label="Condiciones del hallazgo">{study.conditions}</Field>
         <Field label="Evidencia visual (notas)">{study.visual_evidence_notes}</Field>
-        <Field label="Ubicación geográfica del estudio / hallazgo">{study.study_site_notes}</Field>
+        <Field label="Ubicación del estudio / trabajo de campo">
+          {formatStudySiteLocationDisplay(study.study_site_notes)}
+        </Field>
         <StudyContactDisplay raw={study.institution_contact} />
         <Field label="Referencias bibliográficas">{study.references_text}</Field>
         {study.references_links ? (

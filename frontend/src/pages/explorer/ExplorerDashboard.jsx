@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
 import { fossilService } from '../../services/fossilService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { FOSSIL_STATUS_LABELS } from '../../constants/fossilMeta.js';
@@ -9,6 +10,7 @@ import '../workspace/workspace-pages.css';
 
 function ExplorerDashboard() {
   const { user } = useAuth();
+  const { exp } = useWorkspaceNav();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -72,10 +74,10 @@ function ExplorerDashboard() {
           Acciones rápidas
         </p>
         <div className="workspace-actions">
-          <Link to="/explorer/create-fossil" className="workspace-btn">
+          <Link to={exp('/create-fossil')} className="workspace-btn">
             Registrar hallazgo
           </Link>
-          <Link to="/explorer/my-fossils" className="workspace-btn workspace-btn--ghost">
+          <Link to={exp('/my-fossils')} className="workspace-btn workspace-btn--ghost">
             Ver mis fichas
           </Link>
         </div>

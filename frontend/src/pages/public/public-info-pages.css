@@ -25,6 +25,17 @@
   background: rgba(255, 252, 248, 0.94);
 }
 
+.public-card--profile-wide {
+  max-width: min(1120px, 100%);
+  padding: 22px 20px 32px;
+}
+
+@media (min-width: 640px) {
+  .public-card--profile-wide {
+    padding: 26px 28px 36px;
+  }
+}
+
 .public-page-kicker {
   margin: 0 0 8px;
   text-transform: uppercase;

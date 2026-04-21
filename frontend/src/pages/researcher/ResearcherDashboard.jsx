@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
 import { fossilService } from '../../services/fossilService';
 import { studyService } from '../../services/studyService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
@@ -10,14 +11,15 @@ import './researcher-dashboard.css';
 
 function ResearcherDashboard() {
   const { user } = useAuth();
+  const { res } = useWorkspaceNav();
   const [fossils, setFossils] = useState([]);
   const [studies, setStudies] = useState([]);
   const [loading, setLoading] = useState(true);
   const quickActions = [
-    { to: '/researcher/catalog', label: 'Catalogo', hint: 'Fichas publicadas' },
-    { to: '/researcher/search', label: 'Buscar', hint: 'Consulta directa' },
-    { to: '/researcher/my-studies', label: 'Estudios', hint: 'Gestion personal' },
-    { to: '/researcher/map', label: 'Mapa', hint: 'Vista espacial' },
+    { to: res('/catalog'), label: 'Catalogo', hint: 'Fichas publicadas' },
+    { to: res('/search'), label: 'Buscar', hint: 'Consulta directa' },
+    { to: res('/my-studies'), label: 'Estudios', hint: 'Gestion personal' },
+    { to: res('/map'), label: 'Mapa', hint: 'Vista espacial' },
   ];
 
   useEffect(() => {

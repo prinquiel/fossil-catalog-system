@@ -7,10 +7,13 @@ import { FOSSIL_CATEGORIES, FOSSIL_STATUS_LABELS } from '../../constants/fossilM
 import FossilMiniMap from '../../components/maps/FossilMiniMap.jsx';
 import FossilMediaGallery from '../../components/fossil/FossilMediaGallery.jsx';
 import { hasValidCoords, normalizeGeoPoint } from '../../utils/geoNormalize.js';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
+import { WorkspaceBackNav } from '../../components/workspace/WorkspaceBackNav.jsx';
 import '../workspace/workspace-pages.css';
 import './researcher-pages.css';
 
 function ResearcherFossilDetail() {
+  const { res } = useWorkspaceNav();
   const { id } = useParams();
   const [f, setF] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +43,7 @@ function ResearcherFossilDetail() {
   if (loading) {
     return (
       <div className="workspace-page">
+        <WorkspaceBackNav />
         <p className="workspace-muted">Cargando ficha…</p>
       </div>
     );
@@ -48,8 +52,9 @@ function ResearcherFossilDetail() {
   if (!f) {
     return (
       <div className="workspace-page">
+        <WorkspaceBackNav />
         <div className="workspace-alert">No se encontró el registro solicitado.</div>
-        <Link to="/researcher/catalog" className="workspace-link">
+        <Link to={res('/catalog')} className="workspace-link">
           Volver al catálogo
         </Link>
       </div>
@@ -58,6 +63,7 @@ function ResearcherFossilDetail() {
 
   return (
     <div className="workspace-page rw-animate-in">
+      <WorkspaceBackNav />
       <p className="workspace-page__kicker">Detalle de ejemplar</p>
       <h1 className="workspace-page__title">{f.name}</h1>
       <p className="workspace-page__lead">
@@ -111,10 +117,10 @@ function ResearcherFossilDetail() {
           </dl>
           <FossilMediaGallery fossilId={f.id} title="Fotografías" />
           <div className="researcher-detail__actions">
-            <Link to={`/researcher/create-study/${f.id}`} className="workspace-btn">
+            <Link to={res(`/create-study/${f.id}`)} className="workspace-btn">
               Registrar estudio
             </Link>
-            <Link to="/researcher/catalog" className="workspace-btn workspace-btn--ghost">
+            <Link to={res('/catalog')} className="workspace-btn workspace-btn--ghost">
               Volver al catálogo
             </Link>
           </div>
@@ -138,7 +144,7 @@ function ResearcherFossilDetail() {
               subtitle={f.unique_code}
             />
             <p className="researcher-detail__map-caption">
-              <Link to="/researcher/map" className="workspace-link">
+              <Link to={res('/map')} className="workspace-link">
                 Mapa
               </Link>{' '} general de todos los hallazgos.
             </p>
@@ -147,7 +153,7 @@ function ResearcherFossilDetail() {
           <div className="workspace-card researcher-detail__panel researcher-detail__panel--secondary workspace-muted">
             <p style={{ margin: 0 }}>
               Esta ficha no tiene coordenadas; no se puede mostrar un mapa puntual. Consultá el{' '}
-              <Link to="/researcher/map" className="workspace-link">
+              <Link to={res('/map')} className="workspace-link">
                 mapa general
               </Link>{' '}
               para otros ejemplares georreferenciados.

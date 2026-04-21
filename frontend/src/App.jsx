@@ -17,6 +17,7 @@ import PublicProfile from './pages/public/PublicProfile';
 import PublicNotifications from './pages/public/PublicNotifications';
 import PublicSettings from './pages/public/PublicSettings';
 import RoleLayout from './layouts/RoleLayout';
+import DualRoleLayout from './layouts/DualRoleLayout';
 import AdminLayout from './layouts/AdminLayout';
 import PlaceholderPage from './pages/common/PlaceholderPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -46,6 +47,9 @@ import ResearcherCreateStudy from './pages/researcher/ResearcherCreateStudy';
 import ResearcherMyStudies from './pages/researcher/ResearcherMyStudies';
 import ResearcherStudyDetail from './pages/researcher/ResearcherStudyDetail';
 import ResearcherEditStudy from './pages/researcher/ResearcherEditStudy';
+import WorkspaceBlendedHome from './pages/workspace/WorkspaceBlendedHome';
+import WorkspaceNewContribution from './pages/workspace/WorkspaceNewContribution';
+import WorkspaceMyContributions from './pages/workspace/WorkspaceMyContributions';
 
 const ResearcherMap = lazy(() => import('./pages/researcher/ResearcherMap'));
 import GlobalLoadingBar from './components/system/GlobalLoadingBar.jsx';
@@ -64,6 +68,7 @@ const researcherLinks = [
   { to: '/researcher/search', label: 'Buscar' },
   { to: '/researcher/my-studies', label: 'Mis estudios' },
   { to: '/researcher/map', label: 'Mapa' },
+  { to: '/researcher/profile', label: 'Perfil' },
 ];
 
 function PublicRouteTransition() {
@@ -139,8 +144,51 @@ function App() {
               <Route path="study/:id" element={<ResearcherStudyDetail />} />
               <Route path="study/:id/edit" element={<ResearcherEditStudy />} />
               <Route path="my-studies" element={<ResearcherMyStudies />} />
+              <Route path="profile" element={<ExplorerProfile />} />
               <Route
                 path="map"
+                element={
+                  <Suspense
+                    fallback={
+                      <div
+                        style={{
+                          padding: '1.5rem',
+                          fontFamily: 'var(--font-body)',
+                          color: 'var(--ink-muted)',
+                        }}
+                      >
+                        Cargando mapa…
+                      </div>
+                    }
+                  >
+                    <ResearcherMap />
+                  </Suspense>
+                }
+              />
+            </Route>
+
+            <Route path="/workspace" element={<DualRoleLayout />}>
+              <Route index element={<Navigate to="inicio" replace />} />
+              <Route path="dashboard" element={<Navigate to="/workspace/inicio" replace />} />
+              <Route path="inicio" element={<WorkspaceBlendedHome />} />
+              <Route path="nuevo-aporte" element={<WorkspaceNewContribution />} />
+              <Route path="mis-aportes" element={<WorkspaceMyContributions />} />
+              <Route path="explorer/dashboard" element={<ExplorerDashboard />} />
+              <Route path="explorer/create-fossil" element={<ExplorerCreateFossil />} />
+              <Route path="explorer/my-fossils" element={<ExplorerMyFossils />} />
+              <Route path="explorer/edit-fossil/:id" element={<ExplorerEditFossil />} />
+              <Route path="explorer/profile" element={<ExplorerProfile />} />
+              <Route path="researcher/dashboard" element={<ResearcherDashboard />} />
+              <Route path="researcher/catalog" element={<ResearcherCatalog />} />
+              <Route path="researcher/fossil/:id" element={<ResearcherFossilDetail />} />
+              <Route path="researcher/search" element={<ResearcherSearch />} />
+              <Route path="researcher/create-study/:fossilId" element={<ResearcherCreateStudy />} />
+              <Route path="researcher/study/:id" element={<ResearcherStudyDetail />} />
+              <Route path="researcher/study/:id/edit" element={<ResearcherEditStudy />} />
+              <Route path="researcher/my-studies" element={<ResearcherMyStudies />} />
+              <Route path="researcher/profile" element={<ExplorerProfile />} />
+              <Route
+                path="researcher/map"
                 element={
                   <Suspense
                     fallback={
@@ -168,6 +216,7 @@ function App() {
               <Route path="pending-fossils" element={<AdminPendingFossils />} />
               <Route path="pending-studies" element={<AdminPendingStudies />} />
               <Route path="studies" element={<AdminStudies />} />
+              <Route path="study/:id/edit" element={<ResearcherEditStudy />} />
               <Route path="study/:id" element={<AdminStudyView />} />
               <Route path="fossil/:id/review" element={<AdminFossilReview />} />
               <Route path="fossils" element={<AdminFossils />} />

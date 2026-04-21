@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { studyService } from '../../services/studyService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { parseStudyContact } from '../../utils/studyContact.js';
+import { formatStudySiteLocationDisplay } from '../../utils/studySiteLocation.js';
 import '../workspace/workspace-pages.css';
 import '../researcher/researcher-study-detail.css';
 import './adminPages.css';
@@ -133,8 +134,25 @@ export default function AdminStudyView() {
   return (
     <>
       <header className="admin-page-header">
-        <p className="admin-page-eyebrow">Solo lectura</p>
-        <h1 className="admin-page-title">{study.title || 'Sin título'}</h1>
+        <p className="admin-page-eyebrow">Estudio</p>
+        <div
+          className="admin-study-header__title-row"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'baseline',
+            gap: '12px 16px',
+            justifyContent: 'space-between',
+            marginBottom: 8,
+          }}
+        >
+          <h1 className="admin-page-title" style={{ marginBottom: 0 }}>
+            {study.title || 'Sin título'}
+          </h1>
+          <Link to={`/admin/study/${study.id}/edit`} className="admin-btn">
+            Editar contenido
+          </Link>
+        </div>
         <p className="admin-page-desc" style={{ marginBottom: 8 }}>
           <span className="admin-tag" style={{ marginRight: 8 }}>
             {statusLabel}
@@ -143,8 +161,8 @@ export default function AdminStudyView() {
           {dateStr ? ` · Fecha del estudio: ${dateStr}` : ''}
         </p>
         <p className="admin-page-desc" style={{ marginTop: 0 }}>
-          Vista completa del contenido enviado por el investigador. Para aprobar o rechazar use la lista de estudios
-          pendientes.
+          Vista del contenido enviado por el investigador. Use <strong>Editar contenido</strong> para corregir texto,
+          imágenes o metadatos. Para aprobar o rechazar use la lista de estudios pendientes.
         </p>
       </header>
 
@@ -181,7 +199,9 @@ export default function AdminStudyView() {
             ) : null}
             <Field label="Condiciones del hallazgo">{study.conditions}</Field>
             <Field label="Evidencia visual (notas)">{study.visual_evidence_notes}</Field>
-            <Field label="Ubicación geográfica del estudio / hallazgo">{study.study_site_notes}</Field>
+            <Field label="Ubicación del estudio / trabajo de campo">
+              {formatStudySiteLocationDisplay(study.study_site_notes)}
+            </Field>
             <StudyContactDisplay raw={study.institution_contact} />
             <Field label="Referencias bibliográficas">{study.references_text}</Field>
             {study.references_links ? (

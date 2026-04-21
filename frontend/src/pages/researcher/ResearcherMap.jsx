@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Popup, CircleMarker, useMap } from 'react-leaflet';
 import { fossilService } from '../../services/fossilService';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import { hasValidCoords, normalizeGeoPoint } from '../../utils/geoNormalize.js';
 import 'leaflet/dist/leaflet.css';
@@ -32,6 +33,7 @@ function MapFitBounds({ points }) {
 }
 
 function ResearcherMap() {
+  const { res } = useWorkspaceNav();
   const [rows, setRows] = useState([]);
   const [points, setPoints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +99,7 @@ function ResearcherMap() {
                         <br />
                         {p.unique_code}
                         <br />
-                        <Link to={`/researcher/fossil/${p.id}`}>Abrir ficha</Link>
+                        <Link to={res(`/fossil/${p.id}`)}>Abrir ficha</Link>
                       </Popup>
                     </CircleMarker>
                   ))}
@@ -116,7 +118,7 @@ function ResearcherMap() {
             <div style={{ display: 'grid', gap: 8 }}>
               {rows.map((r) => (
                 <div key={r.id} className="workspace-fossil-list-row">
-                  <Link className="workspace-link" to={`/researcher/fossil/${r.id}`}>
+                  <Link className="workspace-link" to={res(`/fossil/${r.id}`)}>
                     {r.unique_code} · {r.name}
                   </Link>
                   {hasValidCoords(r) ? (

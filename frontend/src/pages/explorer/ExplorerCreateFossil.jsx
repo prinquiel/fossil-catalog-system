@@ -17,6 +17,8 @@ import {
 } from '../../utils/fossilOfflineQueue.js';
 import { FOSSIL_CATEGORIES } from '../../constants/fossilMeta.js';
 import FossilGeoTaxonomyFields from '../../components/fossil/FossilGeoTaxonomyFields.jsx';
+import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
+import { WorkspaceBackNav } from '../../components/workspace/WorkspaceBackNav.jsx';
 import '../workspace/workspace-pages.css';
 
 const DEFAULT_FORM = {
@@ -74,6 +76,7 @@ function formatSavedAt(iso) {
 
 function ExplorerCreateFossil() {
   const navigate = useNavigate();
+  const { exp } = useWorkspaceNav();
   const [loading, setLoading] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(
@@ -282,7 +285,7 @@ function ExplorerCreateFossil() {
         }
         clearFossilCreateDraft();
         setLastLocalSaveLabel('');
-        navigate(`/explorer/my-fossils`);
+        navigate(exp('/my-fossils'));
       }
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -293,6 +296,7 @@ function ExplorerCreateFossil() {
 
   return (
     <div className="workspace-page">
+      <WorkspaceBackNav />
       <p className="workspace-page__kicker">Nuevo registro</p>
       <h1 className="workspace-page__title">Registrar un hallazgo</h1>
       <p className="workspace-page__lead">
