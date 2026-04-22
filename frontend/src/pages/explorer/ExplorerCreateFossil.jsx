@@ -16,6 +16,11 @@ import {
   removeOfflineQueuedFossil,
 } from '../../utils/fossilOfflineQueue.js';
 import { FOSSIL_CATEGORIES } from '../../constants/fossilMeta.js';
+import {
+  CR_PROVINCE_REFERENCE,
+  CR_CANTONES_REFERENCE_URL,
+  CR_INEC_HOME_URL,
+} from '../../constants/costaRicaLocationGuide.js';
 import FossilGeoTaxonomyFields from '../../components/fossil/FossilGeoTaxonomyFields.jsx';
 import { useWorkspaceNav } from '../../context/WorkspaceNavContext.jsx';
 import { WorkspaceBackNav } from '../../components/workspace/WorkspaceBackNav.jsx';
@@ -488,13 +493,67 @@ function ExplorerCreateFossil() {
         <div className="workspace-form__row" style={{ marginTop: 14 }}>
           <div>
             <label htmlFor="prov">Código provincia (Costa Rica)</label>
-            <input id="prov" value={form.province_code} onChange={set('province_code')} placeholder="Ej. 1" />
+            <input id="prov" value={form.province_code} onChange={set('province_code')} placeholder="Ej. 1 o SJO" />
           </div>
           <div>
             <label htmlFor="cant">Código cantón</label>
             <input id="cant" value={form.canton_code} onChange={set('canton_code')} placeholder="Ej. 01" />
           </div>
         </div>
+
+        <details className="workspace-cr-location-guide">
+          <summary>Guía: códigos de provincia y cantón (Costa Rica)</summary>
+          <div className="workspace-cr-location-guide__body">
+            <p>
+              Para archivo nacional podés usar el <strong>número de provincia (1–7)</strong> o las{' '}
+              <strong>siglas</strong> (SJO, ALA, …). El <strong>cantón</strong> es el código de{' '}
+              <strong>dos dígitos</strong> del cantón dentro de esa provincia según la división territorial del INEC
+              (ej. provincia 1 — San José: <code>01</code> San José, <code>02</code> Escazú, <code>03</code>{' '}
+              Desamparados).
+            </p>
+            <p>
+              Si solo tenés <strong>GPS</strong>, podés dejar provincia y cantón vacíos y completar latitud y
+              longitud.
+            </p>
+            <div className="workspace-cr-location-guide__table-wrap">
+              <table className="workspace-cr-location-guide__table">
+                <thead>
+                  <tr>
+                    <th scope="col">Código</th>
+                    <th scope="col">Siglas</th>
+                    <th scope="col">Provincia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {CR_PROVINCE_REFERENCE.map((p) => (
+                    <tr key={p.code}>
+                      <td>
+                        <code>{p.code}</code>
+                      </td>
+                      <td>
+                        <code>{p.letters}</code>
+                      </td>
+                      <td>{p.name}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="workspace-muted" style={{ marginBottom: 8, fontSize: '0.82rem' }}>
+              El código de cantón depende de la provincia: consultá la tabla completa de cantones para no
+              equivocar el par provincia + cantón.
+            </p>
+            <div className="workspace-cr-location-guide__links">
+              <a href={CR_CANTONES_REFERENCE_URL} target="_blank" rel="noopener noreferrer">
+                Lista de cantones con códigos (referencia)
+              </a>
+              <a href={CR_INEC_HOME_URL} target="_blank" rel="noopener noreferrer">
+                INEC — división territorial oficial
+              </a>
+            </div>
+          </div>
+        </details>
+
         <div className="workspace-form__row" style={{ marginTop: 14 }}>
           <div>
             <label htmlFor="lat">Latitud</label>

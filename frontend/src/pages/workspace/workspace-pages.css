@@ -356,3 +356,81 @@
     align-items: stretch;
   }
 }
+
+/* Guía provincia / cantón (Costa Rica) — formulario nuevo fósil */
+.workspace-cr-location-guide {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px dashed var(--rule);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.workspace-cr-location-guide > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--clay-deep);
+  list-style-position: outside;
+}
+
+.workspace-cr-location-guide > summary:hover {
+  color: var(--ruby-dark);
+}
+
+.workspace-cr-location-guide__body {
+  margin-top: 12px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--clay-deep);
+}
+
+.workspace-cr-location-guide__body p {
+  margin: 0 0 10px;
+}
+
+.workspace-cr-location-guide__table-wrap {
+  overflow-x: auto;
+  margin: 10px 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+}
+
+.workspace-cr-location-guide__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.workspace-cr-location-guide__table th,
+.workspace-cr-location-guide__table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--rule);
+}
+
+.workspace-cr-location-guide__table th {
+  background: rgba(91, 76, 58, 0.06);
+  font-weight: 700;
+}
+
+.workspace-cr-location-guide__table tr:last-child td {
+  border-bottom: none;
+}
+
+.workspace-cr-location-guide__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 4px;
+}
+
+.workspace-cr-location-guide__links a {
+  font-weight: 700;
+  color: var(--ruby-dark);
+  text-decoration: none;
+}
+
+.workspace-cr-location-guide__links a:hover {
+  text-decoration: underline;
+}
