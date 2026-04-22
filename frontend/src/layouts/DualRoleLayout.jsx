@@ -120,7 +120,9 @@ function DualRoleLayout() {
   }
 
   if (!isExplorer || !isResearcher) {
-    return <Navigate to="/403" replace />;
+    if (isExplorer) return <Navigate to="/explorer/dashboard" replace />;
+    if (isResearcher) return <Navigate to="/researcher/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (

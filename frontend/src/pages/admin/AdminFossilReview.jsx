@@ -8,6 +8,7 @@ import { formatCoord, requestCurrentPosition } from '../../utils/geolocation.js'
 import { FOSSIL_CATEGORIES } from '../../constants/fossilMeta.js';
 import FossilMediaEditor from '../../components/fossil/FossilMediaEditor.jsx';
 import FossilGeoTaxonomyFields from '../../components/fossil/FossilGeoTaxonomyFields.jsx';
+import AdminConfirmDialog from '../../components/admin/AdminConfirmDialog.jsx';
 import { mapFossilApiToForm, buildFossilUpdatePayload } from '../../utils/fossilEditForm.js';
 import '../admin/adminPages.css';
 import '../workspace/workspace-pages.css';
@@ -24,6 +25,7 @@ function AdminFossilReview() {
   const [geoLoading, setGeoLoading] = useState(false);
   const [linkedStudies, setLinkedStudies] = useState([]);
   const [studiesLoading, setStudiesLoading] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
 
   const busy = saving || publishing || rejecting;
 
@@ -129,12 +131,12 @@ function AdminFossilReview() {
     }
   };
 
-  const reject = async () => {
-    if (!window.confirm('¿Rechazar este fósil?')) return;
+  const confirmReject = async () => {
     setRejecting(true);
     try {
       await fossilService.reject(id);
       toast.success('Rechazado.');
+      setRejectDialogOpen(false);
       navigate('/admin/pending-fossils');
     } catch (e) {
       toast.error(getApiErrorMessage(e));
@@ -150,6 +152,27 @@ function AdminFossilReview() {
 
   return (
     <>
+      <AdminConfirmDialog
+        open={rejectDialogOpen}
+        title="Rechazar fósil"
+        confirmLabel="Rechazar"
+        cancelLabel="Cancelar"
+        confirmVariant="danger"
+        loading={rejecting}
+        onCancel={() => !rejecting && setRejectDialogOpen(false)}
+        onConfirm={confirmReject}
+      >
+        <p style={{ margin: 0 }}>
+          ¿Rechazar este registro? Dejará de estar en revisión y el explorador verá el estado rechazado.
+        </p>
+        <p style={{ margin: '12px 0 0' }}>
+          <strong>{form.name || fossil.name}</strong>
+          <span style={{ display: 'block', marginTop: 6, fontSize: '0.9rem', opacity: 0.85 }}>
+            {fossil.unique_code}
+          </span>
+        </p>
+      </AdminConfirmDialog>
+
       <header className="admin-page-header">
         <p className="admin-page-eyebrow">Revisión</p>
         <h1 className="admin-page-title">Revisar y editar ficha</h1>
@@ -323,8 +346,13 @@ function AdminFossilReview() {
                 <button type="button" className="admin-btn" disabled={busy} onClick={handlePublish}>
                   {publishing ? 'Publicando…' : 'Guardar y publicar en catálogo'}
                 </button>
-                <button type="button" className="admin-btn admin-btn--ghost" disabled={busy} onClick={reject}>
-                  {rejecting ? 'Rechazando…' : 'Rechazar'}
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--ghost"
+                  disabled={busy}
+                  onClick={() => setRejectDialogOpen(true)}
+                >
+                  Rechazar
                 </button>
               </>
             )}

@@ -138,7 +138,10 @@ function RoleLayout({ variant, navTitle, tagline, links }) {
   }
 
   if (!allowed) {
-    return <Navigate to="/403" replace />;
+    if (isAdmin) return <Navigate to="/admin/dashboard" replace />;
+    if (variant === 'explorer' && isResearcher) return <Navigate to="/researcher/dashboard" replace />;
+    if (variant === 'researcher' && isExplorer) return <Navigate to="/explorer/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   const isDualNonAdmin = isExplorer && isResearcher && !isAdmin;

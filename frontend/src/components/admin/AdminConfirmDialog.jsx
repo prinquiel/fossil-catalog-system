@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom';
  *   children: import('react').ReactNode;
  *   confirmLabel?: string;
  *   cancelLabel?: string;
+ *   confirmVariant?: 'primary' | 'danger';
  *   loading?: boolean;
  *   onConfirm: () => void;
  *   onCancel: () => void;
@@ -21,10 +22,13 @@ export default function AdminConfirmDialog({
   children,
   confirmLabel = 'Confirmar',
   cancelLabel = 'Cancelar',
+  confirmVariant = 'primary',
   loading = false,
   onConfirm,
   onCancel,
 }) {
+  const confirmBtnClass =
+    confirmVariant === 'danger' ? 'admin-btn admin-btn--danger' : 'admin-btn admin-btn--primary';
   useEffect(() => {
     if (!open) return undefined;
     const prevOverflow = document.body.style.overflow;
@@ -67,7 +71,7 @@ export default function AdminConfirmDialog({
           <button type="button" className="admin-btn admin-btn--ghost" disabled={loading} onClick={onCancel}>
             {cancelLabel}
           </button>
-          <button type="button" className="admin-btn admin-btn--primary" disabled={loading} onClick={onConfirm}>
+          <button type="button" className={confirmBtnClass} disabled={loading} onClick={onConfirm}>
             {loading ? 'Procesando…' : confirmLabel}
           </button>
         </div>

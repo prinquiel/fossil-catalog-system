@@ -113,7 +113,6 @@ function App() {
               <Route path="/profile" element={<PublicProfile />} />
               <Route path="/notifications" element={<PublicNotifications />} />
               <Route path="/settings" element={<PublicSettings />} />
-              <Route path="/403" element={<PlaceholderPage title="403" description="No autorizado" />} />
               <Route path="/404" element={<PlaceholderPage title="404" description="Pagina no encontrada" />} />
               <Route
                 path="/500"

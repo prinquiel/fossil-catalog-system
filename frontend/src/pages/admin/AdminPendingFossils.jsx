@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import AdminConfirmDialog from '../../components/admin/AdminConfirmDialog.jsx';
 import { fossilService } from '../../services/fossilService';
 import { getApiErrorMessage } from '../../utils/apiError.js';
 import '../admin/adminPages.css';
@@ -8,6 +9,8 @@ import '../admin/adminPages.css';
 function AdminPendingFossils() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rejectTarget, setRejectTarget] = useState(/** @type {{ id: number; name: string; code: string } | null} */ (null));
+  const [rejecting, setRejecting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -35,19 +38,50 @@ function AdminPendingFossils() {
     }
   };
 
-  const reject = async (id) => {
-    if (!window.confirm('¿Rechazar este registro?')) return;
+  const closeRejectDialog = () => {
+    if (!rejecting) setRejectTarget(null);
+  };
+
+  const confirmReject = async () => {
+    if (!rejectTarget) return;
+    setRejecting(true);
     try {
-      await fossilService.reject(id);
+      await fossilService.reject(rejectTarget.id);
       toast.success('Registro rechazado.');
+      setRejectTarget(null);
       load();
     } catch (e) {
       toast.error(getApiErrorMessage(e));
+    } finally {
+      setRejecting(false);
     }
   };
 
   return (
     <>
+      <AdminConfirmDialog
+        open={Boolean(rejectTarget)}
+        title="Rechazar fósil"
+        confirmLabel="Rechazar"
+        cancelLabel="Cancelar"
+        confirmVariant="danger"
+        loading={rejecting}
+        onCancel={closeRejectDialog}
+        onConfirm={confirmReject}
+      >
+        <p style={{ margin: 0 }}>
+          ¿Rechazar este registro? Dejará de estar en revisión y el explorador verá el estado rechazado.
+        </p>
+        {rejectTarget ? (
+          <p style={{ margin: '12px 0 0' }}>
+            <strong>{rejectTarget.name}</strong>
+            <span style={{ display: 'block', marginTop: 6, fontSize: '0.9rem', opacity: 0.85 }}>
+              {rejectTarget.code}
+            </span>
+          </p>
+        ) : null}
+      </AdminConfirmDialog>
+
       <header className="admin-page-header">
         <p className="admin-page-eyebrow">Curación</p>
         <h1 className="admin-page-title">Fósiles pendientes</h1>
@@ -96,7 +130,13 @@ function AdminPendingFossils() {
                         type="button"
                         className="admin-btn admin-btn--ghost"
                         style={{ padding: '6px 14px', fontSize: '0.82rem' }}
-                        onClick={() => reject(f.id)}
+                        onClick={() =>
+                          setRejectTarget({
+                            id: f.id,
+                            name: f.name || 'Sin nombre',
+                            code: f.unique_code || '',
+                          })
+                        }
                       >
                         Rechazar
                       </button>
