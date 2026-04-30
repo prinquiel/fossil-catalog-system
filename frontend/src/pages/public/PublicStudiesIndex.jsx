@@ -47,12 +47,13 @@ export default function PublicStudiesIndex() {
     <main className="catalog-shell public-studies-page">
       <SiteHeader />
 
-      <header className="catalog-hero public-studies-hero">
-        <p className="catalog-kicker">Ciencia abierta</p>
+      <header className="catalog-hero public-studies-hero catalog-hero--cuaderno">
+        <p className="catalog-kicker">§ estudios y aportes</p>
         <h1>Estudios científicos</h1>
         <p className="catalog-subtitle">
-          Trabajos publicados vinculados a ejemplares del archivo. Elija una tarjeta para abrir la ficha completa.
+          Trabajos publicados vinculados a ejemplares del archivo. Cada tarjeta abre la ficha completa del estudio.
         </p>
+        <p className="catalog-hero-hand">acceso directo al texto aprobado →</p>
       </header>
 
       {loading && (

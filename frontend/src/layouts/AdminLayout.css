@@ -1,8 +1,9 @@
 .admin-shell {
   min-height: 100vh;
   font-family: var(--font-body);
-  background: radial-gradient(circle at top right, #e7dccb 0%, var(--bone) 38%, #f9f5ee 100%);
-  color: var(--clay-deep);
+  /* Fondo papel B: styles/facelift.css */
+  background: transparent;
+  color: var(--ink-1);
   position: relative;
   box-sizing: border-box;
 }
@@ -53,8 +54,8 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(91, 76, 58, 0.18);
-  background: rgba(244, 239, 230, 0.88);
+  border-bottom: 1px solid var(--b-rule);
+  background: color-mix(in srgb, var(--paper-3) 88%, transparent);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
@@ -75,13 +76,13 @@
   font-weight: 700;
   font-size: 1.05rem;
   letter-spacing: 0.02em;
-  color: var(--clay-deep);
+  color: var(--ink-1);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .admin-brand:hover {
-  color: var(--ruby-dark);
+  color: var(--accent);
 }
 
 .admin-menu-btn {
@@ -91,9 +92,9 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  border: 1px solid rgba(91, 76, 58, 0.22);
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--clay-deep);
+  border: 1px solid var(--b-rule);
+  background: color-mix(in srgb, var(--paper-3) 58%, transparent);
+  color: var(--ink-1);
   cursor: pointer;
   transition:
     transform 0.2s ease,
@@ -102,8 +103,8 @@
 }
 
 .admin-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(159, 24, 56, 0.35);
+  background: var(--paper-3);
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
   transform: scale(1.03);
 }
 
@@ -130,6 +131,10 @@
 .admin-sidebar__backdrop {
   position: absolute;
   inset: 0;
+  border: 0;
+  width: 100%;
+  padding: 0;
+  cursor: pointer;
   background: rgba(45, 38, 32, 0.45);
   opacity: 0;
   transition: opacity 0.35s ease;

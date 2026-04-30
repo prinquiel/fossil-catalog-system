@@ -200,11 +200,11 @@ function RoleLayout({ variant, navTitle, tagline, links }) {
 
         <div className="role-body">
           <aside className={`role-sidebar${menuOpen ? ' is-open' : ''}`}>
-            <div
+            <button
+              type="button"
               className="role-sidebar__backdrop"
+              aria-label="Cerrar menú lateral"
               onClick={() => setMenuOpen(false)}
-              onKeyDown={(e) => e.key === 'Escape' && setMenuOpen(false)}
-              role="presentation"
             />
             <div
               ref={trapRef}

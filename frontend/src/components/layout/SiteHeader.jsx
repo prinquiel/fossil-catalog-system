@@ -65,6 +65,15 @@ function SiteHeader() {
     queueMicrotask(() => setMenuOpen(false));
   }, [pathname]);
 
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
   return (
     <header className="site-header" role="banner">
       <nav className="site-header__nav" aria-label="Navegación principal">
@@ -80,6 +89,7 @@ function SiteHeader() {
           className="site-header__menu-btn"
           aria-expanded={menuOpen}
           aria-controls="site-header-menu"
+          aria-haspopup="true"
           aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
           onClick={() => setMenuOpen((open) => !open)}
         >
@@ -143,6 +153,7 @@ function SiteHeader() {
                 {!isAuthenticated && (
                   <NavLink
                     to="/catalog"
+                    end
                     className={({ isActive }) => `site-header__pill${isActive ? ' is-active' : ''}`}
                   >
                     Catálogo

@@ -316,13 +316,14 @@ function Catalog() {
     <main className="catalog-shell">
       <SiteHeader />
 
-      <header className="catalog-hero">
-        <p className="catalog-kicker">Archivo Paleontológico</p>
-        <h1>Catálogo Público de Hallazgos</h1>
+      <header className="catalog-hero catalog-hero--cuaderno">
+        <p className="catalog-kicker">§ archivo público</p>
+        <h1>Catálogo de hallazgos</h1>
         <p className="catalog-subtitle">
-          Exploración curada de piezas fósiles publicadas, con visualización de imágenes, contexto científico y
-          georreferencia.
+          Exploración curada de piezas publicadas: imágenes, contexto científico y georreferencia — misma lógica de
+          cuaderno de campo que el resto del archivo.
         </p>
+        <p className="catalog-hero-hand">← filtros abajo · fichas con trazabilidad editorial</p>
         {!authLoading && !isAuthenticated && (
           <div className="catalog-hero-actions">
             <Link className="catalog-btn solid" to="/">
