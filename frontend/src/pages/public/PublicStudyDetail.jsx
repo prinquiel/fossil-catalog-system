@@ -55,7 +55,7 @@ export default function PublicStudyDetail() {
 
       {!loading && (error || !study) && (
         <>
-          <header className="catalog-hero" style={{ paddingBottom: 12 }}>
+          <header className="catalog-hero catalog-hero--cuaderno" style={{ paddingBottom: 12 }}>
             <h1 style={{ marginTop: 8 }}>Estudio no disponible</h1>
             <p className="catalog-subtitle">{error || 'No existe o no está publicado.'}</p>
             <Link className="catalog-btn ghost" to="/catalog/estudios">
@@ -67,8 +67,8 @@ export default function PublicStudyDetail() {
 
       {!loading && study && (
         <>
-          <header className="catalog-hero public-study-detail__hero">
-            <p className="catalog-kicker">Estudio científico</p>
+          <header className="catalog-hero public-study-detail__hero catalog-hero--cuaderno">
+            <p className="catalog-kicker">§ ficha de estudio</p>
             <h1>{study.title || 'Sin título'}</h1>
             <p className="catalog-subtitle public-study-detail__subtitle">
               {showFossilCode && study.fossil_unique_code ? (

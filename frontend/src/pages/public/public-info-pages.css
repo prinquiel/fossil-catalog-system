@@ -5,24 +5,23 @@
   padding-right: max(18px, env(safe-area-inset-right));
   padding-bottom: max(54px, env(safe-area-inset-bottom));
   box-sizing: border-box;
-  background:
-    radial-gradient(120% 90% at 10% 0%, rgba(210, 181, 141, 0.24), transparent 52%),
-    radial-gradient(100% 70% at 100% 0%, rgba(140, 103, 73, 0.17), transparent 45%),
-    linear-gradient(180deg, #f8f1e7 0%, #f4eadb 45%, #ede1cf 100%);
+  /* Fondo unificado en styles/facelift.css (tokens B) */
+  background: transparent;
+  color: var(--ink-1);
 }
 
 .public-card {
   width: min(1040px, 100%);
   margin: 0 auto 16px;
   border-radius: 16px;
-  border: 1px solid rgba(123, 90, 64, 0.24);
-  background: rgba(255, 251, 246, 0.86);
-  box-shadow: 0 10px 24px rgba(91, 68, 51, 0.08);
+  border: 1px solid var(--b-rule);
+  background: color-mix(in srgb, var(--paper-3) 88%, transparent);
+  box-shadow: var(--shadow-soft);
   padding: 18px;
 }
 
 .public-card--detail {
-  background: rgba(255, 252, 248, 0.94);
+  background: color-mix(in srgb, var(--paper-3) 94%, transparent);
 }
 
 .public-card--profile-wide {
@@ -41,7 +40,7 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.75rem;
-  color: #7a6248;
+  color: var(--ink-3);
 }
 
 .public-page-title {
@@ -49,12 +48,12 @@
   font-family: var(--font-display);
   line-height: 1.15;
   font-size: clamp(1.6rem, 3vw, 2.2rem);
-  color: #4f3a29;
+  color: var(--ink-1);
 }
 
 .public-page-lead {
   margin: 10px 0 0;
-  color: #6a523f;
+  color: var(--ink-2);
   line-height: 1.52;
 }
 
@@ -65,7 +64,7 @@
 
 .public-page-muted {
   margin-top: 10px;
-  color: #7f6448;
+  color: var(--ink-3);
   font-size: 0.9rem;
 }
 
@@ -80,22 +79,22 @@
 
 .public-page-error {
   margin: 0;
-  border: 1px solid rgba(164, 28, 52, 0.26);
-  background: rgba(255, 242, 244, 0.74);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  background: color-mix(in srgb, var(--accent-wash) 78%, transparent);
   border-radius: 12px;
-  color: #7a1c2f;
+  color: var(--accent);
   padding: 11px 13px;
 }
 
 .public-page-detail-head h2 {
   margin: 0;
   font-family: var(--font-display);
-  color: #4f3a29;
+  color: var(--ink-1);
 }
 
 .public-page-detail-head p {
   margin: 8px 0 0;
-  color: #7a6248;
+  color: var(--ink-3);
 }
 
 .public-grid-two {
@@ -105,9 +104,9 @@
 }
 
 .public-grid-two article {
-  border: 1px solid rgba(123, 90, 64, 0.2);
+  border: 1px solid var(--b-rule);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.68);
+  background: color-mix(in srgb, var(--paper-3) 72%, transparent);
   padding: 12px;
 }
 
@@ -115,7 +114,7 @@
 .public-grid-two h2 {
   margin: 0 0 10px;
   font-family: var(--font-display);
-  color: #4f3a29;
+  color: var(--ink-1);
   font-size: 1.08rem;
 }
 
@@ -132,12 +131,12 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   font-weight: 700;
-  color: #7a6248;
+  color: var(--ink-3);
 }
 
 .public-dl dd {
   margin: 4px 0 0;
-  color: #4f3a29;
+  color: var(--ink-1);
 }
 
 .public-list,
@@ -149,7 +148,7 @@
 .public-list li,
 .public-taxonomy-list li {
   margin: 0 0 8px;
-  color: #5f4733;
+  color: var(--ink-2);
   line-height: 1.45;
 }
 
@@ -160,7 +159,7 @@
 .public-map-wrap h3 {
   margin: 0 0 8px;
   font-family: var(--font-display);
-  color: #4f3a29;
+  color: var(--ink-1);
 }
 
 .public-form {
@@ -173,23 +172,23 @@
   gap: 6px;
   font-weight: 700;
   font-size: 0.88rem;
-  color: #684e37;
+  color: var(--ink-2);
 }
 
 .public-form input,
 .public-form textarea {
   border-radius: 10px;
-  border: 1px solid rgba(123, 90, 64, 0.32);
-  background: rgba(255, 255, 255, 0.92);
-  color: #4a3829;
+  border: 1px solid var(--b-rule-strong);
+  background: var(--paper-3);
+  color: var(--ink-1);
   padding: 10px;
   font: inherit;
 }
 
 .public-form input:focus,
 .public-form textarea:focus {
-  outline: 2px solid rgba(116, 85, 60, 0.28);
-  border-color: rgba(116, 85, 60, 0.5);
+  outline: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
 }
 
 .public-page-actions {
@@ -206,14 +205,14 @@
   font-weight: 700;
   border: 1px solid transparent;
   cursor: pointer;
-  background: linear-gradient(160deg, #5b4433, #7a5a41);
-  color: #fff7ef;
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 82%, black));
+  color: var(--paper-3);
 }
 
 .public-btn--ghost {
-  border-color: rgba(91, 68, 51, 0.3);
-  color: #5b4433;
-  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--b-rule-strong);
+  color: var(--ink-1);
+  background: color-mix(in srgb, var(--paper-3) 82%, transparent);
 }
 
 .public-skeleton {
@@ -281,18 +280,15 @@
   margin: 0 auto;
   border-radius: 20px;
   overflow: hidden;
-  border: 1px solid rgba(91, 58, 52, 0.22);
-  background: rgba(255, 252, 248, 0.96);
-  box-shadow:
-    0 4px 0 rgba(91, 68, 51, 0.06),
-    0 22px 48px rgba(62, 42, 32, 0.12);
+  border: 1px solid var(--b-rule);
+  background: color-mix(in srgb, var(--paper-3) 92%, transparent);
+  box-shadow: var(--shadow-elevated);
 }
 
 .public-contact-board__head {
   padding: clamp(22px, 4vw, 34px) clamp(20px, 4vw, 40px);
-  background:
-    linear-gradient(135deg, rgba(98, 52, 58, 0.98) 0%, rgba(62, 38, 34, 0.99) 48%, rgba(74, 48, 38, 0.98) 100%);
-  border-bottom: 1px solid rgba(255, 245, 236, 0.12);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 92%, black) 0%, var(--ink-0) 52%, color-mix(in srgb, var(--accent) 55%, var(--ink-0)) 100%);
+  border-bottom: 1px solid color-mix(in srgb, var(--paper-3) 14%, transparent);
   position: relative;
 }
 
@@ -321,7 +317,7 @@
   font-family: var(--font-display);
   font-size: clamp(1.75rem, 4vw, 2.35rem);
   line-height: 1.12;
-  color: #fff9f2;
+  color: var(--paper-3);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -332,6 +328,57 @@
   line-height: 1.55;
   font-size: 0.98rem;
   color: rgba(255, 242, 230, 0.88);
+}
+
+.public-contact-stamp {
+  position: absolute;
+  top: clamp(14px, 3vw, 24px);
+  right: clamp(12px, 3vw, 22px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 4.75rem;
+  height: 4.75rem;
+  padding: 6px;
+  border: 2px double color-mix(in srgb, var(--paper-3) 55%, transparent);
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  text-align: center;
+  color: color-mix(in srgb, var(--paper-3) 88%, transparent);
+  background: color-mix(in srgb, var(--paper-3) 8%, transparent);
+  transform: rotate(-14deg);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--ink-0) 35%, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.public-contact-stamp span {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--font-hand);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: color-mix(in srgb, var(--paper-3) 92%, transparent);
+  transform: rotate(0.5deg);
+}
+
+.public-contact-board__hand {
+  position: relative;
+  z-index: 1;
+  margin: 14px 0 0;
+  max-width: 48ch;
+  font-family: var(--font-hand);
+  font-size: 0.98rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--paper-3) 78%, transparent);
+  transform: rotate(-0.35deg);
 }
 
 .public-contact-board__body {
@@ -348,14 +395,14 @@
 
 .public-contact-side {
   padding: clamp(20px, 3vw, 28px);
-  background: linear-gradient(180deg, rgba(255, 250, 244, 0.98) 0%, rgba(245, 236, 224, 0.55) 100%);
-  border-bottom: 1px solid rgba(123, 90, 64, 0.14);
+  background: linear-gradient(180deg, var(--paper-3), color-mix(in srgb, var(--paper-2) 70%, var(--paper-deep)));
+  border-bottom: 1px solid var(--b-rule);
 }
 
 @media (min-width: 880px) {
   .public-contact-side {
     border-bottom: none;
-    border-right: 1px solid rgba(123, 90, 64, 0.14);
+    border-right: 1px solid var(--b-rule);
   }
 }
 
@@ -365,36 +412,36 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 700;
-  color: #7a6248;
+  color: var(--ink-3);
 }
 
 .public-contact-side__email {
   display: inline-block;
   font-size: 1.02rem;
   font-weight: 700;
-  color: #5c2f36;
+  color: var(--accent);
   text-decoration: none;
-  border-bottom: 1px solid rgba(92, 47, 54, 0.35);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
   padding-bottom: 1px;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
 .public-contact-side__email:hover {
-  color: #3d2226;
-  border-color: rgba(61, 34, 38, 0.55);
+  color: var(--ink-0);
+  border-color: color-mix(in srgb, var(--accent) 58%, transparent);
 }
 
 .public-contact-side__hint {
   margin: 12px 0 0;
   font-size: 0.88rem;
   line-height: 1.45;
-  color: #6a523f;
+  color: var(--ink-2);
 }
 
 .public-contact-side__list {
   margin: 22px 0 0;
   padding-left: 1.1rem;
-  color: #5f4733;
+  color: var(--ink-2);
   font-size: 0.88rem;
   line-height: 1.5;
 }
@@ -405,29 +452,59 @@
 
 .public-contact-form-panel {
   padding: clamp(20px, 3vw, 30px);
-  background: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--paper-3) 58%, transparent);
+}
+
+.public-contact-form-head {
+  margin: 0 0 18px;
+  padding: 14px 16px 16px;
+  border: 0.5px solid var(--b-rule);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--paper-3) 94%, transparent);
+  box-shadow: var(--shadow-soft);
+}
+
+.public-contact-form-kicker {
+  margin: 0 0 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.public-contact-form-lead {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-2);
 }
 
 .public-contact-success {
   margin: 0 0 18px;
   padding: 16px 18px;
-  border-radius: 12px;
-  border: 1px solid rgba(20, 138, 76, 0.22);
-  background: linear-gradient(180deg, rgba(236, 252, 242, 0.95), rgba(255, 255, 255, 0.75));
-  color: #1a5c3a;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 12%, var(--paper-3)),
+    color-mix(in srgb, var(--paper-3) 96%, var(--paper-2))
+  );
+  color: var(--ink-0);
 }
 
 .public-contact-success strong {
   display: block;
   margin-bottom: 6px;
   font-size: 1rem;
+  color: var(--ink-0);
 }
 
 .public-contact-success p {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.45;
-  color: #2d6b47;
+  color: var(--ink-2);
 }
 
 .public-contact-form {
@@ -456,26 +533,26 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 700;
-  color: #6a4f3a;
+  color: var(--ink-2);
 }
 
 .public-contact-form .public-contact-field input,
 .public-contact-form .public-contact-field textarea {
   border-radius: 11px;
-  border: 1px solid rgba(100, 72, 58, 0.28);
-  background: #fffefc;
+  border: 1px solid var(--b-rule-strong);
+  background: var(--paper-3);
   padding: 11px 12px;
-  box-shadow: inset 0 1px 2px rgba(91, 68, 51, 0.04);
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--ink-1) 5%, transparent);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .public-contact-form .public-contact-field input:focus,
 .public-contact-form .public-contact-field textarea:focus {
   outline: none;
-  border-color: rgba(92, 47, 54, 0.45);
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
   box-shadow:
-    inset 0 1px 2px rgba(91, 68, 51, 0.04),
-    0 0 0 3px rgba(92, 47, 54, 0.12);
+    inset 0 1px 2px color-mix(in srgb, var(--ink-1) 5%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .public-contact-form__actions {
@@ -493,9 +570,9 @@
   font-size: 0.92rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  background: linear-gradient(165deg, #5c2f36 0%, #4a2529 52%, #3d1f24 100%);
-  color: #fff8f2;
-  box-shadow: 0 10px 22px rgba(62, 31, 36, 0.28);
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, black));
+  color: var(--paper-3);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .public-btn--contact-primary:hover:not(:disabled) {
@@ -514,15 +591,15 @@
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #5c2f36;
-  background: rgba(255, 252, 248, 0.95);
-  border: 2px solid rgba(92, 47, 54, 0.45);
-  box-shadow: 0 2px 0 rgba(62, 31, 36, 0.08);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--paper-3) 92%, transparent);
+  border: 2px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--ink-1) 6%, transparent);
 }
 
 .public-btn--contact-outline:hover {
-  background: #fff;
-  border-color: rgba(92, 47, 54, 0.65);
+  background: var(--paper-3);
+  border-color: color-mix(in srgb, var(--accent) 52%, transparent);
 }
 
 .public-btn--contact-catalog {
@@ -531,10 +608,10 @@
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #fff8f2;
-  background: linear-gradient(165deg, #5b4433 0%, #453328 100%);
-  border: 1px solid rgba(45, 34, 28, 0.35);
-  box-shadow: 0 8px 18px rgba(62, 42, 32, 0.2);
+  color: var(--paper-3);
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 82%, black));
+  border: 1px solid color-mix(in srgb, var(--ink-0) 28%, transparent);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .public-btn--contact-catalog:hover {

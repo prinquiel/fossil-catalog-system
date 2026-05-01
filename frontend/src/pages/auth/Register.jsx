@@ -83,7 +83,7 @@ function Register() {
 
   if (submitted) {
     return (
-      <main className="auth-shell">
+      <main className="auth-shell auth-page--cuaderno">
         <SiteHeader />
 
         <div className="auth-main auth-main--register">
@@ -131,7 +131,7 @@ function Register() {
   }
 
   return (
-    <main className="auth-shell">
+    <main className="auth-shell auth-page--cuaderno">
       <SiteHeader />
 
       <div className="auth-main auth-main--register">

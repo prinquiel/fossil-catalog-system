@@ -155,11 +155,11 @@ function DualRoleLayout() {
 
           <div className="admin-body">
             <aside className={`admin-sidebar${menuOpen ? ' is-open' : ''}`}>
-              <div
+              <button
+                type="button"
                 className="admin-sidebar__backdrop"
+                aria-label="Cerrar menú lateral"
                 onClick={() => setMenuOpen(false)}
-                onKeyDown={(e) => e.key === 'Escape' && setMenuOpen(false)}
-                role="presentation"
               />
               <div
                 ref={trapRef}

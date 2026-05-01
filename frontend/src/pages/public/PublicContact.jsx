@@ -55,8 +55,12 @@ export default function PublicContact() {
     <main className="public-page-shell public-contact-page">
       <SiteHeader />
 
-      <article className="public-contact-board" aria-labelledby="contact-main-heading">
+      <article className="public-contact-board public-contact-board--cuaderno" aria-labelledby="contact-main-heading">
         <header className="public-contact-board__head">
+          <span className="public-contact-stamp" aria-hidden="true">
+            Recibido
+            <span>archivo</span>
+          </span>
           <p className="public-contact-board__eyebrow">Canal institucional</p>
           <h1 id="contact-main-heading" className="public-contact-board__title">
             Contáctanos
@@ -64,6 +68,7 @@ export default function PublicContact() {
           <p className="public-contact-board__deck">
             Coordinación editorial, colaboración científica y consultas sobre el archivo digital de hallazgos.
           </p>
+          <p className="public-contact-board__hand">respuesta en días hábiles · sin credenciales en el cuerpo del mensaje</p>
         </header>
 
         <div className="public-contact-board__body">
@@ -93,6 +98,13 @@ export default function PublicContact() {
                 </p>
               </div>
             ) : null}
+
+            <div className="public-contact-form-head">
+              <p className="public-contact-form-kicker">Consulta al archivo</p>
+              <p className="public-contact-form-lead">
+                Redacte con claridad; si aplica, cite código de ejemplar o enlace al estudio público.
+              </p>
+            </div>
 
             <form className="public-form public-contact-form" onSubmit={handleSubmit}>
               <div className="public-contact-form__row">

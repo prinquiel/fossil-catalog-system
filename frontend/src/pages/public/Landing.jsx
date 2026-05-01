@@ -143,45 +143,61 @@ function Landing() {
     <main className="landing-shell">
       <SiteHeader />
 
-      <section className="landing-hero">
-        <div className="landing-hero-visual" aria-hidden="true">
-          <svg className="landing-hero-svg" viewBox="0 0 900 120" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="landing-strata-a" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(139,21,50,0.35)" />
-                <stop offset="50%" stopColor="rgba(180,140,90,0.25)" />
-                <stop offset="100%" stopColor="rgba(91,76,58,0.3)" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M0,95 Q200,70 400,88 T800,82 L900,90 L900,120 L0,120 Z"
-              fill="url(#landing-strata-a)"
-              opacity="0.45"
-            />
-            <path
-              d="M0,72 Q220,48 440,62 T880,55 L900,62 L900,120 L0,120 Z"
-              fill="rgba(244,239,230,0.85)"
-              opacity="0.9"
-            />
-            <path
-              d="M0,52 Q180,38 360,48 T720,40 L900,48 L900,120 L0,120 Z"
-              fill="rgba(255,252,247,0.55)"
-            />
-          </svg>
+      <section className="landing-hero landing-hero--field">
+        <div className="landing-hero__copy">
+          <div className="field-hero-stamp-row">
+            <span className="field-stamp">Archivo abierto · Vol. I</span>
+            <span className="field-hand-note">↑ vigente desde 1926</span>
+          </div>
+          <p className="edition-line">
+            <span>Cuaderno de campo</span>
+            <span>Archivo abierto</span>
+          </p>
+          <h1>
+            Hallazgos
+            <span>documentados</span>
+            <em>a mano</em>, con rigor.
+          </h1>
+          <p className="hero-dek">
+            Archivo curado de hallazgos paleontológicos. Cada pieza entra como anotación de campo,
+            pasa por curaduría y se publica con trazabilidad editorial.
+          </p>
+          <div className="field-hero-actions">
+            <Link to="/catalog" className="field-primary-link">
+              Abrir catálogo
+              <span aria-hidden="true">→</span>
+            </Link>
+            <span className="field-hand-note field-hand-note--cta">← empieza por aquí</span>
+          </div>
+          <ul className="landing-hero-tags" aria-label="Metadatos del archivo">
+            <li>Georreferencia y medios</li>
+            <li>Geología y taxonomía</li>
+            <li>Estudios vinculados al ejemplar</li>
+          </ul>
         </div>
-        <p className="edition-line">
-          <span>Edición paleontológica</span>
-          <span>Vol. I — 2026</span>
-        </p>
-        <h1>Fossil Catalog System</h1>
-        <p className="hero-dek">
-          Archivo curado de hallazgos para exploración y ciencia colaborativa con trazabilidad editorial.
-        </p>
-        <ul className="landing-hero-tags" aria-label="Capacidades del sistema">
-          <li>Georreferencia y medios</li>
-          <li>Geología y taxonomía</li>
-          <li>Estudios vinculados al ejemplar</li>
-        </ul>
+        <div className="landing-hero-visual" aria-hidden="true">
+          <div className="field-tape field-tape--left" />
+          <div className="field-tape field-tape--right" />
+          <div className="field-specimen-plate">
+            <span className="field-specimen-placeholder">Trilobite · Cámbrico medio</span>
+            <span className="field-specimen-code">FC·0017</span>
+          </div>
+          <div className="field-annotation field-annotation--top">
+            céfalo
+            <br />
+            intacto
+          </div>
+          <div className="field-annotation field-annotation--bottom">
+            pigidio
+            <br />
+            segmentado
+          </div>
+          <div className="field-specimen-caption">
+            <span>Ficha · FC·0017·T</span>
+            <strong>Elrathia kingii</strong>
+            <em>Esquisto Wheeler · registro curatorial</em>
+          </div>
+        </div>
       </section>
 
       <section className="landing-explore landing-reveal" aria-labelledby="landing-explore-title">

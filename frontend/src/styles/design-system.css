@@ -112,6 +112,16 @@ a:visited {
   color: var(--ruby-dark);
 }
 
+:where(a, button, input, select, textarea, [role='button'], [tabindex]):focus-visible {
+  outline: 2px solid rgba(139, 21, 50, 0.7);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(139, 21, 50, 0.16);
+  color: var(--clay-deep);
+}
+
 /* Enlaces con apariencia de botón: el color del botón debe ganar a la regla global `a` (y a Tailwind base). */
 #root a.workspace-btn:not(.workspace-btn--ghost),
 #root a.workspace-btn:not(.workspace-btn--ghost):visited {
@@ -147,4 +157,15 @@ a:visited {
   background: linear-gradient(90deg, transparent, var(--rule), transparent);
   border: 0;
   margin: 1rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

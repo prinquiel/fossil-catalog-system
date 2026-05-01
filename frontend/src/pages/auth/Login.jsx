@@ -83,21 +83,24 @@ function Login() {
   };
 
   return (
-    <main className="auth-shell">
+    <main className="auth-shell auth-page--cuaderno">
       <SiteHeader />
 
       <div className="auth-main auth-main--login">
-        <p className="auth-eyebrow">Bienvenido de nuevo</p>
-        <h1 className="auth-title">Iniciar sesión</h1>
-        <p className="auth-lead">
-          Accede con el correo y la contraseña de tu cuenta. Si acabas de registrarte, espera la aprobación
-          del administrador; recibirás un correo cuando tu acceso esté activo.
-        </p>
+        <div className="auth-login-intro">
+          <p className="auth-eyebrow">Acceso al archivo</p>
+          <h1 className="auth-title">Iniciar sesión</h1>
+          <p className="auth-lead">
+            Usa el correo y la contraseña de tu cuenta. Si tu registro está pendiente, el administrador te
+            notificará por correo cuando el acceso quede activo.
+          </p>
+          <p className="auth-login-note">misma política editorial que el catálogo público</p>
+        </div>
 
-        <div className="auth-card">
+        <div className="auth-card auth-card--login">
           <div className="auth-card-badge-row" aria-hidden="true">
-            <span>Acceso seguro</span>
-            <span>Sesión institucional</span>
+            <span>HTTPS</span>
+            <span>Sesión con rol</span>
           </div>
           <form className="auth-form-grid" onSubmit={handleSubmit} noValidate>
             <div className="auth-field">
@@ -106,25 +109,26 @@ function Login() {
                 id="login-email"
                 type="email"
                 autoComplete="email"
-                placeholder="Email"
+                placeholder="nombre@correo.org"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="auth-field">
               <label htmlFor="login-pass">Contraseña</label>
-              <div className="auth-password-row">
+              <div className="auth-password-field">
                 <input
                   id="login-pass"
+                  className="auth-password-field__input"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  placeholder="Contraseña"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
-                  className="auth-toggle-visibility"
+                  className="auth-password-field__toggle"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-pressed={showPassword}
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
