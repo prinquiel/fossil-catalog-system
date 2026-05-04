@@ -1,7 +1,6 @@
--- Permisos sobre user_roles (error: permission denied for table user_roles, SQLSTATE 42501)
+-- Permisos sobre user_roles
 -- Ejecutar conectado como superusuario (p. ej. postgres), no como fossil_admin.
---
--- Si tu rol de aplicación tiene otro nombre, sustituye fossil_admin en ambas líneas.
+-- Si su rol de aplicación tiene otro nombre, sustituye fossil_admin en ambas líneas.
 
 GRANT USAGE ON SCHEMA public TO fossil_admin;
 
